@@ -16,6 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from custom_manage.sites import superadmin_panel, staff_panel
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('superadmin/', superadmin_panel.urls),
+    path('staff/', staff_panel.urls, name='staff'),
 ]

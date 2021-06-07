@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-from dod.dod.loader import load_credential
+from dod.loader import load_credential
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SETTING_DEV_DIC = load_credential("develop")
@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
 ]
 
 SECONDS_APPS = [
@@ -49,13 +50,16 @@ SECONDS_APPS = [
     'payment',
     'products',
     'projects',
-    'respondent'
+    'respondent',
+    'custom_manage'
 ]
 
 THIRD_APPS = [
     'ckeditor',
     'ckeditor_uploader',
-    'rest_framework'
+    'rest_framework',
+    'pymysql',
+    # 'wpadmin'
 ]
 
 INSTALLED_APPS += SECONDS_APPS + THIRD_APPS
@@ -145,7 +149,7 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
+SITE_ID = 1
 ########## CKEDITOR CONFIGURATION
 CKEDITOR_UPLOAD_PATH = "uploads/"
 

@@ -1,7 +1,7 @@
 from django.db import models
 
 # Create your models here.
-from dod.projects.models import Project
+from projects.models import Project
 
 
 class RespondentPhoneConfirm(models.Model):
