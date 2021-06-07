@@ -13,19 +13,22 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+from dod.dod.loader import load_credential
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+SETTING_DEV_DIC = load_credential("develop")
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(j%x!j3uh)x$fxgtx+oj+c*94&qmhoa78^sh5%*r(yka%ho8+)'
+SECRET_KEY = SETTING_DEV_DIC['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -38,6 +41,24 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
+
+SECONDS_APPS = [
+    'accounts',
+    'logic',
+    'notice',
+    'payment',
+    'products',
+    'projects',
+    'respondent'
+]
+
+THIRD_APPS = [
+    'ckeditor',
+    'ckeditor_uploader',
+    'rest_framework'
+]
+
+INSTALLED_APPS += SECONDS_APPS + THIRD_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -74,10 +95,7 @@ WSGI_APPLICATION = 'dod.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': SETTING_DEV_DIC["default"],
 }
 
 
@@ -114,6 +132,9 @@ USE_L10N = True
 USE_TZ = True
 
 
+# AUTH USER
+AUTH_USER_MODEL = 'accounts.User'
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
@@ -123,3 +144,24 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+########## CKEDITOR CONFIGURATION
+CKEDITOR_UPLOAD_PATH = "uploads/"
+
+CKEDITOR_IMAGE_BACKEND = "pillow"
+CKEDITOR_JQUERY_URL = 'https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js'
+
+
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'Custom',
+        'toolbar_Custom': [
+            ['Bold', 'Italic', 'Underline', 'Source', '-', 'Image'],
+            ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
+            ['Link', 'Unlink'],
+            ['RemoveFormat', 'Source']
+        ]
+    }
+}
+########## END CKEDITOR CONFIGURATION
