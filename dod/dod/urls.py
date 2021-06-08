@@ -23,4 +23,5 @@ urlpatterns = [
     path('superadmin/', superadmin_panel.urls),
     path('staff/', staff_panel.urls, name='staff'),
     path('accounts/v1/', include('accounts.urls')),
+    path('api/v1/', include('projects.urls')),
 ]
