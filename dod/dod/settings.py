@@ -34,8 +34,8 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
     'django.contrib.auth',
+    'django.contrib.admin',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -51,7 +51,8 @@ SECONDS_APPS = [
     'products',
     'projects',
     'respondent',
-    'custom_manage'
+    'custom_manage',
+    'core',
 ]
 
 THIRD_APPS = [
@@ -61,17 +62,18 @@ THIRD_APPS = [
     'rest_framework.authtoken',
     'pymysql',
     # 'wpadmin',
-    'storages'
+    'storages',
 ]
 
 INSTALLED_APPS += SECONDS_APPS + THIRD_APPS
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
+    # OrganizationMiddleware,
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -129,27 +131,38 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # AUTH USER
 AUTH_USER_MODEL = 'accounts.User'
 
+# allauth settings
+AUTHENTICATION_BACKENDS = (
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by e-mail
+    # 'allauth.account.auth_backends.AuthenticationBackend',
+)
 
 # drf 토큰인증처
 REST_FRAMEWORK = {
+    # 'DEFAULT_PERMISSION_CLASSES': [
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        # 'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         # 'rest_framework.authentication.SessionAuthentication',  # temp for web chats test
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     ],
-    # 'DEFAULT_PAGINATION_CLASS': 'core.pagination.SiiotPagination',
+    'DEFAULT_PAGINATION_CLASS': 'core.pagination.DodPagination',
     'PAGE_SIZE': 51
 }
 

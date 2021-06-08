@@ -99,14 +99,16 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     def logout(self, request):
         """
         api: POST accounts/v1/logout/
-        data = { "registration_id" : string }
+        header = {'Authorization' : token}
+        data = {}
         :return: code, status
         """
+        print(request.user)
+        print(request.auth)
         try:
             request.user.auth_token.delete()
         except (AttributeError, ObjectDoesNotExist):
             key = request.headers['Authorization']
-            print(key)
             if key:
                 token = Token.objects.get(key=key)
                 token.delete()

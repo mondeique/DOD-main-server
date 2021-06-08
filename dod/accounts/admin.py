@@ -43,8 +43,7 @@ class TokenStaffAdmin(admin.ModelAdmin):
 
 
 superadmin_panel.register(User, UserSuperadmin)
-# superadmin_panel.register(Token, TokenStaffAdmin)
-
+superadmin_panel.register(Token, TokenStaffAdmin)
 superadmin_register(PhoneConfirm, list_display=['phone', 'confirm_key', 'is_confirmed', 'created_at'])
 
 
@@ -61,3 +60,4 @@ class PhoneConfirmAdmin(admin.ModelAdmin):
 
 staff_panel.register(User, UserStaffadmin)
 staff_panel.register(PhoneConfirm, PhoneConfirmAdmin)
+staff_panel.register(Token, TokenStaffAdmin)
