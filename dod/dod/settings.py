@@ -58,6 +58,7 @@ THIRD_APPS = [
     'ckeditor',
     'ckeditor_uploader',
     'rest_framework',
+    'rest_framework.authtoken',
     'pymysql',
     # 'wpadmin',
     'storages'
@@ -139,6 +140,19 @@ USE_TZ = True
 
 # AUTH USER
 AUTH_USER_MODEL = 'accounts.User'
+
+
+# drf 토큰인증처
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication',  # temp for web chats test
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+    ],
+    # 'DEFAULT_PAGINATION_CLASS': 'core.pagination.SiiotPagination',
+    'PAGE_SIZE': 51
+}
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/

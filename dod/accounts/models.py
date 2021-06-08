@@ -31,8 +31,11 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    USERNAME_FIELD = 'phone'
-    phone = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=30, null=True, blank=True)
+    uid = models.UUIDField(unique=True, null=True, blank=True, help_text="phone 대신 USERNAME_FIELD를 대체할 field입니다.")
+    USERNAME_FIELD = 'uid'
+    REQUIRED_FIELDS = ['phone']
+    phone = models.CharField(max_length=20)
     is_active = models.BooleanField(default=True, help_text="탈퇴시 is_active = False")
     is_staff = models.BooleanField(default=False, help_text="super_user와의 권한 구분을 위해서 새로 만들었습니다. 일반적 운영진에게 부여됩니다.")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -42,8 +45,19 @@ class User(AbstractBaseUser, PermissionsMixin):
                               help_text="운영진 staff page에서 로그인 시 사용합니다.")
     objects = UserManager()
 
+    def __str__(self):
+        if self.is_anonymous:
+            return 'anonymous'
+        if self.is_staff:
+            return '[staff] {}'.format(self.email)
+        return self.phone
+
 
 class PhoneConfirm(models.Model):
+    """
+    회원가입, 비밀번호 변경에만 사용하는 핸드폰 인증 모델입니다.
+    설문자의 인증번호 모델은 따로 생성하여서 관리합니다.
+    """
     SIGN_UP = 1
     RESET_PASSWORD = 2
 
@@ -52,7 +66,7 @@ class PhoneConfirm(models.Model):
         (RESET_PASSWORD, '비밀번호 변경'),
     )
     phone = models.CharField(max_length=20)
-    certification_number = models.CharField(max_length=4)
+    confirm_key = models.CharField(max_length=4)
     kinds = models.IntegerField(choices=KINDS, default=1)
     is_confirmed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
