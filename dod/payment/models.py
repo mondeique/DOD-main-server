@@ -1,15 +1,31 @@
 from django.db import models
 from ckeditor_uploader.fields import RichTextUploadingField
 # Create your models here.
+from projects.models import Project
 
 
 def qrimg_directory_path(instance, filename):
     return 'deposit_without_bankbook/{}/qr/{}'.format(instance.company_name, filename)
 
 
+class UserDepositLog(models.Model):
+    """
+    유저의 입금내역입니다.
+    스태프는 이 모델을 참고하여 입금확인을 진행합니다.
+    프로젝트 생성버튼 클릭시 가격, 프로젝트 등을 저장하고
+    다음페이지인 무통장입금 안내 페이지에서 입금자명을 입력시 업데이트합니다.
+    """
+    project = models.ForeignKey(Project, null=True, on_delete=models.SET_NULL)
+    total_price = models.IntegerField(help_text="가격은 서버에서 계산합니다.")
+    depositor = models.CharField(max_length=30, null=True, blank=True, help_text="예금주입니다.")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    confirm = models.BooleanField(default=False, help_text="스태프가 계좌 확인 후 True로 변경. True변경시 Project status도 바뀝니다.")
+
+
 class DepositWithoutBankbook(models.Model):
     """
-    무통장 입금 계좌 모델입니다.
+    무통장 입금 계좌 안내 모델입니다.
     """
     account = models.CharField(max_length=50)
     holder = models.CharField(max_length=20)

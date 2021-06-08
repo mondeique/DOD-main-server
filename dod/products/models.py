@@ -5,7 +5,7 @@ from projects.models import Project
 
 
 def item_thumb_directory_path(instance, filename):
-    return 'product/{}/{}/{}'.format(instance.brand.name, instance.name, filename)
+    return 'product/{}'.format(filename)
 
 
 def reward_img_directory_path(instance, filename):
@@ -20,6 +20,9 @@ class Brand(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
 
 
 class Item(models.Model):#TODO : 미리 채워두는 모델
