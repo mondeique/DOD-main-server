@@ -10,7 +10,7 @@ class RespondentPhoneConfirm(models.Model):
     나중에 파기한다면 이 데이터를 파기해주세요.
     """
     phone = models.CharField(max_length=20)
-    certification_number = models.CharField(max_length=4)
+    confirm_key = models.CharField(max_length=4)
     is_confirmed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
