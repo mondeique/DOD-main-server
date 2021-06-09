@@ -11,11 +11,11 @@ class ProjectStaffadmin(admin.ModelAdmin):
                     'owner',
                     'winner_count',
                     'project_hash_key',
-                    'created_at',
+                    'start_at',
                     'dead_at',
                     'status']
 
-    search_fields = ['project_hash_key', 'name']
+    search_fields = ['project_hash_key', 'name', 'owner__phone']
 
 
 staff_panel.register(Project, ProjectStaffadmin)

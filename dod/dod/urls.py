@@ -13,15 +13,23 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path, include
 
 from custom_manage.sites import superadmin_panel, staff_panel
+from projects.views import LinkRouteAPIView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('superadmin/', superadmin_panel.urls),
     path('staff/', staff_panel.urls, name='staff'),
+
+    url(r'^link/(?P<slug>[-\w]+)/$', LinkRouteAPIView.as_view()),
+
     path('accounts/v1/', include('accounts.urls')),
     path('api/v1/', include('projects.urls')),
+
+    # ckeditor
+    path('ckeditor/', include('ckeditor_uploader.urls')),
 ]
