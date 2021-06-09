@@ -4,7 +4,7 @@ import uuid
 
 from django.db.models import Avg
 from rest_framework import serializers, exceptions
-from accounts.models import User
+from accounts.models import User, PhoneConfirm
 from rest_framework.authtoken.models import Token
 from django.utils.translation import ugettext_lazy as _
 
@@ -103,3 +103,46 @@ class UserInfoSerializer(serializers.ModelSerializer):
     def get_token(self, user):
         token = create_token(Token, user)
         return token.key
+
+
+class SMSSignupPhoneCheckSerializer(serializers.Serializer):
+    phone = serializers.CharField()
+
+    def validate(self, attrs):
+        super(SMSSignupPhoneCheckSerializer, self).validate(attrs)
+        phone = attrs.get('phone')
+        if User.objects.filter(phone=phone, is_active=False).exists():
+            msg = _('User is banned.')
+            raise exceptions.ValidationError(msg)
+        elif User.objects.filter(phone=phone, is_active=True).exists():
+            msg = _('Exists Phone number')
+            raise exceptions.ValidationError(msg)
+        return attrs
+
+
+class SMSSignupPhoneConfirmSerializer(serializers.Serializer):
+    phone = serializers.CharField()
+    confirm_key = serializers.CharField()
+
+    def validate(self, attrs):
+        super(SMSSignupPhoneConfirmSerializer, self).validate(attrs)
+        phone = attrs.get('phone')
+        confirm_key = attrs.get('confirm_key')
+        phone_confirm = PhoneConfirm.objects.filter(phone=phone, is_confirmed=False)
+        if not phone_confirm.exists():
+            msg = _('Try send SMS again')
+            raise exceptions.ValidationError(msg)
+
+        if PhoneConfirm.objects.filter(phone=phone, is_confirmed=True).filter(confirm_key=confirm_key).exists():
+            msg = _('Already confirmed')
+            raise exceptions.ValidationError(msg)
+        elif not phone_confirm.filter(confirm_key=confirm_key).exists():
+            msg = _('Wrong confirm key')
+            raise exceptions.ValidationError(msg)
+
+        phone_confirm = phone_confirm.get(confirm_key=confirm_key)
+        phone_confirm.is_confirmed = True
+        phone_confirm.save()
+        return attrs
+
+
