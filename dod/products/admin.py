@@ -3,7 +3,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from custom_manage.sites import staff_panel
-from products.models import Brand, Item, Product
+from products.models import Brand, Item, Product, Reward
 
 
 class BrandStaffAdmin(admin.ModelAdmin):
@@ -25,11 +25,19 @@ class ItemStaffAdmin(admin.ModelAdmin):
         return brand.name
 
 
+class RewardImageInline(admin.TabularInline):
+    model = Reward
+
+
 class ProductStaffAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'project', 'item', 'count', 'total_price', 'created_at']
+    list_display = ['pk', 'project', 'payment_confirm', 'item', 'count', 'total_price', 'created_at']
+    inlines = [RewardImageInline]
 
     def total_price(self, obj):
         return obj.item.price * obj.count
+
+    def payment_confirm(self, obj):
+        return obj.project.status
 
 
 staff_panel.register(Brand, BrandStaffAdmin)

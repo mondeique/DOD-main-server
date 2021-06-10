@@ -41,7 +41,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         api: api/v1/project
         method : POST
         :data:
-        {'winner_count', 'created_at', 'dead_at', 'item'}
+        {'winner_count', 'start_at', 'dead_at', 'item'}
         :return: {'id', 'name', 'winner_count', 'total_price'}
         """
         data = request.data.copy()
