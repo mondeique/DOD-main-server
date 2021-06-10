@@ -27,6 +27,7 @@ class ItemStaffAdmin(admin.ModelAdmin):
 
 class RewardImageInline(admin.TabularInline):
     model = Reward
+    fields = ('product', 'reward_img')
 
 
 class ProductStaffAdmin(admin.ModelAdmin):
