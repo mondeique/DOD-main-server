@@ -13,6 +13,9 @@ from projects.models import Project
 from projects.serializers import ProjectCreateSerializer, ProjectDepositInfoRetrieveSerializer, ProjectUpdateSerializer, \
     ProjectDashboardSerializer, SimpleProjectInfoSerializer, ProjectLinkSerializer
 
+from random import sample
+from logic.models import UserSelectLogic, DateTimeLotteryResult
+
 
 class ProjectViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, ]
@@ -55,6 +58,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
         self._create_products()
 
         project_info_serializer = ProjectDepositInfoRetrieveSerializer(project)
+
+        # project 생성과 동시에 당첨 logic 자동 생성
+        logic = UserSelectLogic.objects.create(kind=1, project=project)
+        dt_hours = project.start_at - project.dead_at / 60 / 60
+        random_number = sorted(sample(range(1, dt_hours), data.get('winner_count')))
+        for i in range(random_number):
+            DateTimeLotteryResult.objects.create(lucky_time=project.start_at + datetime.timedelta(hours=random_number[i])
+                                                 , logic=logic)
+
         return Response(project_info_serializer.data, status=status.HTTP_201_CREATED)
 
     def _create_products(self):
