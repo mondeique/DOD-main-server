@@ -31,21 +31,21 @@ class SignupSerializer(serializers.ModelSerializer):
         phone_confirm_qs = PhoneConfirm.objects.filter(confirm_key=confirm_key)
 
         if User.objects.filter(phone=phone, is_active=True):
-            msg = _('User is already exists.')
+            msg = _('이미 가입된 계정이 있습니다.')
             raise exceptions.ValidationError(msg)
         if not phone_confirm_qs.exists():
-            msg = _('Wrong Confirm key.')
+            msg = _('잘못된 인증번호입니다.')
             raise exceptions.ValidationError(msg)
 
         phone_confirm = phone_confirm_qs.last()
         if not phone_confirm.is_confirmed:
-            msg = _('Unconfirmed Phone number.')
+            msg = _('인증되지 않은 핸드폰번호 입니다.')
             raise exceptions.ValidationError(msg)
         if phone_confirm.phone != phone:
-            msg = _('Not match phone number with Confirm Key.')
+            msg = _('잘못된 인증번호로 요청하였습니다.')
             raise exceptions.ValidationError(msg)
         if phone_confirm.is_used:
-            msg = _('Already Used Confirm key')
+            msg = _('이미 사용된 인증번호 입니다.')
             raise exceptions.ValidationError(msg)
         return attrs
 
@@ -115,8 +115,8 @@ class LoginSerializer(serializers.Serializer):
                 token, _ = Token.objects.get_or_create(user=user)
                 attrs['token'] = token.key
                 return attrs
-            raise exceptions.ValidationError("invalid Password")
-        raise exceptions.ValidationError("invalid Email (No User)")
+            raise exceptions.ValidationError("잘못된 비밀번호입니다.")
+        raise exceptions.ValidationError("계정이 존재하지 않습니다.")
 
 
 class TokenSerializer(serializers.ModelSerializer):
@@ -144,10 +144,10 @@ class SMSSignupPhoneCheckSerializer(serializers.Serializer):
         super(SMSSignupPhoneCheckSerializer, self).validate(attrs)
         phone = attrs.get('phone')
         if User.objects.filter(phone=phone, is_active=False).exists():
-            msg = _('User is banned.')
+            msg = _('활성화 되지않은 유저입니다.')
             raise exceptions.ValidationError(msg)
         elif User.objects.filter(phone=phone, is_active=True).exists():
-            msg = _('Exists Phone number')
+            msg = _('이미 가입된 정보가 있습니다.')
             raise exceptions.ValidationError(msg)
         return attrs
 
@@ -162,14 +162,14 @@ class SMSSignupPhoneConfirmSerializer(serializers.Serializer):
         confirm_key = attrs.get('confirm_key')
         phone_confirm = PhoneConfirm.objects.filter(phone=phone, is_confirmed=False)
         if not phone_confirm.exists():
-            msg = _('Try send SMS again')
+            msg = _('다시한번 인증번호를 요청해 주세요')
             raise exceptions.ValidationError(msg)
 
         if PhoneConfirm.objects.filter(phone=phone, is_confirmed=True).filter(confirm_key=confirm_key).exists():
-            msg = _('Already confirmed')
+            msg = _('이미 인증되었습니다.')
             raise exceptions.ValidationError(msg)
         elif not phone_confirm.filter(confirm_key=confirm_key).exists():
-            msg = _('Wrong confirm key')
+            msg = _('잘못된 인증번호 입니다.')
             raise exceptions.ValidationError(msg)
 
         phone_confirm = phone_confirm.get(confirm_key=confirm_key)
