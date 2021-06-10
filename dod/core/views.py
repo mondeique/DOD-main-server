@@ -8,9 +8,11 @@ import datetime
 from accounts.models import PhoneConfirm
 from accounts.serializers import SMSSignupPhoneCheckSerializer, SMSSignupPhoneConfirmSerializer
 from core.sms.utils import SMSV2Manager
+from core.alim.utils import ALIMV1Manager
 from projects.models import Project
+from products.models import Product, Reward
 from respondent.models import RespondentPhoneConfirm
-from respondent.serializers import SMSRespondentPhoneCheckSerializer, RespondentCreateSerializer
+from respondent.serializers import SMSRespondentPhoneCheckSerializer, RespondentCreateSerializer, SMSRespondentPhoneConfirmSerializer
 
 
 class SMSViewSet(viewsets.GenericViewSet):
@@ -27,7 +29,7 @@ class SMSViewSet(viewsets.GenericViewSet):
         elif self.action == 'respondent_send':
             serializer = SMSRespondentPhoneCheckSerializer
         elif self.action == 'respondent_confirm':
-            serializer = None
+            serializer = SMSRespondentPhoneConfirmSerializer
         else:
             serializer = super(SMSViewSet, self).get_serializer_class()
         return serializer
@@ -110,10 +112,23 @@ class SMSViewSet(viewsets.GenericViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         self.data = serializer.validated_data
         self._create_respondent()
+
         # 여기까지가 유저 당첨확인 및 생성
-        # TODO : 문자보내고 로직상 문제있는지 확인
-        # TODO : MMS 만들기 및 문자 포맷 admin에서 수정할 수 있게 만들기
-        # TODO : MMS 보내고, 쿠폰 안겹치게 Reward winner_id 넣기, 중복안되게 문자발송 쿠폰 체크
+
+        if self.is_win:
+            lucky_time = self.valid_lucky_times.first()
+            lucky_time.is_used = True
+            lucky_time.save()
+
+            alim_manager = ALIMV1Manager()
+            phone = self.data.get('phone')
+            alim_manager.send_alim(phone=phone)
+
+            # TODO: product 여러개..?
+            product = Product.objects.filter(project=self.project).first()
+            self.reward = product.rewards.filter(winner_id__isnull=False).first()
+            self.reward.winner_id = self.respondent.id
+            self.reward.save()
 
         return Response({'phone': serializer.validated_data['phone']}, status=status.HTTP_200_OK)
 
@@ -129,7 +144,7 @@ class SMSViewSet(viewsets.GenericViewSet):
 
         serializer = RespondentCreateSerializer(data=data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        self.respondent = serializer.save()
 
     def _am_i_winner(self):
         self.lucky_times = self.project.select_logics.last().lottery_times.filter(is_used=False)
@@ -139,11 +154,7 @@ class SMSViewSet(viewsets.GenericViewSet):
             # 당첨 안된 경우
             return False
         else:
-            lucky_time = self.valid_lucky_times.first()
-            lucky_time.is_used = True
-            lucky_time.save()
+
+
             return True
 
-
-class MMSViewSet(viewsets.GenericViewSet):
-    pass

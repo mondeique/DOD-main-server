@@ -77,11 +77,10 @@ class SMSV2Manager():
         self.body = {
             "type": "SMS",
             "contentType": "COMM",
-            "from": load_credential("_from"), # 발신번호
+            "from": load_credential("sms")["_from"], # 발신번호
             "content": "",  # 기본 메시지 내용
             "messages": [{"to": ""}],
         }
-
 
     def generate_random_key(self):
         return ''.join(random.choices(string.digits, k=4))
@@ -113,9 +112,10 @@ class SMSV2Manager():
         self.body['content'] = "[디오디] 당첨확인을 위해 인증번호 {}를 입력해 주세요.".format(self.confirm_key)
 
     def send_sms(self, phone):
-        access_key = load_credential("access_key")
+        sms_dic = load_credential("sms")
+        access_key = sms_dic['access_key']
         url = "https://sens.apigw.ntruss.com"
-        uri = "/sms/v2/services/" + load_credential("serviceId") + "/messages"
+        uri = "/sms/v2/services/" + sms_dic['serviceId'] + "/messages"
         api_url = url + uri
         timestamp = str(int(time.time() * 1000))
         string_to_sign = "POST " + uri + "\n" + timestamp + "\n" + access_key

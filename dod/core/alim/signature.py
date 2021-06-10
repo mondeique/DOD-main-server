@@ -10,8 +10,8 @@ def time_stamp():
 
 
 def make_signature(string_to_sign):
-    sms_dic = load_credential("sms")
-    secret_key = bytes(sms_dic["secret_key"], 'UTF-8')
+    alim_dic = load_credential("alim")
+    secret_key = bytes(alim_dic["secret_key"], 'UTF-8')
     string = bytes(string_to_sign, 'UTF-8')
     string_hmac = hmac.new(secret_key, string, digestmod=hashlib.sha256).digest()
     string_base64 = base64.b64encode(string_hmac).decode('UTF-8')
