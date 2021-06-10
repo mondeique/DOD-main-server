@@ -138,10 +138,8 @@ class ProjectDashboardViewSet(viewsets.GenericViewSet,
         now = datetime.datetime.now()
         buffer_day = now - datetime.timedelta(days=2)
         queryset = self.get_queryset().filter(owner=user).filter(dead_at__gte=buffer_day).order_by('-id')
-        paginator = DodPagination()
-        page = paginator.paginate_queryset(queryset, request)
-        serializer = self.get_serializer(page, many=True)
-        return paginator.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, *args, **kwargs):
         """
