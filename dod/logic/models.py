@@ -28,3 +28,4 @@ class DateTimeLotteryResult(models.Model):
     logic = models.ForeignKey(UserSelectLogic, null=True, on_delete=models.SET_NULL, related_name='lottery_times')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_used = models.BooleanField(default=False)
