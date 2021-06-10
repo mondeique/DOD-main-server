@@ -164,8 +164,7 @@ class SMSSignupPhoneConfirmSerializer(serializers.Serializer):
         if not phone_confirm.exists():
             msg = _('다시한번 인증번호를 요청해 주세요')
             raise exceptions.ValidationError(msg)
-
-        if PhoneConfirm.objects.filter(phone=phone, is_confirmed=True).filter(confirm_key=confirm_key).exists():
+        if PhoneConfirm.objects.filter(phone=phone, is_confirmed=True, confirm_key=confirm_key).exists():
             msg = _('이미 인증되었습니다.')
             raise exceptions.ValidationError(msg)
         elif not phone_confirm.filter(confirm_key=confirm_key).exists():

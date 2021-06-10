@@ -18,7 +18,7 @@ class RespondentPhoneConfirm(models.Model):
 class Respondent(models.Model):
     """
     프로젝트당 설문응모자 모델입니다.
-    RewardPhoneConfirm 이 생성되고 생성되며, 당첨여부가 저장됩니다.
+    RewardPhoneConfirm 이 is_confirmed = True 시 생성되며, 추후 당첨여부가 저장됩니다.
     """
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="respondents")
     phone_confirm = models.OneToOneField(RespondentPhoneConfirm, on_delete=models.CASCADE, help_text="Phone Confirm 이 True 일때만 Reward 생성")

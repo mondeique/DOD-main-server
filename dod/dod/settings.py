@@ -63,6 +63,7 @@ THIRD_APPS = [
     'pymysql',
     # 'wpadmin',
     'storages',
+    'corsheaders'
 ]
 
 INSTALLED_APPS += SECONDS_APPS + THIRD_APPS
@@ -76,6 +77,8 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
+
 ]
 
 ROOT_URLCONF = 'dod.urls'
@@ -221,3 +224,11 @@ CKEDITOR_CONFIGS = {
     }
 }
 ########## END CKEDITOR CONFIGURATION
+# CORS
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_WHITELIST = (
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+)
+
+APPEND_SLASH = True

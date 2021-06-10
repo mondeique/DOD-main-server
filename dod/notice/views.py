@@ -14,6 +14,7 @@ class DodExplanationAPIView(viewsets.GenericViewSet,
     permission_classes = [AllowAny]
     queryset = MainPageDodExplanation.objects.filter(is_active=True).order_by('id')
     serializer_class = DodExplanationSerializer
+    pagination_class = None
     """
     대시보드 없는 메인페이지의 dod 설명 api 입니다.
     """
