@@ -10,15 +10,12 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework import viewsets, mixins
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 
 # Create your views here.
 from accounts.models import User, PhoneConfirm
 from accounts.serializers import LoginSerializer, SignupSerializer, \
     ResetPasswordSerializer, UserInfoSerializer
-# from accounts.sms.signature import simple_send
-# from accounts.sms.utils import SMSV2Manager, SMSManager
-# from accounts.utils import create_token, set_random_nickname
 
 
 class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
@@ -52,20 +49,9 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         400 : confirm_key가 유효하지 않을 때
         201 : created
         """
-        data = request.data.copy()
-
-        # check is confirmed (confirm key로서 외부의 post 막음)
-        if not 'confirm_key' in data:
-            return Response("No confirm key", status=status.HTTP_400_BAD_REQUEST)
-        confirm_key = data.pop('confirm_key')
-        phone_confirm = PhoneConfirm.objects.get(confirm_key=confirm_key)
-        if not phone_confirm.is_confirmed:
-            return Response("Unconfirmed Phone number", status=status.HTTP_400_BAD_REQUEST)
-        if phone_confirm.phone != data.get("phone"):
-            return Response("Not match phone number & temp key", status=status.HTTP_400_BAD_REQUEST)
 
         # user 생성
-        serializer = self.get_serializer(data=data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
@@ -103,8 +89,6 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         data = {}
         :return: code, status
         """
-        print(request.user)
-        print(request.auth)
         try:
             request.user.auth_token.delete()
         except (AttributeError, ObjectDoesNotExist):
@@ -131,6 +115,7 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         data = request.data.copy()
 
         # check is confirmed (temp key로서 외부의 post 막음)
+        # TODO : view를 serializer로 옮겨서 이쁘게 만들기
         confirm_key = data.get('confirm_key')
         if not confirm_key:
             return Response("No confirm key", status=status.HTTP_400_BAD_REQUEST)
@@ -157,3 +142,4 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
         serializer = UserInfoSerializer(user)
         return Response(serializer.data, status=status.HTTP_206_PARTIAL_CONTENT)
+

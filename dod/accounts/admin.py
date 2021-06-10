@@ -55,7 +55,7 @@ class UserStaffadmin(admin.ModelAdmin):
 
 
 class PhoneConfirmAdmin(admin.ModelAdmin):
-    list_display = ['phone', 'confirm_key', 'is_confirmed', 'created_at']
+    list_display = ['phone', 'confirm_key', 'is_confirmed', 'is_used', 'created_at']
 
 
 staff_panel.register(User, UserStaffadmin)

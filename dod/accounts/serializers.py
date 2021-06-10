@@ -19,16 +19,34 @@ def create_token(token_model, user):
 
 
 class SignupSerializer(serializers.ModelSerializer):
+    confirm_key = serializers.CharField()
+
     class Meta:
         model = User
-        fields = ("phone", "password")
+        fields = ("phone", "password", "confirm_key")
 
     def validate(self, attrs):
         phone = attrs.get('phone')
-        # Did we get back an active user?
+        confirm_key = attrs.get('confirm_key')
+        phone_confirm_qs = PhoneConfirm.objects.filter(confirm_key=confirm_key)
+
         if User.objects.filter(phone=phone, is_active=True):
             msg = _('User is already exists.')
-            raise exceptions.ValidationError(msg) # already exists
+            raise exceptions.ValidationError(msg)
+        if not phone_confirm_qs.exists():
+            msg = _('Wrong Confirm key.')
+            raise exceptions.ValidationError(msg)
+
+        phone_confirm = phone_confirm_qs.last()
+        if not phone_confirm.is_confirmed:
+            msg = _('Unconfirmed Phone number.')
+            raise exceptions.ValidationError(msg)
+        if phone_confirm.phone != phone:
+            msg = _('Not match phone number with Confirm Key.')
+            raise exceptions.ValidationError(msg)
+        if phone_confirm.is_used:
+            msg = _('Already Used Confirm key')
+            raise exceptions.ValidationError(msg)
         return attrs
 
     def create(self, validated_data):
@@ -38,6 +56,10 @@ class SignupSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.uid = uuid.uuid4()
         user.save()
+
+        self.confirm_key = validated_data['confirm_key']
+        self._phone_confirm_is_used()
+
         return user
 
     def update(self, instance, validated_data):
@@ -46,7 +68,17 @@ class SignupSerializer(serializers.ModelSerializer):
         if validated_data.get('password'):
             instance.set_password(validated_data['password'])
         instance.save()
+
+        self.confirm_key = validated_data['confirm_key']
+        self._phone_confirm_is_used()
+
         return instance
+
+    def _phone_confirm_is_used(self):
+        confirm_key = self.confirm_key
+        phone_confirm = PhoneConfirm.objects.get(confirm_key=confirm_key)
+        phone_confirm.is_used = True
+        phone_confirm.save()
 
 
 class ResetPasswordSerializer(serializers.ModelSerializer):

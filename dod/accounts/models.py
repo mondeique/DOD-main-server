@@ -36,7 +36,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'uid'
     REQUIRED_FIELDS = ['phone']
     phone = models.CharField(max_length=20)
-    is_active = models.BooleanField(default=True, help_text="탈퇴시 is_active = False")
+    is_active = models.BooleanField(default=True, help_text="밴시 is_active = False")
     is_staff = models.BooleanField(default=False, help_text="super_user와의 권한 구분을 위해서 새로 만들었습니다. 일반적 운영진에게 부여됩니다.")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -69,4 +69,5 @@ class PhoneConfirm(models.Model):
     confirm_key = models.CharField(max_length=4)
     kinds = models.IntegerField(choices=KINDS, default=1)
     is_confirmed = models.BooleanField(default=False)
+    is_used = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
