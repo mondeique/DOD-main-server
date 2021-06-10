@@ -57,13 +57,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
         }
         self._create_products()
 
+        #TODO : 입금자명 따로 입력받는 api (기획수정)
         project_info_serializer = ProjectDepositInfoRetrieveSerializer(project)
 
         # project 생성과 동시에 당첨 logic 자동 생성
         logic = UserSelectLogic.objects.create(kind=1, project=project)
-        dt_hours = project.start_at - project.dead_at / 60 / 60
-        random_number = sorted(sample(range(1, dt_hours), data.get('winner_count')))
-        for i in range(random_number):
+        dt_hours = (project.start_at - project.dead_at).seconds / 60 / 60
+        # TODO : 마지막 하나는 마지막날에 나오게 수정
+        random_number = sorted(sample(range(0, dt_hours), data.get('winner_count')))
+        for i in range(len(random_number)):
             DateTimeLotteryResult.objects.create(lucky_time=project.start_at + datetime.timedelta(hours=random_number[i])
                                                  , logic=logic)
 
