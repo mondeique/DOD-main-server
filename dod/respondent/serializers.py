@@ -18,13 +18,13 @@ class SMSRespondentPhoneConfirmSerializer(serializers.Serializer):
         confirm_key = attrs.get('confirm_key')
         phone_confirm = RespondentPhoneConfirm.objects.filter(phone=phone, is_confirmed=False)
         if not phone_confirm.exists():
-            msg = _('다시한번 인증번호를 요청해 주세요')
+            msg = '다시한번 인증번호를 요청해 주세요'
             raise exceptions.ValidationError(msg)
         if RespondentPhoneConfirm.objects.filter(phone=phone, is_confirmed=True, confirm_key=confirm_key).exists():
-            msg = _('이미 사용된 인증번호입니다.')
+            msg = '이미 사용된 인증번호입니다.'
             raise exceptions.ValidationError(msg)
         elif not phone_confirm.filter(confirm_key=confirm_key).exists():
-            msg = _('잘못된 인증번호 입니다.')
+            msg = '잘못된 인증번호 입니다.'
             raise exceptions.ValidationError(msg)
 
         phone_confirm = phone_confirm.get(confirm_key=confirm_key)

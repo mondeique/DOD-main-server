@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
@@ -94,6 +95,7 @@ class SMSViewSet(viewsets.GenericViewSet):
 
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
+    @transaction.atomic
     @action(methods=['post'], detail=False)
     def respondent_confirm(self, request, *args, **kwargs):
         """
@@ -115,22 +117,26 @@ class SMSViewSet(viewsets.GenericViewSet):
         # 여기까지가 유저 당첨확인 및 생성
 
         if self.is_win:
+
+            self.product = Product.objects.filter(project=self.project).first()
+            self.reward = self.product.rewards.filter(winner_id__isnull=True).first()
+
+            mms_manager = MMSV1Manager()
+            phone = self.data.get('phone')
+            mms_manager.set_content(self.product.item.name)
+            if not mms_manager.send_mms(phone=phone, image_url=self.reward.reward_img.url):
+                return Response({'error_code': '네이버 문자 발송이 실패하였습니다.'}, status=status.HTTP_404_NOT_FOUND)
+
             lucky_time = self.valid_lucky_times.first()
             lucky_time.is_used = True
             lucky_time.save()
 
-            mms_manager = MMSV1Manager()
-            phone = self.data.get('phone')
-            mms_manager.send_mms(phone=phone, image=self.reward.reward_img)
-
             # TODO: product 여러개..?
-            product = Product.objects.filter(project=self.project).first()
-            self.reward = product.rewards.filter(winner_id__isnull=False).first()
             self.reward.winner_id = self.respondent.id
             self.reward.save()
 
         return Response({'id': self.project.id,
-                         'is_win' : self.is_win}, status=status.HTTP_200_OK)
+                         'is_win': self.is_win}, status=status.HTTP_200_OK)
 
     def _create_respondent(self):
         self.project = Project.objects.get(project_hash_key=self.data.get('project_key'))

@@ -1,3 +1,4 @@
+import os
 import string
 import time
 
@@ -9,6 +10,7 @@ from respondent.models import RespondentPhoneConfirm
 from ..loader import load_credential
 import requests
 import base64
+from PIL import Image
 
 # class SMSManager():
 #     """
@@ -145,12 +147,17 @@ class MMSV1Manager():
             "type": "MMS",
             "contentType": "COMM",
             "from": load_credential("sms")["_from"], # 발신번호
-            "content": "",  # 기본 메시지 내용
+            "content": "당첨을 축하합니다.",  # 기본 메시지 내용
             "messages": [{"to": ""}],
             "files": [{"name": "string", "body": "string"}]
         }
 
-    def send_mms(self, phone, image):
+    def set_content(self, product_name):
+        self.body['content'] = "[디오디] 당첨 안내 \n 안녕하세요 디오디입니다. \n 추첨결과 {}에 당첨되셨습니다. \n 축하드립니다!! \n" \
+                               "※ 유효기간을 확인하고 사용 해 주세요! \n\n ▷ 문의하기 \n - 고객센터 : 02-334-1133 \n 09:00 ~ 20:00 " \
+                               "(주말&공휴일 포함) ".format(product_name)
+
+    def send_mms(self, phone, image_url):
         sms_dic = load_credential("sms")
         access_key = sms_dic['access_key']
         url = "https://sens.apigw.ntruss.com"
@@ -167,11 +174,15 @@ class MMSV1Manager():
             'x-ncp-apigw-signature-v2': signature
         }
 
-        data = base64.b64encode(image.read())
+        # download gift.jpg from url
+        os.system("curl " + image_url + " > gift.jpg")
+
+        with open("gift.jpg", "rb") as image_file:
+            data = base64.b64encode(image_file.read())
 
         self.body['messages'][0]['to'] = phone
         self.body['files'][0]['name'] = "gift.jpg"
-        self.body['files'][0]['body'] = data
+        self.body['files'][0]['body'] = data.decode('utf-8')
         request = requests.post(api_url, headers=headers, data=json.dumps(self.body))
         if request.status_code == 202:
             return True
