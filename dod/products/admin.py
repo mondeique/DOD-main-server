@@ -41,6 +41,19 @@ class ProductStaffAdmin(admin.ModelAdmin):
         return obj.project.status
 
 
+class RewardStaffAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'product', 'name', 'reward', 'winner_id']
+
+    def name(self, obj):
+        return obj
+
+    def reward(self, obj):
+        if obj.reward_img:
+            return mark_safe('<img src="%s" width=120px "/>' % obj.reward_img.url)
+        return '-'
+
+
 staff_panel.register(Brand, BrandStaffAdmin)
 staff_panel.register(Item, ItemStaffAdmin)
 staff_panel.register(Product, ProductStaffAdmin)
+staff_panel.register(Reward, RewardStaffAdmin)

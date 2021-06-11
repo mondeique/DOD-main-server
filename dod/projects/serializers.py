@@ -35,13 +35,13 @@ class ProjectUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ['name', 'created_at', 'dead_at']
+        fields = ['name', 'start_at', 'dead_at']
 
 
 class ProjectDepositInfoRetrieveSerializer(serializers.ModelSerializer):
     """
     프로젝트 생성버튼클릭시 리턴하는 데이터입니다.
-    해당 데이터를 사용하여 무통장입금 안내시 가격, 프로젝트 기본정보를 제공합니다.
+    해당 데이터를 사용하여 무통장입금 안내시 가격, 프로젝트 기본정보, 입금 안내링크를 제공합니다.
 
     * project id를 가지고 입금확인 버튼을 요청해야 입금자명을 저장할 수 있습니다.
     """

@@ -24,6 +24,9 @@ class Brand(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name_plural = '상품-브랜드'
+
 
 class Item(models.Model):#TODO : 미리 채워두는 모델
     """
@@ -41,6 +44,9 @@ class Item(models.Model):#TODO : 미리 채워두는 모델
     def __str__(self):
         return '{} {}'.format(self.brand.name, self.name)
 
+    class Meta:
+        verbose_name_plural = '상품-아이템'
+
 
 class Product(models.Model):
     """
@@ -53,6 +59,17 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name_plural = '유저선택상품'
+
+    def __str__(self):
+        return '[{}]유저 [{}] [{}]상품 [{}]개 생성'.format(
+            self.project.owner.phone,
+            self.project.name,
+            self.item.name,
+            self.count
+        )
+
 
 class Reward(models.Model):
     """
@@ -62,6 +79,11 @@ class Reward(models.Model):
     reward_img = models.ImageField(upload_to=reward_img_directory_path)
     winner_id = models.IntegerField(null=True, blank=True, help_text="당첨자(Respondent)의 id를 저장합니다.")
 
+    class Meta:
+        verbose_name_plural = '유저구매상품-실물'
 
-
-
+    def __str__(self):
+        return '[{}]상품 중 id_{}'.format(
+            self.product.item.name,
+            self.id
+        )

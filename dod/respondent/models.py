@@ -14,6 +14,9 @@ class RespondentPhoneConfirm(models.Model):
     is_confirmed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return '[{}]님, 인증번호 {} 확인{}'.format(self.phone, self.confirm_key, self.is_confirmed)
+
 
 class Respondent(models.Model):
     """

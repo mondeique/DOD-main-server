@@ -2,6 +2,8 @@ from django.db import models
 from ckeditor_uploader.fields import RichTextUploadingField
 
 # Create your models here.
+
+
 def icon_thumb_directory_path(instance, filename):
     return 'dod-explanation/icon/{}'.format(filename)
 
@@ -16,6 +18,9 @@ class LinkCopyNotice(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name_plural = '링크복사 안내'
+
 
 class FAQLink(models.Model):
     """
@@ -25,6 +30,9 @@ class FAQLink(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = '자주묻는질문-노션링크'
 
 
 class ContactLink(models.Model):
@@ -36,6 +44,9 @@ class ContactLink(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name_plural = '문의하기-카카오링크'
+
 
 class MainPageDodExplanation(models.Model):
     title = RichTextUploadingField()
@@ -44,3 +55,6 @@ class MainPageDodExplanation(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = '디오디설명'

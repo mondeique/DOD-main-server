@@ -54,7 +54,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         self._create_products()
         self._generate_lucky_time()
 
-        #TODO : 입금자명 따로 입력받는 api (기획수정)
         project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
 
         return Response(project_info_serializer.data, status=status.HTTP_201_CREATED)
