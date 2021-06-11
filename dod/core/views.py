@@ -7,8 +7,7 @@ import datetime
 # Create your views here.
 from accounts.models import PhoneConfirm
 from accounts.serializers import SMSSignupPhoneCheckSerializer, SMSSignupPhoneConfirmSerializer
-from core.sms.utils import SMSV2Manager
-from core.alim.utils import ALIMV1Manager
+from core.sms.utils import SMSV2Manager, MMSV1Manager
 from projects.models import Project
 from products.models import Product, Reward
 from respondent.models import RespondentPhoneConfirm
@@ -120,9 +119,9 @@ class SMSViewSet(viewsets.GenericViewSet):
             lucky_time.is_used = True
             lucky_time.save()
 
-            alim_manager = ALIMV1Manager()
+            mms_manager = MMSV1Manager()
             phone = self.data.get('phone')
-            alim_manager.send_alim(phone=phone)
+            mms_manager.send_mms(phone=phone, image=self.reward.reward_img)
 
             # TODO: product 여러개..?
             product = Product.objects.filter(project=self.project).first()
