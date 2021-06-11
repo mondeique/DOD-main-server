@@ -130,7 +130,8 @@ class SMSViewSet(viewsets.GenericViewSet):
             self.reward.winner_id = self.respondent.id
             self.reward.save()
 
-        return Response({'phone': serializer.validated_data['phone']}, status=status.HTTP_200_OK)
+        return Response({'id': self.project.id,
+                         'is_win' : self.is_win}, status=status.HTTP_200_OK)
 
     def _create_respondent(self):
         self.project = Project.objects.get(project_hash_key=self.data.get('project_key'))
@@ -154,7 +155,5 @@ class SMSViewSet(viewsets.GenericViewSet):
             # 당첨 안된 경우
             return False
         else:
-
-
             return True
 

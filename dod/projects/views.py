@@ -4,15 +4,11 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 import datetime
-
 from rest_framework.views import APIView
-
-from core.pagination import DodPagination
 from products.serializers import ProductCreateSerializer
 from projects.models import Project
 from projects.serializers import ProjectCreateSerializer, ProjectDepositInfoRetrieveSerializer, ProjectUpdateSerializer, \
     ProjectDashboardSerializer, SimpleProjectInfoSerializer, ProjectLinkSerializer
-
 from random import sample
 from logic.models import UserSelectLogic, DateTimeLotteryResult
 
@@ -44,39 +40,49 @@ class ProjectViewSet(viewsets.ModelViewSet):
         {'winner_count', 'start_at', 'dead_at', 'item'}
         :return: {'id', 'name', 'winner_count', 'total_price'}
         """
-        data = request.data.copy()
+        self.data = request.data.copy()
 
-        serializer = self.get_serializer(data=data)
+        serializer = self.get_serializer(data=self.data)
         serializer.is_valid(raise_exception=True)
-        project = serializer.save()
+        self.project = serializer.save()
 
         self.product_data = {
-            'item': data.get('item'),
-            'count': data.get('winner_count'),
-            'project': project.id
+            'item': self.data.get('item'),
+            'count': self.data.get('winner_count'),
+            'project': self.project.id
         }
         self._create_products()
+        self._generate_lucky_time()
 
         #TODO : 입금자명 따로 입력받는 api (기획수정)
-        project_info_serializer = ProjectDepositInfoRetrieveSerializer(project)
+        project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
 
-        # project 생성과 동시에 당첨 logic 자동 생성
-        logic = UserSelectLogic.objects.create(kind=1, project=project)
-        dt_hours = int((project.dead_at - project.start_at).total_seconds() / 60 / 60)
-        random_number = sorted(sample(range(0, dt_hours), data.get('winner_count') - 1))
-        last_random_number = sample(range(1, 25), 1)[0]
-        print(last_random_number)
-        for i in range(len(random_number)):
-            DateTimeLotteryResult.objects.create(lucky_time=project.start_at + datetime.timedelta(hours=random_number[i])
-                                                 , logic=logic)
-        DateTimeLotteryResult.objects.create(lucky_time=project.dead_at - datetime.timedelta(hours=last_random_number)
-                                             , logic=logic)
         return Response(project_info_serializer.data, status=status.HTTP_201_CREATED)
 
     def _create_products(self):
         serializer = ProductCreateSerializer(data=self.product_data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+
+    def _generate_lucky_time(self):
+        # project 생성과 동시에 당첨 logic 자동 생성
+        logic = UserSelectLogic.objects.create(kind=1, project=self.project)
+        dt_hours = int((self.project.dead_at - self.project.start_at).total_seconds() / 60 / 60)
+        random_hours = sorted(sample(range(0, dt_hours), self.data.get('winner_count') - 1))
+        bulk_datetime_lottery_result = []
+        for i in range(len(random_hours)):
+            bulk_datetime_lottery_result.append(DateTimeLotteryResult(
+                lucky_time=self.project.start_at + datetime.timedelta(hours=random_hours[i]),
+                logic=logic
+            ))
+        DateTimeLotteryResult.objects.create(bulk_datetime_lottery_result)
+        DateTimeLotteryResult.objects.create(
+            lucky_time=self.project.dead_at - datetime.timedelta(hours=self._last_day_random_hour()),
+            logic=logic
+        )
+
+    def _last_day_random_hour(self):
+        return sample(range(1, 25), 1)[0]
 
     def update(self, request, *args, **kwargs):
         """
