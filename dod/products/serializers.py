@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from products.models import Product
+from products.models import Product, Item
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
@@ -30,3 +30,24 @@ class ProductSimpleDashboardSerializer(serializers.ModelSerializer):
     def get_winner_count(self, obj):
         return obj.count
 
+
+class ItemRetrieveSerializer(serializers.ModelSerializer):
+    brand = serializers.SerializerMethodField()
+    thumbnail_image = serializers.SerializerMethodField()
+    discount_rate = serializers.SerializerMethodField()
+
+
+    class Meta:
+        model = Item
+        fields = ['id', 'brand', 'name', 'thumbnail_image', 'price', 'origin_price', 'discount_rate']
+
+    def get_brand(self, obj):
+        if obj.brand:
+            return obj.brand.name
+
+    def get_thumbnail_image(self, obj):
+        return obj.thumbnail.url
+
+    def get_discount_rate(self, obj):
+        discount_rate = round((obj.origin_price - obj.price) / obj.origin_price * 100)
+        return discount_rate

@@ -29,6 +29,7 @@ urlpatterns = [
 
     path('accounts/v1/', include('accounts.urls')),
     path('api/v1/', include('projects.urls')),
+    path('api/v1/', include('products.urls')),
     path('api/v1/', include('notice.urls')),
     path('api/v1/', include('core.urls')),
 

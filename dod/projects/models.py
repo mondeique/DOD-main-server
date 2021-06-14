@@ -17,5 +17,7 @@ class Project(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    is_active = models.BooleanField(default=True, help_text='프로젝트 유효성을 저장합니다.')
+
     def __str__(self):
         return '{}님의 프로젝트{}'.format(self.owner.phone, self.name)

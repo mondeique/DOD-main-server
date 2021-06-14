@@ -15,7 +15,7 @@ from logic.models import UserSelectLogic, DateTimeLotteryResult
 
 class ProjectViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, ]
-    queryset = Project.objects.all().select_related('owner')
+    queryset = Project.objects.filter(is_active=True).select_related('owner')
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -74,7 +74,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 lucky_time=self.project.start_at + datetime.timedelta(hours=random_hours[i]),
                 logic=logic
             ))
-        DateTimeLotteryResult.objects.create(bulk_datetime_lottery_result)
+        DateTimeLotteryResult.objects.bulk_create(bulk_datetime_lottery_result)
         DateTimeLotteryResult.objects.create(
             lucky_time=self.project.dead_at - datetime.timedelta(hours=self._last_day_random_hour()),
             logic=logic
@@ -114,7 +114,7 @@ class ProjectDashboardViewSet(viewsets.GenericViewSet,
                               mixins.ListModelMixin,
                               mixins.RetrieveModelMixin):
     permission_classes = [IsAuthenticated, ]
-    queryset = Project.objects.all()
+    queryset = Project.objects.filter(is_active=True)
     serializer_class = ProjectDashboardSerializer
 
     def list(self, request, *args, **kwargs):
