@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/v1/', include('projects.urls')),
     path('api/v1/', include('products.urls')),
     path('api/v1/', include('notice.urls')),
+    path('api/v1/', include('payment.urls')),
     path('api/v1/', include('core.urls')),
 
     # ckeditor
