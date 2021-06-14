@@ -146,7 +146,7 @@ class SMSViewSet(viewsets.GenericViewSet):
         remain_rewards_price = list(remain_rewards.values_list('product__item__price', flat=True))
         reward_weight = list(map(lambda x: round(1 / x * (sum(remain_rewards_price) / len(remain_rewards_price)))
                             , remain_rewards_price))
-        random_reward_id_by_weight = random.choices(remain_rewards_id, weights=reward_weight)
+        random_reward_id_by_weight = random.choices(remain_rewards_id, weights=reward_weight)[0]
         self.reward = reward_queryset.get(id=random_reward_id_by_weight)
 
     def _create_respondent(self):
