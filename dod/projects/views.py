@@ -109,6 +109,20 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(project)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def destroy(self, request, *args, **kwargs):
+        """
+        프로젝트 삭제 api
+        api: api/v1/project/<id>
+        method : DELETE
+        """
+        user = request.user
+        instance = self.get_object()
+        if instance.owner != user:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        instance.is_active = False
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class ProjectDashboardViewSet(viewsets.GenericViewSet,
                               mixins.ListModelMixin,

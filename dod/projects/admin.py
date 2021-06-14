@@ -13,7 +13,8 @@ class ProjectStaffadmin(admin.ModelAdmin):
                     'project_hash_key',
                     'start_at',
                     'dead_at',
-                    'status']
+                    'status',
+                    'is_active']
 
     search_fields = ['project_hash_key', 'name', 'owner__phone']
 
