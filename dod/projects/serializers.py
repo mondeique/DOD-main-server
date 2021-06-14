@@ -22,7 +22,7 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ['owner', 'winner_count', 'start_at', 'dead_at']
+        fields = ['owner', 'start_at', 'dead_at']
 
     def create(self, validated_data):
         validated_data['project_hash_key'] = generate_hash_key()

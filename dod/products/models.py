@@ -1,7 +1,14 @@
+import random
+import string
+
 from django.db import models
 
 # Create your models here.
 from projects.models import Project
+
+
+def generate_random_key(length=5):
+    return ''.join(random.choices(string.digits+string.ascii_letters, k=length))
 
 
 def item_thumb_directory_path(instance, filename):
@@ -9,7 +16,10 @@ def item_thumb_directory_path(instance, filename):
 
 
 def reward_img_directory_path(instance, filename):
-    return 'project/{}/item/{}/{}'.format(instance.product.project.project_hash_key, instance.product.item.name, instance.id)
+    return 'project/{}/item/{}/{}'.format(
+        instance.product.project.project_hash_key,
+        instance.product.item.name,
+        generate_random_key())
 
 
 class Brand(models.Model):
@@ -74,6 +84,7 @@ class Product(models.Model):
 class Reward(models.Model):
     """
     프로덕트에서 유저가 구매한 상품의 정보를 저장하는 모델입니다.
+    스태프가 채워야 합니다.
     """
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="rewards")
     reward_img = models.ImageField(upload_to=reward_img_directory_path)

@@ -1,3 +1,5 @@
+import random
+
 from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import status
@@ -117,13 +119,11 @@ class SMSViewSet(viewsets.GenericViewSet):
         # 여기까지가 유저 당첨확인 및 생성
 
         if self.is_win:
-
-            self.product = Product.objects.filter(project=self.project).first()
-            self.reward = self.product.rewards.filter(winner_id__isnull=True).first()
+            self._set_random_reward()
 
             mms_manager = MMSV1Manager()
             phone = self.data.get('phone')
-            mms_manager.set_content(self.product.item.name)
+            mms_manager.set_content(self.reward.product.item.name)
             if not mms_manager.send_mms(phone=phone, image_url=self.reward.reward_img.url):
                 return Response({'error_code': '네이버 문자 발송이 실패하였습니다.'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -131,12 +131,23 @@ class SMSViewSet(viewsets.GenericViewSet):
             lucky_time.is_used = True
             lucky_time.save()
 
-            # TODO: product 여러개..?
+            # TODO: 당첨자 안나온 상품 있으면 한번에 보내기
             self.reward.winner_id = self.respondent.id
             self.reward.save()
 
         return Response({'id': self.project.id,
                          'is_win': self.is_win}, status=status.HTTP_200_OK)
+
+    def _set_random_reward(self):
+        reward_queryset = Reward.objects.filter(winner_id__isnull=True) \
+            .select_related('product', 'product__item', 'product__project')
+        remain_rewards = reward_queryset.filter(product__project=self.project)
+        remain_rewards_id = list(remain_rewards.values_list('id', flat=True))
+        remain_rewards_price = list(remain_rewards.values_list('product__item__price', flat=True))
+        reward_weight = list(map(lambda x: round(1 / x * (sum(remain_rewards_price) / len(remain_rewards_price)))
+                            , remain_rewards_price))
+        random_reward_id_by_weight = random.choices(remain_rewards_id, weights=reward_weight)
+        self.reward = reward_queryset.get(id=random_reward_id_by_weight)
 
     def _create_respondent(self):
         self.project = Project.objects.get(project_hash_key=self.data.get('project_key'))

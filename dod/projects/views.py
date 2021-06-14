@@ -37,20 +37,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
         api: api/v1/project
         method : POST
         :data:
-        {'winner_count', 'start_at', 'dead_at', 'item'}
+        {'start_at', 'dead_at',
+        items': [{'item':'item.id', 'count':'3'}, {'item':'', 'count':''}]}
         :return: {'id', 'name', 'winner_count', 'total_price'}
         """
         self.data = request.data.copy()
-
         serializer = self.get_serializer(data=self.data)
         serializer.is_valid(raise_exception=True)
         self.project = serializer.save()
-
-        self.product_data = {
-            'item': self.data.get('item'),
-            'count': self.data.get('winner_count'),
-            'project': self.project.id
-        }
         self._create_products()
         self._generate_lucky_time()
 
@@ -59,15 +53,31 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Response(project_info_serializer.data, status=status.HTTP_201_CREATED)
 
     def _create_products(self):
-        serializer = ProductCreateSerializer(data=self.product_data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        items = self.data.get('items')
+        if not items:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        winner_count = 0
+        for val in items:
+            self.product_data = {
+                'item': val.get('item'),
+                'count': val.get('count'),
+                'project': self.project.id
+            }
+            winner_count += val.get('count')
+            serializer = ProductCreateSerializer(data=self.product_data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        self.project.winner_count = winner_count
+        self.project.save()
+
+    def _create_user_deposit_log(self):
+        pass
 
     def _generate_lucky_time(self):
         # project 생성과 동시에 당첨 logic 자동 생성
         logic = UserSelectLogic.objects.create(kind=1, project=self.project)
         dt_hours = int((self.project.dead_at - self.project.start_at).total_seconds() / 60 / 60)
-        random_hours = sorted(sample(range(0, dt_hours), self.data.get('winner_count') - 1))
+        random_hours = sorted(sample(range(0, dt_hours), self.project.winner_count - 1))
         bulk_datetime_lottery_result = []
         for i in range(len(random_hours)):
             bulk_datetime_lottery_result.append(DateTimeLotteryResult(
