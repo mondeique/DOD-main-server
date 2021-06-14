@@ -35,7 +35,7 @@ class ProjectUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ['name', 'start_at', 'dead_at']
+        fields = ['start_at', 'dead_at']
 
 
 class ProjectDepositInfoRetrieveSerializer(serializers.ModelSerializer):

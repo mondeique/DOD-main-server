@@ -1,3 +1,5 @@
+from operator import itemgetter
+
 from django.db import transaction
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
@@ -5,6 +7,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 import datetime
 from rest_framework.views import APIView
+
+from payment.models import UserDepositLog
 from products.serializers import ProductCreateSerializer
 from projects.models import Project
 from projects.serializers import ProjectCreateSerializer, ProjectDepositInfoRetrieveSerializer, ProjectUpdateSerializer, \
@@ -47,6 +51,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         self.project = serializer.save()
         self._create_products()
         self._generate_lucky_time()
+        self._create_user_deposit_log()
 
         project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
 
@@ -71,7 +76,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
         self.project.save()
 
     def _create_user_deposit_log(self):
-        pass
+        UserDepositLog.objects.create(project=self.project, total_price=self._calculate_total_price())
+
+    def _calculate_total_price(self):
+        counts = self.project.products.all().values_list('count', flat=True)
+        prices = self.project.products.all().values_list('item__price', flat=True)
+        mul_price = list(map(lambda x,y: x*y, counts, prices))
+        total_price = 0
+        for i in mul_price:
+            total_price += int(i)
+        return total_price
 
     def _generate_lucky_time(self):
         # project 생성과 동시에 당첨 logic 자동 생성
@@ -93,18 +107,45 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def _last_day_random_hour(self):
         return sample(range(1, 25), 1)[0]
 
+    @transaction.atomic
     def update(self, request, *args, **kwargs):
         """
         프로젝트 업데이트 api
-        name, created_at, dead_at 중 원하는 데이터 입력하여 PUT 요청하면 됨
-        * 상품의 관련된 수정은 구현하지 않음 ex: 상품바꾸기, 상품 추가하기(winner_count), 환불하기 등 (문의하기로 처리)
+        TODO name만 따로 업데이트하는 함수
+        items, start_at, dead_at 중 원하는 데이터 입력하여 PUT 요청하면 됨
         api: api/v1/project/<id>
         method : PUT
         :data:
-        {'created_at', 'dead_at', 'name'}
+        {'start_at', 'dead_at', 'items':[]}
         :return: {'id', 'name'', 'total_price'}
         """
-        return super(ProjectViewSet, self).update(request, args, kwargs)
+        items = request.data.get('items')
+        if not items:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        self.data = request.data.copy()
+        serializer = self.get_serializer(self.get_object(), data=self.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.project = serializer.save()
+
+        previous_items = list(self.project.products.values('item', 'count'))
+        previous_items = sorted(previous_items, key=itemgetter('item'))
+        present_items = sorted(items, key=itemgetter('item'))
+        if previous_items == present_items:
+            # item 변화 없는 경우
+            project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
+            return Response(project_info_serializer.data, status=status.HTTP_206_PARTIAL_CONTENT)
+        else:
+            # delete previous data
+            self.project.products.all().delete()
+            self.project.select_logics.all().delete()
+            self.project.deposit_logs.all().delete()
+            # create new data
+            self._create_products()
+            self._generate_lucky_time()
+            self._create_user_deposit_log()
+            project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
+            return Response(project_info_serializer.data, status=status.HTTP_206_PARTIAL_CONTENT)
 
     @action(methods=['get'], detail=True)
     def link_notice(self, request, *args, **kwargs):
@@ -132,6 +173,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
         instance.is_active = False
         instance.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(methods=['put'], detail=True)
+    def depositor(self, request, *args, **kwargs):
+        project = self.get_object()
+        if project.owner != request.user:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        depositor = request.data.get('depositor')
+        project.deposit_logs.update(depositor=depositor)
+        return Response(status=status.HTTP_206_PARTIAL_CONTENT)
 
 
 class ProjectDashboardViewSet(viewsets.GenericViewSet,

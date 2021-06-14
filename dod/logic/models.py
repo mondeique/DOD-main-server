@@ -25,7 +25,7 @@ class DateTimeLotteryResult(models.Model):
     시간으로 추첨하는 로직의 '시간정보'를 저장합니다.
     """
     lucky_time = models.DateTimeField()
-    logic = models.ForeignKey(UserSelectLogic, null=True, on_delete=models.SET_NULL, related_name='lottery_times')
+    logic = models.ForeignKey(UserSelectLogic, null=True, on_delete=models.CASCADE, related_name='lottery_times')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_used = models.BooleanField(default=False)

@@ -16,7 +16,7 @@ class UserDepositLog(models.Model):
     다음페이지인 무통장입금 안내 페이지에서 입금자명을 입력시 업데이트합니다.
     * 현재 프로젝트 생성 api 에 엮어있으므로 추후 PG 결제 추가시 삭제필요
     """
-    project = models.ForeignKey(Project, null=True, on_delete=models.SET_NULL)
+    project = models.ForeignKey(Project, null=True, on_delete=models.SET_NULL, related_name='deposit_logs')
     total_price = models.IntegerField(help_text="가격은 서버에서 계산합니다.")
     depositor = models.CharField(max_length=30, null=True, blank=True, help_text="예금주입니다.")
     created_at = models.DateTimeField(auto_now_add=True)
