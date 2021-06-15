@@ -267,7 +267,6 @@ class PastProjectViewSet(viewsets.GenericViewSet,
         return super(PastProjectViewSet, self).retrieve(request, args, kwargs)
 
 
-
 class LinkRouteAPIView(APIView):
     permission_classes = [AllowAny]
     """
@@ -277,7 +276,7 @@ class LinkRouteAPIView(APIView):
     """
     def get(self, request, *args, **kwargs):
         """
-        api : /link/<slug>
+        api : /check_link/<slug>
         return : {'id', 'dead_at', 'is_started', 'is_done', 'status'}
         시작되지 않았을때, 종료되었을 때, 결제 승인이 되지 않았을 때 접속시 페이지 기획이 필요합니다.
         """

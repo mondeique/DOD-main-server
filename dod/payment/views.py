@@ -35,7 +35,7 @@ class DepositSuccessAPIView(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
         if project.owner != request.user:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-        message = "[입금확인요청] \n" \
+        message = "\n [입금확인요청] \n" \
                   "전화번호: {} \n" \
                   "프로젝트명: {} \n" \
                   "입금자명: {}\n" \

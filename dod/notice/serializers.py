@@ -21,3 +21,7 @@ class DodExplanationSerializer(serializers.ModelSerializer):
         return obj.icon.url
 
 
+class ThirdPartyMenuListSerializer(serializers.Serializer):
+    faq = serializers.SerializerMethodField()
+    notice = serializers.SerializerMethodField()
+    suggestion = serializers.SerializerMethodField()

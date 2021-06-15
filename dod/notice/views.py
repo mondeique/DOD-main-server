@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 # Create your views here.
 from rest_framework import viewsets, mixins
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from notice.models import MainPageDodExplanation
@@ -24,3 +24,13 @@ class DodExplanationAPIView(viewsets.GenericViewSet,
         """
 
         return super(DodExplanationAPIView, self).list(request, args, kwargs)
+
+
+class ThirdPartyMenuListAPIView(viewsets.GenericViewSet,
+                      mixins.ListModelMixin):
+    queryset = None
+    serializer_class = None
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        pass

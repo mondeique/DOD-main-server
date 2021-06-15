@@ -66,11 +66,11 @@ class ProjectDashboardSerializer(serializers.ModelSerializer):
     products = serializers.SerializerMethodField()
     total_respondent = serializers.SerializerMethodField()
     dead_at = serializers.SerializerMethodField()
-    is_done = serializers.SerializerMethodField()
+    project_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
-        fields = ['id', 'name', 'total_respondent', 'products', 'dead_at', 'is_done', 'status']
+        fields = ['id', 'name', 'total_respondent', 'products', 'start_at', 'dead_at', 'project_status']
 
     def get_total_respondent(self, obj):
         count = obj.respondents.all().count()
@@ -81,8 +81,14 @@ class ProjectDashboardSerializer(serializers.ModelSerializer):
         serializer = ProductSimpleDashboardSerializer(products, many=True)
         return serializer.data
 
+    def get_start_at(self, obj):  # humanize
+        return obj.dead_at.strftime("%m월%d일부터")
+
     def get_dead_at(self, obj):  # humanize
-        return obj.dead_at.strftime("%Y년 %m월 %d일까지")
+        return obj.dead_at.strftime("%m월%d일까지")
+
+    def get_project_status(self, obj):
+        pass
 
     def get_is_done(self, obj):
         now = datetime.datetime.now()
