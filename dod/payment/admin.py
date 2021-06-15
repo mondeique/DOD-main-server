@@ -5,7 +5,7 @@ from payment.models import UserDepositLog, DepositWithoutBankbookShortCutLink, D
 
 
 class UserDepositLogStaffAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'project', 'total_price', 'depositor', 'confirm']
+    list_display = ['pk', 'project', 'total_price', 'depositor', 'confirm', 'created_at']
     list_editable = ['confirm']
 
 
