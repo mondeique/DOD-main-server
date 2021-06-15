@@ -13,7 +13,7 @@ from accounts.serializers import SMSSignupPhoneCheckSerializer, SMSSignupPhoneCo
 from core.sms.utils import SMSV2Manager, MMSV1Manager
 from projects.models import Project
 from products.models import Product, Reward
-from respondent.models import RespondentPhoneConfirm
+from respondent.models import RespondentPhoneConfirm, Respondent
 from respondent.serializers import SMSRespondentPhoneCheckSerializer, RespondentCreateSerializer, SMSRespondentPhoneConfirmSerializer
 
 
@@ -101,7 +101,7 @@ class SMSViewSet(viewsets.GenericViewSet):
     @action(methods=['post'], detail=False)
     def respondent_confirm(self, request, *args, **kwargs):
         """
-        설문자  인증번호 인증 api입니다. 인증시 서버에서 5-10초후 reward MMS를 발송합니다.
+        설문자 인증번호 인증 api입니다. 인증시 서버에서 5-10초후 reward MMS를 발송합니다.
         api: api/v1/sms/respondent_confirm
         method: POST
         전화번호, 인증번호 와 url에서 파싱한 project_key를 담아서 보내주어야 합니다.
@@ -114,6 +114,9 @@ class SMSViewSet(viewsets.GenericViewSet):
         if not Project.objects.filter(project_hash_key=data.get('project_key')).exists():
             return Response(status=status.HTTP_404_NOT_FOUND)
         self.data = serializer.validated_data
+        # 중복 응모 불
+        if self._check_respondent_overlap():
+            return Response(status=status.HTTP_403_FORBIDDEN)
         self._create_respondent()
 
         # 여기까지가 유저 당첨확인 및 생성
@@ -149,11 +152,14 @@ class SMSViewSet(viewsets.GenericViewSet):
         random_reward_id_by_weight = random.choices(remain_rewards_id, weights=reward_weight)[0]
         self.reward = reward_queryset.get(id=random_reward_id_by_weight)
 
-    def _create_respondent(self):
+    def _check_respondent_overlap(self):
         self.project = Project.objects.get(project_hash_key=self.data.get('project_key'))
         self.phone_confirm = RespondentPhoneConfirm.objects.filter(phone=self.data.get('phone'),
                                                                    confirm_key=self.data.get('confirm_key'),
                                                                    is_confirmed=True).first()
+        return Respondent.objects.filter(project=self.project, phone_confirm=self.phone_confirm).exists()
+
+    def _create_respondent(self):
         self.is_win = self._am_i_winner()
         data = {'project': self.project.id,
                 'phone_confirm': self.phone_confirm.id,
@@ -164,6 +170,9 @@ class SMSViewSet(viewsets.GenericViewSet):
         self.respondent = serializer.save()
 
     def _am_i_winner(self):
+        # 프로젝트 생성자는 무조건 꽝!
+        if self.phone_confirm.phone == self.project.owner.phone:
+            return False
         self.lucky_times = self.project.select_logics.last().lottery_times.filter(is_used=False)
         now = datetime.datetime.now()
         self.valid_lucky_times = self.lucky_times.filter(lucky_time__lte=now)
@@ -172,4 +181,5 @@ class SMSViewSet(viewsets.GenericViewSet):
             return False
         else:
             return True
+
 
