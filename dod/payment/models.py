@@ -26,6 +26,13 @@ class UserDepositLog(models.Model):
     class Meta:
         verbose_name_plural = '유저 입금내역'
 
+    def save(self, *args, **kwargs):
+        super(UserDepositLog, self).save(*args, **kwargs)
+        if self.confirm:
+            project = self.project
+            project.status = True
+            project.save()
+
 
 class DepositWithoutBankbook(models.Model):
     """
