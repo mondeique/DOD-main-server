@@ -22,11 +22,24 @@ class LinkCopyNotice(models.Model):
         verbose_name_plural = '링크복사 안내'
 
 
+class NoticeLink(models.Model):
+    """
+    공지사항 노션 링크입니다.
+    """
+    link = models.URLField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = '공지사항-노션링크'
+
+
 class FAQLink(models.Model):
     """
     자주묻는 질문 노션 링크입니다.
     """
-    notion_link = models.URLField()
+    link = models.URLField()
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -37,15 +50,28 @@ class FAQLink(models.Model):
 
 class ContactLink(models.Model):
     """
-    문의하기 카카오톡 링크입니다.
+    문의하기 링크입니다.
     """
-    kakao_link = models.URLField()
+    link = models.URLField()
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name_plural = '문의하기-카카오링크'
+        verbose_name_plural = '문의하기-링크'
+
+
+class SuggestionLink(models.Model):
+    """
+    건의하기 링크입니다.
+    """
+    link = models.URLField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = '건의하기-링크'
 
 
 class MainPageDodExplanation(models.Model):

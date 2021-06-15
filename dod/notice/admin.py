@@ -7,12 +7,20 @@ class LinkCopyNoticeStaffAdmin(admin.ModelAdmin):
     list_display = ['pk', 'title', 'is_active', 'created_at']
 
 
+class NoticeLinkStaffAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'link', 'is_active', 'created_at']
+
+
 class FAQLinkStaffAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'notion_link', 'is_active', 'created_at']
+    list_display = ['pk', 'link', 'is_active', 'created_at']
 
 
 class ContactLinkStaffAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'kakao_link', 'is_active', 'created_at']
+    list_display = ['pk', 'link', 'is_active', 'created_at']
+
+
+class SuggestionLinkStaffAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'link', 'is_active', 'created_at']
 
 
 class MainPageDodExplanationStaffAdmin(admin.ModelAdmin):
