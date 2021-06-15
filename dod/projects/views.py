@@ -180,7 +180,21 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if project.owner != request.user:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         depositor = request.data.get('depositor')
+        if not depositor:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         project.deposit_logs.update(depositor=depositor)
+        return Response(status=status.HTTP_206_PARTIAL_CONTENT)
+
+    @action(methods=['put'], detail=True)
+    def set_name(self, request, *args, **kwargs):
+        project = self.get_object()
+        if project.owner != request.user:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        name = request.data.get('name')
+        if not name:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        project.name = name
+        project.save()
         return Response(status=status.HTTP_206_PARTIAL_CONTENT)
 
 
