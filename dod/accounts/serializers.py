@@ -1,3 +1,4 @@
+import datetime
 import random
 import string
 import uuid
@@ -127,14 +128,30 @@ class TokenSerializer(serializers.ModelSerializer):
 
 class UserInfoSerializer(serializers.ModelSerializer):
     token = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
+    has_project = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'token', 'name']
+        fields = ['id', 'token', 'name', 'has_project']
 
     def get_token(self, user):
         token = create_token(Token, user)
         return token.key
+
+    def get_name(self, user):
+        phone = user.phone[7:]
+        return phone
+
+    def get_has_project(self, user):
+        projects = user.projects.filter(is_active=True)
+        now = datetime.datetime.now()
+        buffer_day = now - datetime.timedelta(days=2)
+        remain_projects = projects.filter(dead_at__gte=buffer_day)
+        if remain_projects.exists():
+            return True
+        else:
+            return False
 
 
 class SMSSignupPhoneCheckSerializer(serializers.Serializer):
