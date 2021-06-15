@@ -267,10 +267,10 @@ class PastProjectViewSet(viewsets.GenericViewSet,
         return super(PastProjectViewSet, self).retrieve(request, args, kwargs)
 
 
-class LinkRouteAPIView(APIView):
+class ProjectValidCheckAPIView(APIView):
     permission_classes = [AllowAny]
     """
-    클라에서 이 링크로 접속하면 핸드폰 인증 페이지를 띄움.
+    클라에서 프로젝트 활성화 여부를 체크하는 api.
     또는 추후 html로 한다면, 이 링크로 접속시 해당 html 띄워야 함(Template 처럼)
     현재는 클라에서 호스팅한다는 가정 하에
     """

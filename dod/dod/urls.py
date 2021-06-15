@@ -18,15 +18,14 @@ from django.contrib import admin
 from django.urls import path, include
 
 from custom_manage.sites import superadmin_panel, staff_panel
-from payment.views import DepositSuccessAPIView
-from projects.views import LinkRouteAPIView
+from projects.views import ProjectValidCheckAPIView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('superadmin/', superadmin_panel.urls),
     path('staff/', staff_panel.urls, name='staff'),
 
-    url(r'^link/(?P<slug>[-\w]+)/$', LinkRouteAPIView.as_view()),
+    url(r'^check_link/(?P<slug>[-\w]+)/$', ProjectValidCheckAPIView.as_view()),
 
     path('accounts/v1/', include('accounts.urls')),
     path('api/v1/', include('projects.urls')),

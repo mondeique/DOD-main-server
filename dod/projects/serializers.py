@@ -101,30 +101,22 @@ class ProjectDashboardSerializer(serializers.ModelSerializer):
 
 
 class SimpleProjectInfoSerializer(serializers.ModelSerializer):
-    dead_at = serializers.SerializerMethodField()
-    is_started = serializers.SerializerMethodField()
-    is_done = serializers.SerializerMethodField()
+    project_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
-        fields = ['id', 'dead_at', 'is_started', 'is_done', 'status']
+        fields = ['id', 'project_status']
 
-    def get_dead_at(self, obj):  # humanize
-        return obj.dead_at.strftime("%Y년 %m월 %d일까지")
-
-    def get_is_started(self, obj):
-        now = datetime.datetime.now()
-        if obj.start_at < now:
-            return True
-        else:
-            return False
-
-    def get_is_done(self, obj):
+    def get_project_status(self, obj):  # humanize
         now = datetime.datetime.now()
         if obj.dead_at < now:
-            return True
+            return False  # 종료됨
+        elif not obj.status:
+            return False  # 입금대기중
+        elif obj.start_at > now:
+            return False  # 프로젝트 대기중
         else:
-            return False
+            return True  # 진행중
 
 
 class ProjectLinkSerializer(serializers.ModelSerializer):
