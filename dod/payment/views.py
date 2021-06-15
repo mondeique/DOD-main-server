@@ -41,9 +41,9 @@ class DepositSuccessAPIView(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
                   "입금자명: {}\n" \
                   "결제금액: {}원\n" \
                   "--------------------".format(project.owner.phone,
-                                     project.name,
-                                     project.deposit_logs.first().depositor,
-                                     project.deposit_logs.first().total_price)
+                                                project.name,
+                                                project.deposit_logs.first().depositor,
+                                                project.deposit_logs.first().total_price)
         deposit_success_slack_message(message)
         return Response(status=status.HTTP_200_OK)
 

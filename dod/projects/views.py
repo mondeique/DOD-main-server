@@ -8,6 +8,7 @@ from rest_framework.response import Response
 import datetime
 from rest_framework.views import APIView
 
+from core.slack import deposit_temp_slack_message
 from payment.models import UserDepositLog
 from products.serializers import ProductCreateSerializer
 from projects.models import Project
@@ -183,6 +184,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if not depositor:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         project.deposit_logs.update(depositor=depositor)
+        message = "\n [입금자명을 입력했습니다.] \n" \
+                  "전화번호: {} \n" \
+                  "입금자명: {}\n" \
+                  "결제금액: {}원\n" \
+                  "--------------------".format(project.owner.phone,
+                                                project.deposit_logs.first().depositor,
+                                                project.deposit_logs.first().total_price)
+        deposit_temp_slack_message(message)
         return Response(status=status.HTTP_206_PARTIAL_CONTENT)
 
     @action(methods=['put'], detail=True)
