@@ -19,7 +19,7 @@ class LinkCopyNotice(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name_plural = '링크복사 안내'
+        verbose_name_plural = '[1] 링크복사 안내'
 
 
 class NoticeLink(models.Model):
@@ -32,7 +32,7 @@ class NoticeLink(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name_plural = '공지사항-노션링크'
+        verbose_name_plural = '[4] 공지사항-링크'
 
 
 class FAQLink(models.Model):
@@ -45,7 +45,7 @@ class FAQLink(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name_plural = '자주묻는질문-노션링크'
+        verbose_name_plural = '[3] 자주묻는질문-링크'
 
 
 class ContactLink(models.Model):
@@ -58,7 +58,7 @@ class ContactLink(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name_plural = '문의하기-링크'
+        verbose_name_plural = '[6] 문의하기-링크'
 
 
 class SuggestionLink(models.Model):
@@ -71,7 +71,33 @@ class SuggestionLink(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name_plural = '건의하기-링크'
+        verbose_name_plural = '[5] 건의하기-링크'
+
+
+class PrivacyPolicyLink(models.Model):
+    """
+    개인정보 처리방침 링크입니다.
+    """
+    link = models.URLField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = '[7] 개인정보처리방침-링크'
+
+
+class TermsOfServiceLink(models.Model):
+    """
+    이용약관 링크입니다.
+    """
+    link = models.URLField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = '[8] 이용약관-링크'
 
 
 class MainPageDodExplanation(models.Model):
@@ -83,4 +109,4 @@ class MainPageDodExplanation(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name_plural = '디오디설명'
+        verbose_name_plural = '[2] 디오디설명'

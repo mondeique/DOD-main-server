@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from notice.models import LinkCopyNotice, MainPageDodExplanation
+from notice.models import LinkCopyNotice, MainPageDodExplanation, FAQLink, NoticeLink, SuggestionLink, \
+    PrivacyPolicyLink, TermsOfServiceLink
 
 
 class LinkNoticeSerializer(serializers.ModelSerializer):
@@ -25,3 +26,38 @@ class ThirdPartyMenuListSerializer(serializers.Serializer):
     faq = serializers.SerializerMethodField()
     notice = serializers.SerializerMethodField()
     suggestion = serializers.SerializerMethodField()
+    privacy_policy = serializers.SerializerMethodField()
+    terms_of_service = serializers.SerializerMethodField()
+
+    class Meta:
+        fields = ['faq']
+
+    def get_faq(self):
+        if FAQLink.objects.filter(is_active=True).exists():
+            return FAQLink.objects.filter(is_active=True).last().link
+        else:
+            return None
+
+    def get_notice(self):
+        if NoticeLink.objects.filter(is_active=True).exists():
+            return NoticeLink.objects.filter(is_active=True).last().link
+        else:
+            return None
+
+    def get_suggestion(self):
+        if SuggestionLink.objects.filter(is_active=True).exists():
+            return SuggestionLink.objects.filter(is_active=True).last().link
+        else:
+            return None
+
+    def get_privacy_policy(self):
+        if PrivacyPolicyLink.objects.filter(is_active=True).exists():
+            return PrivacyPolicyLink.objects.filter(is_active=True).last().link
+        else:
+            return None
+
+    def get_terms_of_service(self):
+        if TermsOfServiceLink.objects.filter(is_active=True).exists():
+            return TermsOfServiceLink.objects.filter(is_active=True).last().link
+        else:
+            return None
