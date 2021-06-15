@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from notice.models import MainPageDodExplanation, FAQLink, NoticeLink, SuggestionLink, PrivacyPolicyLink, \
-    TermsOfServiceLink
+    TermsOfServiceLink, ContactLink
 from notice.serializers import DodExplanationSerializer, ThirdPartyMenuListSerializer
 
 
@@ -43,14 +43,16 @@ class ThirdPartyMenuListAPIView(viewsets.GenericViewSet,
         suggestion = None if not SuggestionLink.objects.filter(is_active=True).exists()\
             else SuggestionLink.objects.filter(is_active=True).last().link
 
-        privacy_policy = None if not PrivacyPolicyLink.objects.filter(is_active=True).exists() \
-            else PrivacyPolicyLink.objects.filter(is_active=True).last().link
+        contact = None if not ContactLink.objects.filter(is_active=True).exists() \
+            else ContactLink.objects.filter(is_active=True).last().link
 
-        terms_of_service = None if not TermsOfServiceLink.objects.filter(is_active=True).exists() \
-            else TermsOfServiceLink.objects.filter(is_active=True).last().link
+        # privacy_policy = None if not PrivacyPolicyLink.objects.filter(is_active=True).exists() \
+        #     else PrivacyPolicyLink.objects.filter(is_active=True).last().link
+        #
+        # terms_of_service = None if not TermsOfServiceLink.objects.filter(is_active=True).exists() \
+        #     else TermsOfServiceLink.objects.filter(is_active=True).last().link
 
         return Response({'faq': faq,
                          'notice': notice,
-                         'suggestion': suggestion,
-                         'privacy_policy': privacy_policy,
-                         'terms_of_service': terms_of_service}, status=status.HTTP_200_OK)
+                         'contact': contact,
+                         'suggestion': suggestion}, status=status.HTTP_200_OK)
