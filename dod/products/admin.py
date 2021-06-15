@@ -33,12 +33,15 @@ class RewardImageInline(admin.TabularInline):
 class ProductStaffAdmin(admin.ModelAdmin):
     list_display = ['pk', 'project', 'payment_confirm', 'item', 'count', 'total_price', 'created_at']
     inlines = [RewardImageInline]
+    search_fields = ['project', 'total_price']
 
     def total_price(self, obj):
         return obj.item.price * obj.count
 
     def payment_confirm(self, obj):
         return obj.project.status
+
+    payment_confirm.boolean = True
 
 
 class RewardStaffAdmin(admin.ModelAdmin):

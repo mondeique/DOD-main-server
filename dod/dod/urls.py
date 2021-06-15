@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 from custom_manage.sites import superadmin_panel, staff_panel
+from payment.views import DepositSuccessAPIView
 from projects.views import LinkRouteAPIView
 
 urlpatterns = [
