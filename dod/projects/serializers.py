@@ -130,7 +130,7 @@ class ProjectLinkSerializer(serializers.ModelSerializer):
     def get_url(self, obj):
         hash_key = obj.project_hash_key
         # url = 'https://d-o-d.io/link/{}'.format(hash_key)
-        url = 'http://3.36.156.224:8000/link/{}'.format(hash_key)
+        url = 'http://172.30.1.17:3000/link/{}'.format(hash_key)
         return url
 
     def get_link_notice(self, obj):
