@@ -216,7 +216,7 @@ class ProjectDashboardViewSet(viewsets.GenericViewSet,
                         {"id", "item_thumbnail", "present_winner_count", "winner_count"},
                          {}
                        ],
-          "dead_at", "is_done", "status"
+          "dead_at", "start_at", "project_status"
           },
         {
         ...

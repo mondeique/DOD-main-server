@@ -65,6 +65,7 @@ class ProjectDepositInfoRetrieveSerializer(serializers.ModelSerializer):
 class ProjectDashboardSerializer(serializers.ModelSerializer):
     products = serializers.SerializerMethodField()
     total_respondent = serializers.SerializerMethodField()
+    start_at = serializers.SerializerMethodField()
     dead_at = serializers.SerializerMethodField()
     project_status = serializers.SerializerMethodField()
 
@@ -82,20 +83,21 @@ class ProjectDashboardSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def get_start_at(self, obj):  # humanize
-        return obj.dead_at.strftime("%m월%d일부터")
+        return obj.start_at.strftime("%m월 %d일")
 
     def get_dead_at(self, obj):  # humanize
-        return obj.dead_at.strftime("%m월%d일까지")
+        return obj.dead_at.strftime("%m월 %d일")
 
     def get_project_status(self, obj):
-        pass
-
-    def get_is_done(self, obj):
         now = datetime.datetime.now()
         if obj.dead_at < now:
-            return True
+            return 999  # 종료됨
+        elif not obj.status:
+            return 200  # 입금대기중
+        elif obj.start_at > now:
+            return 300  # 프로젝트 대기중
         else:
-            return False
+            return 100  # 진행중
 
 
 class SimpleProjectInfoSerializer(serializers.ModelSerializer):
