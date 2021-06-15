@@ -12,7 +12,7 @@ from payment.models import UserDepositLog
 from products.serializers import ProductCreateSerializer
 from projects.models import Project
 from projects.serializers import ProjectCreateSerializer, ProjectDepositInfoRetrieveSerializer, ProjectUpdateSerializer, \
-    ProjectDashboardSerializer, SimpleProjectInfoSerializer, ProjectLinkSerializer
+    ProjectDashboardSerializer, SimpleProjectInfoSerializer, ProjectLinkSerializer, PastProjectSerializer
 from random import sample
 from logic.models import UserSelectLogic, DateTimeLotteryResult
 
@@ -195,23 +195,20 @@ class ProjectDashboardViewSet(viewsets.GenericViewSet,
         """
         api: api/v1/dashboard/
         method: GET
-        pagination 됨.
         :return
+        [
+          {"id", "name", "total_respondent",
+            "products":[
+                        {"id", "item_thumbnail", "present_winner_count", "winner_count"},
+                         {}
+                       ],
+          "dead_at", "is_done", "status"
+          },
         {
-        "count", "next", "previous",
-        "results": [
-                        {"id", "name", "total_respondent",
-                        "products":
-                                [
-                                "id", "item_thumbnail", "present_winner_count", "winner_count"
-                                ],
-                        "dead_at", "is_done", "status"
-                        },
-                        {
-                        ...
-                        }
-                    ]
+        ...
         }
+        ]
+
         """
         user = request.user
         now = datetime.datetime.now()
@@ -227,6 +224,34 @@ class ProjectDashboardViewSet(viewsets.GenericViewSet,
         pagination 안됨(조회이기 떄문).
         """
         return super(ProjectDashboardViewSet, self).retrieve(request, args, kwargs)
+
+
+class PastProjectViewSet(viewsets.GenericViewSet,
+                         mixins.ListModelMixin,
+                         mixins.RetrieveModelMixin):
+    permission_classes = [IsAuthenticated]
+    queryset = Project.objects.filter(is_active=True)
+    serializer_class = PastProjectSerializer
+
+    def list(self, request, *args, **kwargs):
+        """
+        api: api/v1/last-project/
+        method: GET
+        """
+        user = request.user
+        now = datetime.datetime.now()
+        buffer_day = now - datetime.timedelta(days=2)
+        queryset = self.get_queryset().filter(owner=user).filter(dead_at__lte=buffer_day).order_by('-id')
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        api: api/v1/dashboard/<pk>
+        method: GET
+        """
+        return super(PastProjectViewSet, self).retrieve(request, args, kwargs)
+
 
 
 class LinkRouteAPIView(APIView):

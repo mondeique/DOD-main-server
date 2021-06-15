@@ -137,3 +137,44 @@ class ProjectLinkSerializer(serializers.ModelSerializer):
         link_notice = LinkCopyNotice.objects.filter(is_active=True).last()
         serializer = LinkNoticeSerializer(link_notice)
         return serializer.data
+
+
+class PastProjectSerializer(serializers.ModelSerializer):
+    """
+    마이페이지 또는 메뉴에서 지난프로젝트 데이터를 보내주는 serializer 입니다.
+    """
+    start_at = serializers.SerializerMethodField()
+    dead_at = serializers.SerializerMethodField()
+    total_price = serializers.SerializerMethodField()
+    total_respondent = serializers.SerializerMethodField()
+    end_winner_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Project
+        fields = ['id', 'name', 'total_respondent',
+                  'winner_count', 'start_at', 'dead_at',
+                  'total_price', 'end_winner_count']
+
+    def get_total_respondent(self, obj):
+        count = obj.respondents.all().count()
+        return count
+
+    def get_start_at(self, obj):
+        return obj.start_at.strftime("%Y년 %m월 %d일")
+
+    def get_dead_at(self, obj):  # humanize
+        return obj.dead_at.strftime("%Y년 %m월 %d일")
+
+    def get_total_price(self, obj):
+        products = obj.products.all()
+        total_price = 0
+        for product in products:
+            item_price = product.item.price
+            price = item_price * product.count
+            total_price = total_price + price
+        return total_price
+
+    def get_end_winner_count(self, obj):
+        return obj.respondents.filter(is_win=True).count()
+
+
