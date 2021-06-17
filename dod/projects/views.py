@@ -184,6 +184,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if not depositor:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         project.deposit_logs.update(depositor=depositor)
+        project.is_active = True
+        project.save()
         message = "\n [입금자명을 입력했습니다.] \n" \
                   "전화번호: {} \n" \
                   "입금자명: {}\n" \
