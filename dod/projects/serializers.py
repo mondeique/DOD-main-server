@@ -25,6 +25,12 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
         fields = ['owner', 'start_at', 'dead_at']
 
     def create(self, validated_data):
+        start_at = validated_data['start_at']
+        fixed_start_at = start_at + datetime.timedelta(hours=9)
+        dead_at = validated_data['dead_at']
+        fixed_dead_at = dead_at + datetime.timedelta(days=1, hours=8, minutes=59, seconds=59)
+        validated_data['start_at'] = fixed_start_at
+        validated_data['dead_at'] = fixed_dead_at
         validated_data['project_hash_key'] = generate_hash_key()
         validated_data['name'] = generate_project_name()
         project = super(ProjectCreateSerializer, self).create(validated_data)
@@ -36,6 +42,16 @@ class ProjectUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ['start_at', 'dead_at']
+
+    def update(self, instance, validated_data):
+        start_at = validated_data['start_at']
+        fixed_start_at = start_at + datetime.timedelta(hours=9)
+        dead_at = validated_data['dead_at']
+        fixed_dead_at = dead_at + datetime.timedelta(days=1, hours=8, minutes=59, seconds=59)
+        validated_data['start_at'] = fixed_start_at
+        validated_data['dead_at'] = fixed_dead_at
+        project = super(ProjectUpdateSerializer, self).update(instance, validated_data)
+        return project
 
 
 class ProjectDepositInfoRetrieveSerializer(serializers.ModelSerializer):

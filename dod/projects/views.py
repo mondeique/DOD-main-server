@@ -7,7 +7,6 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 import datetime
 from rest_framework.views import APIView
-
 from core.slack import deposit_temp_slack_message
 from payment.models import UserDepositLog
 from products.serializers import ProductCreateSerializer
@@ -112,7 +111,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         """
         프로젝트 업데이트 api
-        TODO name만 따로 업데이트하는 함수
         items, start_at, dead_at 중 원하는 데이터 입력하여 PUT 요청하면 됨
         api: api/v1/project/<id>
         method : PUT
