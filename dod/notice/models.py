@@ -7,6 +7,9 @@ from ckeditor_uploader.fields import RichTextUploadingField
 def icon_thumb_directory_path(instance, filename):
     return 'dod-explanation/icon/{}'.format(filename)
 
+def link_notice_directory_path(instance, filename):
+    return 'link-notice/{}'.format(filename)
+
 
 class LinkCopyNotice(models.Model):
     """
@@ -14,6 +17,7 @@ class LinkCopyNotice(models.Model):
     """
     title = models.CharField(max_length=40)
     content = RichTextUploadingField(help_text="rich_text_field로 이미지 등을 추가할 수 있습니다.")
+    image = models.ImageField(upload_to=link_notice_directory_path, null=True)
     is_active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

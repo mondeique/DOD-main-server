@@ -137,11 +137,11 @@ class SimpleProjectInfoSerializer(serializers.ModelSerializer):
 
 class ProjectLinkSerializer(serializers.ModelSerializer):
     url = serializers.SerializerMethodField()
-    link_notice = serializers.SerializerMethodField()
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
-        fields = ['url', 'link_notice']
+        fields = ['url', 'image_url']
 
     def get_url(self, obj):
         hash_key = obj.project_hash_key
@@ -149,10 +149,11 @@ class ProjectLinkSerializer(serializers.ModelSerializer):
         url = 'http://172.30.1.17:3000/link/{}'.format(hash_key)
         return url
 
-    def get_link_notice(self, obj):
+    def get_image_url(self, obj):
         link_notice = LinkCopyNotice.objects.filter(is_active=True).last()
-        serializer = LinkNoticeSerializer(link_notice)
-        return serializer.data
+        if link_notice.image:
+            return link_notice.image.url
+        return None
 
 
 class PastProjectSerializer(serializers.ModelSerializer):

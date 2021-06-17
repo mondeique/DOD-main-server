@@ -20,7 +20,7 @@ from logic.models import UserSelectLogic, DateTimeLotteryResult
 
 class ProjectViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, ]
-    queryset = Project.objects.filter(is_active=True).select_related('owner')
+    queryset = Project.objects.all().select_related('owner')
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -154,7 +154,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         api: api/v1/project/<id>/link_notice
         :return: {
             "url" ,
-            "link_notice" : {"id", "title", "content(html)"}
+            "link_notice" : {"id", "title", "image_(url)"}
         }
         """
         project = self.get_object()
