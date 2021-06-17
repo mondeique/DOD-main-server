@@ -28,13 +28,13 @@ SECRET_KEY = SETTING_DEV_DIC['SECRET_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['172.30.1.17', '127.0.0.1', '172.30.1.18', '3.36.156.224']
 
+INTERNAL_IPS = ('172.30.1.18')
 
 # Application definition
 
 INSTALLED_APPS = [
-    'corsheaders',
     'django.contrib.auth',
     'django.contrib.admin',
     'django.contrib.contenttypes',
@@ -57,6 +57,7 @@ SECONDS_APPS = [
 ]
 
 THIRD_APPS = [
+    'corsheaders',
     'ckeditor',
     'ckeditor_uploader',
     'rest_framework',
@@ -64,6 +65,7 @@ THIRD_APPS = [
     'pymysql',
     # 'wpadmin',
     'storages',
+    'debug_toolbar'
 ]
 
 INSTALLED_APPS += SECONDS_APPS + THIRD_APPS
@@ -78,7 +80,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'dod.urls'

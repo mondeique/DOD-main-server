@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 from custom_manage.sites import superadmin_panel, staff_panel
+from dod import settings
 from projects.views import ProjectValidCheckAPIView
 
 urlpatterns = [
@@ -37,3 +38,13 @@ urlpatterns = [
     # ckeditor
     path('ckeditor/', include('ckeditor_uploader.urls')),
 ]
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += [
+        path('__debug__/', include(debug_toolbar.urls)),
+
+        # For django versions before 2.0:
+        # url(r'^__debug__/', include(debug_toolbar.urls)),
+
+    ]

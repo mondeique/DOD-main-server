@@ -112,6 +112,9 @@ class SMSV2Manager():
         self.set_confirm_key()
         self.body['content'] = "[디오디] 당첨확인을 위해 인증번호 {}를 입력해 주세요.".format(self.confirm_key)
 
+    def deposit_confirm_content(self):
+        self.body['content'] = "[디오디] 프로젝트가 활성화되었습니다."
+
     def send_sms(self, phone):
         sms_dic = load_credential("sms")
         access_key = sms_dic['access_key']
