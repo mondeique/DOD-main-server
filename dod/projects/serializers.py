@@ -68,10 +68,14 @@ class ProjectDashboardSerializer(serializers.ModelSerializer):
     start_at = serializers.SerializerMethodField()
     dead_at = serializers.SerializerMethodField()
     project_status = serializers.SerializerMethodField()
+    depositor = serializers.SerializerMethodField()
+    total_price = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
-        fields = ['id', 'name', 'total_respondent', 'products', 'start_at', 'dead_at', 'project_status']
+        fields = ['id', 'name', 'total_respondent',
+                  'products', 'start_at', 'dead_at',
+                  'project_status', 'depositor', 'total_price']
 
     def get_total_respondent(self, obj):
         count = obj.respondents.all().count()
@@ -98,6 +102,18 @@ class ProjectDashboardSerializer(serializers.ModelSerializer):
             return 300  # 프로젝트 대기중
         else:
             return 100  # 진행중
+
+    def get_depositor(self, obj):
+        if obj.deposit_logs.exists():
+            return obj.deposit_logs.last().depositor
+        else:
+            return None
+
+    def get_total_price(self, obj):
+        if obj.deposit_logs.exists():
+            return obj.deposit_logs.last().total_price
+        else:
+            return 0
 
 
 class SimpleProjectInfoSerializer(serializers.ModelSerializer):
