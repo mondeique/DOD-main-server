@@ -104,7 +104,7 @@ class ClientRefererProjectValidateCheckViewSet(viewsets.GenericViewSet):
 
         api : d-o-d.io/api/v1/check/is_valid
         body : {'project_key', 'validator'}
-        return : 100: pass, 404: project is not valid, 999: validator is not valid
+        return : 100: pass, 400: project is not valid, 999: validator is not valid
         """
         data = request.data
         serializer = self.get_serializer(data=data)
@@ -120,9 +120,9 @@ class ClientRefererProjectValidateCheckViewSet(viewsets.GenericViewSet):
 
             self.project = Project.objects.filter(project_hash_key=data.get('project_key')).last()
             if not self.project or not self._validate_project():
-                return Response({'dod_status': 404})
+                return Response({'dod_status': 400})
 
-            return Response({'dod_status': 200})
+            return Response({'dod_status': 100})
 
     def _validate_project(self):
         now = datetime.datetime.now()
