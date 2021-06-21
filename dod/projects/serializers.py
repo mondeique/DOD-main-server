@@ -139,7 +139,7 @@ class SimpleProjectInfoSerializer(serializers.ModelSerializer):
         model = Project
         fields = ['id', 'project_status']
 
-    def get_project_status(self, obj):  # humanize
+    def get_project_status(self, obj):  # humanize #TODO: request validator check
         now = datetime.datetime.now()
         if obj.dead_at < now:
             return False  # 종료됨
@@ -159,7 +159,7 @@ class ProjectLinkSerializer(serializers.ModelSerializer):
         model = Project
         fields = ['url', 'image_url']
 
-    def get_url(self, obj):
+    def get_url(self, obj): # TODO : respondent validator view api
         hash_key = obj.project_hash_key
         # url = 'https://d-o-d.io/link/{}'.format(hash_key)
         url = 'http://172.30.1.17:3000/link/{}'.format(hash_key)

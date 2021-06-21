@@ -104,8 +104,8 @@ class SMSViewSet(viewsets.GenericViewSet):
         설문자 인증번호 인증 api입니다. 인증시 서버에서 5-10초후 reward MMS를 발송합니다.
         api: api/v1/sms/respondent_confirm
         method: POST
-        전화번호, 인증번호 와 url에서 파싱한 project_key를 담아서 보내주어야 합니다.
-        data: {'phone', 'confirm_key', 'project_key'}
+        전화번호, 인증번호 와 url에서 파싱한 project_key와 validator를 담아서 보내주어야 합니다.
+        data: {'phone', 'confirm_key', 'project_key', 'validator}
         """
         data = request.data
         serializer = self.get_serializer(data=data)

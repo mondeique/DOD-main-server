@@ -28,9 +28,21 @@ class Respondent(models.Model):
     is_win = models.BooleanField(default=False, help_text="Reward의 winner_id로 사용해도 되지만, 대시보드 쿼리 속도 향상을 위해 사용")
 
 
+class DeviceMetaInfo(models.Model):
+    """
+    React 에서 referer가 동작하지 않아, 서버에서 request.META 에서 검증후 redirect 합니다.
+    이때, 어뷰징의 위험이 있기 때문에 최대한 request.ip 와 request.META['HTTP_USER_AGENT'] 를 이용하여 유효한 토큰을 발행합니다.
+    토근은 referer 통과하면 무조건 발행합니다.
 
-
-
-
-
-
+    * 공용 wifi를 사용하면 ip로만은 유효성을 검증할 수 없기 때문에, 같은 ip 와 같은 HTTP_USER_AGENT 로 접속한 경우 토큰이 유효하다 판단합니다.
+    * 공용 wifi, 같은 device & 검색엔진(Chrome 등)을 사용할 확률은 적다 판단하여 이렇게 사용합니다.
+    ** 어뷰징 케이스
+        - referer 변조해서 들어왔을때 : 어차피 중복응모 불가하게 함.
+        - referer 변조 후 계속해서 토큰 발행하고, 공용 wifi 및 같은 검색엔진일 경우 : 막을방법 없음.
+    """
+    ip = models.TextField(max_length=100)
+    user_agent = models.TextField()
+    validator = models.CharField(max_length=30)
+    is_confirmed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

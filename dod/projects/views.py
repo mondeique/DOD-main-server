@@ -279,6 +279,7 @@ class PastProjectViewSet(viewsets.GenericViewSet,
 class ProjectValidCheckAPIView(APIView):
     permission_classes = [AllowAny]
     """
+    [DEPRECATED] -> Server단에서 referer 체크할때 같이 체크
     클라에서 프로젝트 활성화 여부를 체크하는 api.
     또는 추후 html로 한다면, 이 링크로 접속시 해당 html 띄워야 함(Template 처럼)
     현재는 클라에서 호스팅한다는 가정 하에
@@ -286,9 +287,10 @@ class ProjectValidCheckAPIView(APIView):
     def get(self, request, *args, **kwargs):
         """
         api : /check_link/<slug>
-        return : {'id', 'dead_at', 'is_started', 'is_done', 'status'}
+        return : {'id', 'project_status'}
         시작되지 않았을때, 종료되었을 때, 결제 승인이 되지 않았을 때 접속시 페이지 기획이 필요합니다.
         """
+        # TODO : Project check & validator check
         project_hash_key = kwargs['slug']
         project = Project.objects.filter(project_hash_key=project_hash_key).last()
         if not project:

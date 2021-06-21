@@ -10,8 +10,7 @@ payment_info.json
 .slack.json
 static
 settings/__init__.py
-savecategory.py
-savesampledata.py
+.config
 *.xlsx
 
 # Created by https://www.gitignore.io/api/macos,python,django
