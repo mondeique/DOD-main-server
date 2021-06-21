@@ -7,8 +7,13 @@ from ckeditor_uploader.fields import RichTextUploadingField
 def icon_thumb_directory_path(instance, filename):
     return 'dod-explanation/icon/{}'.format(filename)
 
+
 def link_notice_directory_path(instance, filename):
     return 'link-notice/{}'.format(filename)
+
+
+def menu_icon_directory_path(instance, filename):
+    return 'menu_icon/{}'.format(filename)
 
 
 class LinkCopyNotice(models.Model):
@@ -31,6 +36,7 @@ class NoticeLink(models.Model):
     공지사항 노션 링크입니다.
     """
     link = models.URLField()
+    icon = models.ImageField(null=True, upload_to=menu_icon_directory_path)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -44,6 +50,7 @@ class FAQLink(models.Model):
     자주묻는 질문 노션 링크입니다.
     """
     link = models.URLField()
+    icon = models.ImageField(null=True, upload_to=menu_icon_directory_path)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -57,6 +64,7 @@ class ContactLink(models.Model):
     문의하기 링크입니다.
     """
     link = models.URLField()
+    icon = models.ImageField(null=True, upload_to=menu_icon_directory_path)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -70,6 +78,7 @@ class SuggestionLink(models.Model):
     건의하기 링크입니다.
     """
     link = models.URLField()
+    icon = models.ImageField(null=True, upload_to=menu_icon_directory_path)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from notice.models import LinkCopyNotice, MainPageDodExplanation, FAQLink, NoticeLink, SuggestionLink, \
-    PrivacyPolicyLink, TermsOfServiceLink
+    PrivacyPolicyLink, TermsOfServiceLink, ContactLink
 
 
 class LinkNoticeSerializer(serializers.ModelSerializer):
@@ -20,6 +20,63 @@ class DodExplanationSerializer(serializers.ModelSerializer):
 
     def get_icon(self, obj):
         return obj.icon.url
+
+
+class MenuSerializer(serializers.ModelSerializer):
+    icon_src = serializers.SerializerMethodField()
+
+    class Meta:
+        fields = ['id', 'icon_src', 'link']
+        abstract = True
+
+    def get_icon_src(self, obj):
+        if obj.icon:
+            return obj.icon.url
+        return ''
+
+
+class FAQMenuSerializer(MenuSerializer):
+    title = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FAQLink
+        fields = MenuSerializer.Meta.fields + ['title']
+
+    def get_title(self, obj):
+        return '자주묻는질문'
+
+
+class NoticeMenuSerializer(MenuSerializer):
+    title = serializers.SerializerMethodField()
+
+    class Meta:
+        model = NoticeLink
+        fields = MenuSerializer.Meta.fields + ['title']
+
+    def get_title(self, obj):
+        return '공지사항'
+
+
+class SuggestionMenuSerializer(MenuSerializer):
+    title = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SuggestionLink
+        fields = MenuSerializer.Meta.fields + ['title']
+
+    def get_title(self, obj):
+        return '건의하기'
+
+
+class ContactMenuSerializer(MenuSerializer):
+    title = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ContactLink
+        fields = MenuSerializer.Meta.fields + ['title']
+
+    def get_title(self, obj):
+        return '문의하기'
 
 
 class ThirdPartyMenuListSerializer(serializers.Serializer):
