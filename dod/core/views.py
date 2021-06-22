@@ -115,13 +115,13 @@ class SMSViewSet(viewsets.GenericViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         self.data = serializer.validated_data
         # 중복 응모 불
-        if self._check_respondent_overlap():
+        if self._check_respondent_overlap(): # TODO : check
             return Response(status=status.HTTP_403_FORBIDDEN)
         self._create_respondent()
 
         # 여기까지가 유저 당첨확인 및 생성
 
-        if self.is_win:
+        if self.is_win: #TODO : signal 로 3초 뒤에 보내기..!
             self._set_random_reward()
 
             mms_manager = MMSV1Manager()

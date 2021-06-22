@@ -19,7 +19,7 @@ from django.urls import path, include
 
 from custom_manage.sites import superadmin_panel, staff_panel
 from dod import settings
-from respondent.views import RefererValidatorAPIView
+from respondent.views import RefererValidatorAPIView, home
 
 urlpatterns = [
     path('admin/', admin.site.urls),

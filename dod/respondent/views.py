@@ -1,9 +1,9 @@
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
 import random
 import string
 import datetime
-from django.db import transaction
+
+from django.shortcuts import render
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -42,14 +42,15 @@ class RefererValidatorAPIView(APIView):
         """
 
         # base_url = 'https://d-o-d.io/'
-        base_url = 'http://172.30.1.17:3000/'
-
+        base_url = 'http://172.30.1.37:3000/'
+        # base_url = 'http://3.36.156.224:8000/'
+        print(base_url)
         self.referer = request.META.get('HTTP_REFERER', "")
 
         if not self._check_referer():
             # client forbidden page
             # TODO: client url
-            forbidden_url = base_url + 'forbidden'
+            forbidden_url = base_url + 'invalid'
             return HttpResponseRedirect(forbidden_url)
 
         project_hash_key = kwargs['slug']
@@ -57,7 +58,7 @@ class RefererValidatorAPIView(APIView):
 
         if not self.project or not self._validate_project():
             # project not started page
-            project_not_start_url = base_url + 'invalid_project'  # TODO: client url
+            project_not_start_url = base_url + 'invalid'
             return HttpResponseRedirect(project_not_start_url)
 
         ip = get_client_ip(request)
@@ -69,7 +70,7 @@ class RefererValidatorAPIView(APIView):
 
         # client phone confirm(Success) page with query: project, validator
         # TODO: client url
-        respondent_phone_register_url = base_url + 'respondent?p={}&v={}'.format(project_hash_key, validator)
+        respondent_phone_register_url = base_url + 'link?p={}&v={}'.format(project_hash_key, validator)
         return HttpResponseRedirect(respondent_phone_register_url)
 
     def _check_referer(self):
@@ -98,6 +99,7 @@ class ClientRefererProjectValidateCheckViewSet(viewsets.GenericViewSet):
     queryset = DeviceMetaInfo.objects.all()
     serializer_class = ClientRefererProjectValidateSerializer
 
+    @action(methods=['post'], detail=False)
     def is_valid(self, request, *args, **kwargs):
         """
         client 핸드폰 인증 페이지 접속시, 유효한 접근인지 체크하는 api 입니다.
@@ -109,20 +111,22 @@ class ClientRefererProjectValidateCheckViewSet(viewsets.GenericViewSet):
         data = request.data
         serializer = self.get_serializer(data=data)
         if serializer.is_valid(raise_exception=True):
-            validator = self.get_queryset().filter(data.get('validator'))
+            data = serializer.validated_data
+            print(data)
+            validator = self.get_queryset().filter(validator=data.get('validator'))
             if not validator.exists():
                 return Response(status=status.HTTP_404_NOT_FOUND)
             validator = validator.last()
             ip = get_client_ip(request)
             user_agent = request.META.get('HTTP_USER_AGENT', "")
-            if not validator.ip != ip or validator.user_agent != user_agent or validator.is_confirmed:
-                return Response({'dod_status': 999})
+            if validator.ip != ip or validator.user_agent != user_agent or validator.is_confirmed:
+                return Response({'dod_status': 999}, status=status.HTTP_200_OK)
 
             self.project = Project.objects.filter(project_hash_key=data.get('project_key')).last()
             if not self.project or not self._validate_project():
-                return Response({'dod_status': 400})
+                return Response({'dod_status': 400}, status=status.HTTP_200_OK)
 
-            return Response({'dod_status': 100})
+        return Response({'dod_status': 100}, status=status.HTTP_200_OK)
 
     def _validate_project(self):
         now = datetime.datetime.now()
@@ -144,3 +148,12 @@ def get_client_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
+
+def home(request):
+    ip = get_client_ip(request)
+    print(ip)
+    user_agent = request.META.get('HTTP_USER_AGENT', "")
+    print(user_agent)
+    referer = request.META.get('HTTP_REFERER', "")
+    context = {'ip': ip, 'agent': user_agent, 'referer': referer}
+    return render(request, 'test.html', context)
