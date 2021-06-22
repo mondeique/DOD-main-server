@@ -47,15 +47,29 @@ class ThirdPartyMenuListAPIView(viewsets.GenericViewSet,
         contact = None if not ContactLink.objects.filter(is_active=True).exists() \
             else ContactLink.objects.filter(is_active=True).last()
 
-        # privacy_policy = None if not PrivacyPolicyLink.objects.filter(is_active=True).exists() \
-        #     else PrivacyPolicyLink.objects.filter(is_active=True).last().link
-        #
-        # terms_of_service = None if not TermsOfServiceLink.objects.filter(is_active=True).exists() \
-        #     else TermsOfServiceLink.objects.filter(is_active=True).last().link
+        menu_list = [faq, notice, suggestion, contact]
+        menu_data = []
+        for menu in menu_list:
+            if menu:
+                menu_data.append(self._meta_serializer(menu))
 
-        return Response({'faq': FAQMenuSerializer(faq).data,
-                         'notice': NoticeMenuSerializer(notice).data,
-                         'contact': ContactMenuSerializer(contact).data,
-                         'suggestion': SuggestionMenuSerializer(suggestion).data
-                         }, status=status.HTTP_200_OK)
+        return Response(menu_data, status=status.HTTP_200_OK)
+
+    def _meta_serializer(self, obj):
+        val = {'icon_src': obj.icon.url,
+               'link': obj.link}
+        obj_name = obj._meta.model_name
+        if obj_name == 'faqlink':
+            title = '자주묻는질문'
+        elif obj_name == 'noticelink':
+            title = '공지사항'
+        elif obj_name == 'suggestionlink':
+            title = '이 기능 추가해주세요'
+        elif obj_name == 'contactlink':
+            title = '문의하기'
+        else:
+            title = None
+        val['title'] = title
+        return val
+
 
