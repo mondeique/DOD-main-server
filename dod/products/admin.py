@@ -31,9 +31,10 @@ class RewardImageInline(admin.TabularInline):
 
 
 class ProductStaffAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'project', 'payment_confirm', 'item', 'count', 'total_price', 'created_at']
+    list_display = ['pk', 'project', 'project_key',
+                    'payment_confirm', 'item', 'count', 'total_price', 'created_at']
     inlines = [RewardImageInline]
-    search_fields = ['project', 'total_price']
+    search_fields = ['project__project_hash_key']
 
     def total_price(self, obj):
         return obj.item.price * obj.count
@@ -41,11 +42,16 @@ class ProductStaffAdmin(admin.ModelAdmin):
     def payment_confirm(self, obj):
         return obj.project.status
 
+    def project_key(self, obj):
+        if obj.project:
+            return obj.project.project_hash_key
+        return ''
+
     payment_confirm.boolean = True
 
 
 class RewardStaffAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'product', 'name', 'reward', 'winner_id', 'due_date']
+    list_display = ['pk', 'product', 'project_key', 'name', 'reward', 'winner_id', 'due_date']
 
     def name(self, obj):
         return obj
@@ -54,6 +60,12 @@ class RewardStaffAdmin(admin.ModelAdmin):
         if obj.reward_img:
             return mark_safe('<img src="%s" width=120px "/>' % obj.reward_img.url)
         return '-'
+
+    def project_key(self, obj):
+        product = obj.product
+        if product.project:
+            return product.project.project_hash_key
+        return ''
 
 
 staff_panel.register(Brand, BrandStaffAdmin)

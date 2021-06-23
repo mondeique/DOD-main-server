@@ -20,4 +20,4 @@ class Project(models.Model):
     is_active = models.BooleanField(default=False, help_text='프로젝트 유효성을 저장합니다.')
 
     def __str__(self):
-        return '{}님의 프로젝트{}'.format(self.owner.phone, self.name)
+        return '[{}]님의 프로젝트{}'.format(self.owner.phone, self.name)

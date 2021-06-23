@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 
 
 # Create your views here.
+from core.tools import get_client_ip
 from projects.models import Project
 from respondent.models import DeviceMetaInfo
 from respondent.serializers import ClientRefererProjectValidateSerializer
@@ -139,15 +140,6 @@ class ClientRefererProjectValidateCheckViewSet(viewsets.GenericViewSet):
             return False  # 프로젝트 대기중
         else:
             return True  # 진행중
-
-
-def get_client_ip(request):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
 
 
 def home(request, **kwargs):

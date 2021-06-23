@@ -27,10 +27,7 @@ urlpatterns = [
     path('superadmin/', superadmin_panel.urls),
     path('staff/', staff_panel.urls, name='staff'),
 
-    # url(r'^check_link/(?P<slug>[-\w]+)/$', ProjectValidCheckAPIView.as_view()),
-    url(r'^link/(?P<slug>[-\w]+)/$', RefererValidatorAPIView.as_view()),
-    # url(r'^link/(?P<slug>[-\w]+)$', home),
-    # url(r'^link/(?P<slug>[-\w]+)/$', home),
+    path('link/<slug:slug>/', RefererValidatorAPIView.as_view()),
 
     path('accounts/v1/', include('accounts.urls')),
     path('api/v1/', include('projects.urls')),
@@ -41,8 +38,6 @@ urlpatterns = [
     path('api/v1/', include('respondent.urls')),
 
     path('send-mms/', SendMMSAPIView.as_view()),
-    # path('link', home),
-    # path('link/<slug:slug>/', home),
 
     # ckeditors
     path('ckeditor/', include('ckeditor_uploader.urls')),

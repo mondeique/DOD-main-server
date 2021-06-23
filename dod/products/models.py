@@ -70,7 +70,7 @@ class Product(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name_plural = '유저선택상품'
+        verbose_name_plural = '기프티콘업로드'
 
     def __str__(self):
         return '[{}]유저 [{}] [{}]상품 [{}]개 생성'.format(

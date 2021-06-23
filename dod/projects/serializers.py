@@ -32,9 +32,16 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
         validated_data['start_at'] = fixed_start_at
         validated_data['dead_at'] = fixed_dead_at
         validated_data['project_hash_key'] = generate_hash_key()
-        validated_data['name'] = generate_project_name()
+        validated_data['name'] = self.set_project_name()
         project = super(ProjectCreateSerializer, self).create(validated_data)
         return project
+
+    def set_project_name(self):
+        user = self.context['user']
+        project_counts = user.projects.count() + 1
+        name = '추첨_{}'.format(project_counts)
+        return name
+
 
 
 class ProjectUpdateSerializer(serializers.ModelSerializer):

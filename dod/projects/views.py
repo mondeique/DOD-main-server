@@ -46,7 +46,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         :return: {'id', 'name', 'winner_count', 'total_price'}
         """
         self.data = request.data.copy()
-        serializer = self.get_serializer(data=self.data)
+        serializer = self.get_serializer_class()
+        serializer = serializer(data=self.data, context={'request': request,
+                                                         'user': request.user})
         serializer.is_valid(raise_exception=True)
         self.project = serializer.save()
         self._create_products()
@@ -175,6 +177,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     @action(methods=['put'], detail=True)
     def depositor(self, request, *args, **kwargs):
+        print('asdasd')
         project = self.get_object()
         if project.owner != request.user:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
@@ -188,9 +191,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
                   "전화번호: {} \n" \
                   "입금자명: {}\n" \
                   "결제금액: {}원\n" \
+                  "검색 키: {}\n" \
                   "--------------------".format(project.owner.phone,
                                                 project.deposit_logs.first().depositor,
-                                                project.deposit_logs.first().total_price)
+                                                project.deposit_logs.first().total_price,
+                                                project.project_hash_key)
         deposit_temp_slack_message(message)
         return Response(status=status.HTTP_206_PARTIAL_CONTENT)
 

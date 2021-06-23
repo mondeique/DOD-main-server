@@ -16,6 +16,8 @@ from rest_framework.authtoken.models import Token
 from accounts.models import PhoneConfirm, User
 from accounts.serializers import SMSSignupPhoneCheckSerializer, SMSSignupPhoneConfirmSerializer
 from core.sms.utils import SMSV2Manager, MMSV1Manager
+from core.tools import get_client_ip
+from dod import settings
 from logs.models import MMSSendLog
 from projects.models import Project
 from products.models import Product, Reward
@@ -207,21 +209,28 @@ class SendMMSAPIView(APIView):
     당첨자 3초 후 문자전송을 위해 만듬
     20210622
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
+
+        ip = get_client_ip(request)
+        if ip not in settings.ALLOWED_HOSTS:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         data = request.data
+        print('===========')
+        print(get_client_ip(request))
         phone = data.get('phone')
         brand = data.get('brand')
         item_name = data.get('item_name')
         item_url = data.get('item_url')
         due_date = data.get('due_date')
-        # time.sleep(3)  # wait 3 seconds
+        time.sleep(3)  # wait 3 seconds
         mms_manager = MMSV1Manager()
         mms_manager.set_content(brand, item_name, due_date)
         success, code = mms_manager.send_mms(phone=phone, image_url=item_url)
-        print(code)
         if not success:
             MMSSendLog.objects.create(code=code, phone=phone, item_name=item_name, item_url=item_url, due_date=due_date)
 
         return Response(status=status.HTTP_200_OK)
+
