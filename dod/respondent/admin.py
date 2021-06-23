@@ -2,7 +2,6 @@ from django.contrib import admin
 from custom_manage.sites import staff_panel
 
 # staff
-from projects.models import Project
 from respondent.models import RespondentPhoneConfirm, Respondent, DeviceMetaInfo
 
 
@@ -13,7 +12,6 @@ class RespondentPhoneConfirmStaffadmin(admin.ModelAdmin):
                     'is_confirmed',
                     'created_at',
                     ]
-
 
 
 class RespondentStaffadmin(admin.ModelAdmin):

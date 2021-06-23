@@ -54,6 +54,7 @@ SECONDS_APPS = [
     'respondent',
     'custom_manage',
     'core',
+    'logs'
 ]
 
 THIRD_APPS = [

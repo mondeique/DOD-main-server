@@ -156,9 +156,8 @@ class MMSV1Manager():
         }
 
     def set_content(self, product_name):
-        self.body['content'] = "[디오디] 당첨 안내 \n 안녕하세요 디오디입니다. \n 추첨결과 {}에 당첨되셨습니다. \n 축하드립니다!! \n" \
-                               "※ 유효기간을 확인하고 사용 해 주세요! \n\n ▷ 문의하기 \n - 고객센터 : 02-334-1133 \n 09:00 ~ 20:00 " \
-                               "(주말&공휴일 포함) ".format(product_name)
+        self.body['content'] = "[디오디] 당첨 안내 \n안녕하세요 디오디입니다. \n추첨결과 {}에 당첨되셨습니다.\n" \
+                               "※ 유효기간을 확인하고 사용 해 주세요! \n\n▷ 문의하기 \n- 고객센터 : 02-334-1133".format(product_name)
 
     def send_mms(self, phone, image_url):
         sms_dic = load_credential("sms")
@@ -188,6 +187,6 @@ class MMSV1Manager():
         self.body['files'][0]['body'] = data.decode('utf-8')
         request = requests.post(api_url, headers=headers, data=json.dumps(self.body))
         if request.status_code == 202:
-            return True
+            return True, ''
         else:
-            return False
+            return False, request.status_code

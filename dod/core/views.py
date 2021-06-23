@@ -1,16 +1,22 @@
+import json
 import random
 
+import requests
 from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework import viewsets
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 import datetime
+import time
 # Create your views here.
-from accounts.models import PhoneConfirm
+from rest_framework.views import APIView
+from rest_framework.authtoken.models import Token
+from accounts.models import PhoneConfirm, User
 from accounts.serializers import SMSSignupPhoneCheckSerializer, SMSSignupPhoneConfirmSerializer
 from core.sms.utils import SMSV2Manager, MMSV1Manager
+from logs.models import MMSSendLog
 from projects.models import Project
 from products.models import Product, Reward
 from respondent.models import RespondentPhoneConfirm, Respondent
@@ -121,14 +127,24 @@ class SMSViewSet(viewsets.GenericViewSet):
 
         # 여기까지가 유저 당첨확인 및 생성
 
-        if self.is_win: #TODO : signal 로 3초 뒤에 보내기..!
+        if self.is_win:
             self._set_random_reward()
 
-            mms_manager = MMSV1Manager()
             phone = self.data.get('phone')
-            mms_manager.set_content(self.reward.product.item.name)
-            if not mms_manager.send_mms(phone=phone, image_url=self.reward.reward_img.url):
-                return Response({'error_code': '네이버 문자 발송이 실패하였습니다.'}, status=status.HTTP_404_NOT_FOUND)
+
+            try:
+                body = {'phone': phone,
+                        'item_name': self.reward.product.item.name,
+                        'item_url': self.reward.reward_img.url}
+                staff = User.objects.get(email='park@mondeique.com')
+                token = Token.objects.get(user=staff).key
+                headers = {'Content-type': 'application/json',
+                           'Accept': 'application/json'
+                           'Authorization: token {}'.format(token)}
+                url = "http://3.36.156.224:8000/send-mms/" # dod로 바꾸기
+                requests.post(url, headers=headers, data=json.dumps(body), timeout=0.0000000001)
+            except requests.exceptions.ReadTimeout:
+                pass
 
             lucky_time = self.valid_lucky_times.first()
             lucky_time.is_used = True
@@ -141,7 +157,7 @@ class SMSViewSet(viewsets.GenericViewSet):
         return Response({'id': self.project.id,
                          'is_win': self.is_win}, status=status.HTTP_200_OK)
 
-    def _set_random_reward(self):
+    def _set_random_reward(self): # TODO: 에러날경우 패스 혹은 문의하기로
         reward_queryset = Reward.objects.filter(winner_id__isnull=True) \
             .select_related('product', 'product__item', 'product__project')
         remain_rewards = reward_queryset.filter(product__project=self.project)
@@ -183,3 +199,23 @@ class SMSViewSet(viewsets.GenericViewSet):
             return True
 
 
+class SendMMSAPIView(APIView):
+    """
+    당첨자 3초 후 문자전송을 위해 만듬
+    20210622
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        phone = data.get('phone')
+        item_name = data.get('item_name')
+        item_url = data.get('item_url')
+        time.sleep(3)  # wait 3 seconds
+        mms_manager = MMSV1Manager()
+        mms_manager.set_content(item_name)
+        success, code = mms_manager.send_mms(phone=phone, image_url=item_url)
+        if not success:
+            MMSSendLog.objects.create(code=code, phone=phone, item_name=item_name, item_url=item_url)
+
+        return Response(status=status.HTTP_200_OK)
