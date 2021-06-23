@@ -134,10 +134,13 @@ class SMSViewSet(viewsets.GenericViewSet):
 
             try:
                 body = {'phone': phone,
+                        'brand': self.reward.product.item.brand.name,
                         'item_name': self.reward.product.item.name,
-                        'item_url': self.reward.reward_img.url}
+                        'item_url': self.reward.reward_img.url,
+                        'due_date': self.reward.due_date}
                 staff = User.objects.get(email='park@mondeique.com')
-                token = Token.objects.get(user=staff).key
+                token = Token.objects.all().last().key
+                print(token)
                 headers = {'Content-type': 'application/json',
                            'Accept': 'application/json'
                            'Authorization: token {}'.format(token)}
@@ -159,7 +162,7 @@ class SMSViewSet(viewsets.GenericViewSet):
 
     def _set_random_reward(self): # TODO: 에러날경우 패스 혹은 문의하기로
         reward_queryset = Reward.objects.filter(winner_id__isnull=True) \
-            .select_related('product', 'product__item', 'product__project')
+            .select_related('product', 'product__item', 'product__project', 'product__item__brand')
         remain_rewards = reward_queryset.filter(product__project=self.project)
         remain_rewards_id = list(remain_rewards.values_list('id', flat=True))
         remain_rewards_price = list(remain_rewards.values_list('product__item__price', flat=True))
@@ -209,13 +212,16 @@ class SendMMSAPIView(APIView):
     def post(self, request, *args, **kwargs):
         data = request.data
         phone = data.get('phone')
+        brand = data.get('brand')
         item_name = data.get('item_name')
         item_url = data.get('item_url')
-        time.sleep(3)  # wait 3 seconds
+        due_date = data.get('due_date')
+        # time.sleep(3)  # wait 3 seconds
         mms_manager = MMSV1Manager()
-        mms_manager.set_content(item_name)
+        mms_manager.set_content(brand, item_name, due_date)
         success, code = mms_manager.send_mms(phone=phone, image_url=item_url)
+        print(code)
         if not success:
-            MMSSendLog.objects.create(code=code, phone=phone, item_name=item_name, item_url=item_url)
+            MMSSendLog.objects.create(code=code, phone=phone, item_name=item_name, item_url=item_url, due_date=due_date)
 
         return Response(status=status.HTTP_200_OK)

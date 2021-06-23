@@ -89,6 +89,7 @@ class Reward(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="rewards")
     reward_img = models.ImageField(upload_to=reward_img_directory_path)
     winner_id = models.IntegerField(null=True, blank=True, help_text="당첨자(Respondent)의 id를 저장합니다.")
+    due_date = models.CharField(max_length=30, default='')
 
     class Meta:
         verbose_name_plural = '유저구매상품-실물'

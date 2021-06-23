@@ -152,7 +152,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         api: api/v1/project/<id>/link_notice
         :return: {
             "url" ,
-            "link_notice" : {"id", "title", "image_(url)"}
+            "link_notice" : {"id", "title", "pc_url", "mobile_url"}
         }
         """
         project = self.get_object()

@@ -20,8 +20,15 @@ class LinkCopyNotice(models.Model):
     """
     메인 대시보드에서 링크 복사 클릭시 나오는 안내 페이지입니다.
     """
+    DESKTOP = 1
+    MOBILE = 2
+    KINDS = (
+        (DESKTOP, 'desktop'),
+        (MOBILE, 'mobile'),
+    )
     title = models.CharField(max_length=40)
-    content = RichTextUploadingField(help_text="rich_text_field로 이미지 등을 추가할 수 있습니다.")
+    kinds = models.IntegerField(choices=KINDS, default=1)
+    content = RichTextUploadingField(help_text="rich_text_field로 이미지 등을 추가할 수 있습니다.", null=True, blank=True)
     image = models.ImageField(upload_to=link_notice_directory_path, null=True)
     is_active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -26,14 +26,12 @@ class DepositInfoAPIView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
 
 class DepositSuccessAPIView(viewsets.GenericViewSet, mixins.RetrieveModelMixin):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     queryset = Project.objects.filter(is_active=True)
     serializer_class = None
 
     def retrieve(self, request, *args, **kwargs):
         project = self.get_object()
-        if project.owner != request.user:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         message = "\n [입금확인요청] \n" \
                   "전화번호: {} \n" \

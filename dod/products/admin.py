@@ -27,7 +27,7 @@ class ItemStaffAdmin(admin.ModelAdmin):
 
 class RewardImageInline(admin.TabularInline):
     model = Reward
-    fields = ('product', 'reward_img')
+    fields = ('product', 'reward_img', 'due_date')
 
 
 class ProductStaffAdmin(admin.ModelAdmin):
@@ -45,7 +45,7 @@ class ProductStaffAdmin(admin.ModelAdmin):
 
 
 class RewardStaffAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'product', 'name', 'reward', 'winner_id']
+    list_display = ['pk', 'product', 'name', 'reward', 'winner_id', 'due_date']
 
     def name(self, obj):
         return obj

@@ -153,23 +153,31 @@ class SimpleProjectInfoSerializer(serializers.ModelSerializer):
 
 class ProjectLinkSerializer(serializers.ModelSerializer):
     url = serializers.SerializerMethodField()
-    image_url = serializers.SerializerMethodField()
+    pc_url = serializers.SerializerMethodField()
+    mobile_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
-        fields = ['url', 'image_url']
+        fields = ['url', 'pc_url', 'mobile_url']
 
     def get_url(self, obj): # TODO : respondent validator view api
         hash_key = obj.project_hash_key
         # url = 'https://d-o-d.io/link/{}'.format(hash_key)
-        url = 'http://172.30.1.17:3000/link/{}'.format(hash_key)
+        url = 'https://docs.gift/link/{}/'.format(hash_key)
         return url
 
-    def get_image_url(self, obj):
-        link_notice = LinkCopyNotice.objects.filter(is_active=True).last()
+    def get_pc_url(self, obj):
+        link_notice = LinkCopyNotice.objects.filter(is_active=True, kinds=1).last()
         if link_notice.image:
             return link_notice.image.url
         return None
+
+    def get_mobile_url(self, obj):
+        link_notice = LinkCopyNotice.objects.filter(is_active=True, kinds=2).last()
+        if link_notice.image:
+            return link_notice.image.url
+        return None
+
 
 
 class PastProjectSerializer(serializers.ModelSerializer):

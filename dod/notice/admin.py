@@ -5,7 +5,7 @@ from notice.models import LinkCopyNotice, FAQLink, ContactLink, MainPageDodExpla
 
 
 class LinkCopyNoticeStaffAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'title', 'is_active', 'created_at']
+    list_display = ['pk', 'kinds', 'title', 'is_active', 'created_at']
 
 
 class NoticeLinkStaffAdmin(admin.ModelAdmin):
