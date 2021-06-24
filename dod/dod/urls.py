@@ -39,7 +39,7 @@ urlpatterns = [
     path('api/v1/', include('respondent.urls')),
 
     path('send-mms/', SendMMSAPIView.as_view()),
-    path('', post_new),
+    path('manage/reset_pw/', post_new),
 
     # ckeditors
     path('ckeditor/', include('ckeditor_uploader.urls')),

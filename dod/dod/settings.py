@@ -66,7 +66,8 @@ THIRD_APPS = [
     'pymysql',
     # 'wpadmin',
     'storages',
-    'debug_toolbar'
+    'debug_toolbar',
+    'crispy_forms'
 ]
 
 INSTALLED_APPS += SECONDS_APPS + THIRD_APPS
@@ -89,7 +90,7 @@ ROOT_URLCONF = 'dod.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['templates/'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -242,3 +243,6 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 APPEND_SLASH = False
+
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
