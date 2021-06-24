@@ -42,7 +42,7 @@ class RefererValidatorAPIView(APIView):
         """
 
         # base_url = 'https://d-o-d.io/'
-        base_url = 'http://172.30.1.17:3000/'
+        base_url = 'http://172.30.1.26:3000/'
         server_url = 'https://docs.gift/'
         print(base_url)
         self.referer = request.META.get('HTTP_REFERER', "")
