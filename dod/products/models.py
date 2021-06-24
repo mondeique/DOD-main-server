@@ -42,10 +42,12 @@ class Item(models.Model):#TODO : 미리 채워두는 모델
     """
     아이스아메리카노 등 상품 목록
     """
+    order = models.IntegerField(unique=True)
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='items')
     thumbnail = models.ImageField(upload_to=item_thumb_directory_path)
     name = models.CharField(max_length=50)
     is_active = models.BooleanField(default=True)
+    short_name = models.CharField(max_length=30, null=True, blank=True)
     price = models.IntegerField()
     origin_price = models.IntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -90,6 +92,7 @@ class Reward(models.Model):
     reward_img = models.ImageField(upload_to=reward_img_directory_path)
     winner_id = models.IntegerField(null=True, blank=True, help_text="당첨자(Respondent)의 id를 저장합니다.")
     due_date = models.CharField(max_length=30, default='')
+    # short_name = models.CharField()
 
     class Meta:
         verbose_name_plural = '유저구매상품-실물'

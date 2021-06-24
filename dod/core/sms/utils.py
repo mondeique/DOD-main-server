@@ -188,7 +188,7 @@ class MMSV1Manager():
         self.body['files'][0]['name'] = "gift.jpg"
         self.body['files'][0]['body'] = data.decode('utf-8')
         request = requests.post(api_url, headers=headers, data=json.dumps(self.body))
-        print(request.status_code)
+
         if request.status_code == 202:
             return True, ''
         else:

@@ -12,7 +12,7 @@ class BrandStaffAdmin(admin.ModelAdmin):
 
 
 class ItemStaffAdmin(admin.ModelAdmin):
-    list_display = ['name', 'pk', 'thumb_img', 'brand_name', 'price', 'origin_price', 'is_active', 'created_at']
+    list_display = ['name', 'short_name', 'order', 'thumb_img', 'brand_name', 'price', 'origin_price', 'is_active', 'created_at']
     list_editable = ['is_active']
 
     def thumb_img(self, obj):
@@ -31,10 +31,15 @@ class RewardImageInline(admin.TabularInline):
 
 
 class ProductStaffAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'project', 'project_key',
-                    'payment_confirm', 'item', 'count', 'total_price', 'created_at']
+    list_display = ['pk', 'project', 'gifticon', 'count', 'project_key',
+                    'payment_confirm', 'item',  'total_price', 'created_at']
     inlines = [RewardImageInline]
     search_fields = ['project__project_hash_key']
+
+    def gifticon(self, obj):
+        if obj.rewards.exists():
+            return obj.rewards.count()
+        return 0
 
     def total_price(self, obj):
         return obj.item.price * obj.count

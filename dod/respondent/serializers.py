@@ -1,5 +1,6 @@
 from rest_framework import serializers, exceptions
 
+from projects.models import Project
 from respondent.models import RespondentPhoneConfirm, Respondent, DeviceMetaInfo
 
 
@@ -18,18 +19,24 @@ class SMSRespondentPhoneConfirmSerializer(serializers.Serializer):
         phone = attrs.get('phone')
         confirm_key = attrs.get('confirm_key')
         validator = attrs.get('validator')
-        phone_confirm = RespondentPhoneConfirm.objects.filter(phone=phone, is_confirmed=False)
-        if not phone_confirm.exists():
+        project_key = attrs.get('project_key')
+        phone_confirm_queryset = RespondentPhoneConfirm.objects.filter(phone=phone)\
+            .prefetch_related('respondent', 'respondent__project')
+        if phone_confirm_queryset.filter(respondent__project__project_hash_key=project_key).exists():
+            msg = '이미 추첨에 참여하셨어요!'
+            raise exceptions.ValidationError(msg)
+        if not phone_confirm_queryset.filter(is_confirmed=True).exists():
             msg = '다시한번 인증번호를 요청해 주세요'
             raise exceptions.ValidationError(msg)
-        if RespondentPhoneConfirm.objects.filter(phone=phone, is_confirmed=True, confirm_key=confirm_key).exists():
+        if phone_confirm_queryset.filter(is_confirmed=True, confirm_key=confirm_key).exists():
             msg = '이미 사용된 인증번호입니다.'
             raise exceptions.ValidationError(msg)
-        elif not phone_confirm.filter(confirm_key=confirm_key).exists():
+        elif not phone_confirm_queryset.filter(confirm_key=confirm_key, is_confirmed=False).exists():
             msg = '잘못된 인증번호 입니다.'
             raise exceptions.ValidationError(msg)
+        # elif phone_confirm_queryset.filter()
 
-        phone_confirm = phone_confirm.get(confirm_key=confirm_key)
+        phone_confirm = phone_confirm_queryset.filter(is_confirmed=False).get(confirm_key=confirm_key)
         phone_confirm.is_confirmed = True
         phone_confirm.save()
 

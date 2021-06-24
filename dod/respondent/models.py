@@ -24,7 +24,8 @@ class Respondent(models.Model):
     RewardPhoneConfirm 이 is_confirmed = True 시 생성되며, 추후 당첨여부가 저장됩니다.
     """
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="respondents")
-    phone_confirm = models.OneToOneField(RespondentPhoneConfirm, on_delete=models.CASCADE, help_text="Phone Confirm 이 True 일때만 Reward 생성")
+    phone_confirm = models.OneToOneField(RespondentPhoneConfirm, on_delete=models.CASCADE, related_name='respondent',
+                                         help_text="Phone Confirm 이 True 일때만 Reward 생성")
     is_win = models.BooleanField(default=False, help_text="Reward의 winner_id로 사용해도 되지만, 대시보드 쿼리 속도 향상을 위해 사용")
 
 

@@ -113,7 +113,7 @@ class SMSViewSet(viewsets.GenericViewSet):
         api: api/v1/sms/respondent_confirm
         method: POST
         전화번호, 인증번호 와 url에서 파싱한 project_key와 validator를 담아서 보내주어야 합니다.
-        data: {'phone', 'confirm_key', 'project_key', 'validator}
+        data: {'phone', 'confirm_key', 'project_key', 'validator'}
         """
         data = request.data
         serializer = self.get_serializer(data=data)
@@ -122,13 +122,11 @@ class SMSViewSet(viewsets.GenericViewSet):
         if not Project.objects.filter(project_hash_key=data.get('project_key')).exists():
             return Response(status=status.HTTP_404_NOT_FOUND)
         self.data = serializer.validated_data
-        # 중복 응모 불
-        if self._check_respondent_overlap(): # TODO : check
-            return Response(status=status.HTTP_403_FORBIDDEN)
+        self._set_project()
         self._create_respondent()
 
         # 여기까지가 유저 당첨확인 및 생성
-
+        item_name = ''
         if self.is_win:
             self._set_random_reward()
 
@@ -140,13 +138,10 @@ class SMSViewSet(viewsets.GenericViewSet):
                         'item_name': self.reward.product.item.name,
                         'item_url': self.reward.reward_img.url,
                         'due_date': self.reward.due_date}
-                staff = User.objects.get(email='park@mondeique.com')
-                token = Token.objects.all().last().key
-                print(token)
                 headers = {'Content-type': 'application/json',
                            'Accept': 'application/json'
-                           'Authorization: token {}'.format(token)}
-                url = "http://3.36.156.224:8000/send-mms/" # dod로 바꾸기
+                           }
+                url = "https://docs.gift/send-mms/" # dod로 바꾸기
                 requests.post(url, headers=headers, data=json.dumps(body), timeout=0.0000000001)
             except requests.exceptions.ReadTimeout:
                 pass
@@ -158,9 +153,11 @@ class SMSViewSet(viewsets.GenericViewSet):
             # TODO: 당첨자 안나온 상품 있으면 한번에 보내기
             self.reward.winner_id = self.respondent.id
             self.reward.save()
+            item_name = self.reward.product.item.short_name
 
         return Response({'id': self.project.id,
-                         'is_win': self.is_win}, status=status.HTTP_200_OK)
+                         'is_win': self.is_win,
+                         'item_name': item_name}, status=status.HTTP_200_OK)
 
     def _set_random_reward(self): # TODO: 에러날경우 패스 혹은 문의하기로
         reward_queryset = Reward.objects.filter(winner_id__isnull=True) \
@@ -173,12 +170,14 @@ class SMSViewSet(viewsets.GenericViewSet):
         random_reward_id_by_weight = random.choices(remain_rewards_id, weights=reward_weight)[0]
         self.reward = reward_queryset.get(id=random_reward_id_by_weight)
 
-    def _check_respondent_overlap(self):
-        self.project = Project.objects.get(project_hash_key=self.data.get('project_key'))
+    def _set_project(self):
+        project_queryset = Project.objects.filter(project_hash_key=self.data.get('project_key'))\
+            .prefetch_related('respondents', 'respondents__phone_confirm')
+
+        self.project = project_queryset.get(project_hash_key=self.data.get('project_key'))
         self.phone_confirm = RespondentPhoneConfirm.objects.filter(phone=self.data.get('phone'),
                                                                    confirm_key=self.data.get('confirm_key'),
                                                                    is_confirmed=True).first()
-        return Respondent.objects.filter(project=self.project, phone_confirm=self.phone_confirm).exists()
 
     def _create_respondent(self):
         self.is_win = self._am_i_winner()
@@ -218,8 +217,6 @@ class SendMMSAPIView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data
-        print('===========')
-        print(get_client_ip(request))
         phone = data.get('phone')
         brand = data.get('brand')
         item_name = data.get('item_name')

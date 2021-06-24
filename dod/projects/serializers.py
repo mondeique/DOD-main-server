@@ -26,7 +26,7 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         start_at = validated_data['start_at']
-        fixed_start_at = start_at + datetime.timedelta(hours=9)
+        fixed_start_at = start_at + datetime.timedelta(hours=9, minutes=1)
         dead_at = validated_data['dead_at']
         fixed_dead_at = dead_at + datetime.timedelta(days=1, hours=8, minutes=59, seconds=59)
         validated_data['start_at'] = fixed_start_at
@@ -41,7 +41,6 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
         project_counts = user.projects.count() + 1
         name = '추첨_{}'.format(project_counts)
         return name
-
 
 
 class ProjectUpdateSerializer(serializers.ModelSerializer):

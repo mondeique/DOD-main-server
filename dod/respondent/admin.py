@@ -17,9 +17,15 @@ class RespondentPhoneConfirmStaffadmin(admin.ModelAdmin):
 class RespondentStaffadmin(admin.ModelAdmin):
     list_display = ['id',
                     'project',
+                    'project_key',
                     'phone_confirm',
                     'is_win',
                     ]
+
+    def project_key(self, obj):
+        if obj.project:
+            return obj.project.project_hash_key
+        return ''
 
 
 class DeviceMetaInfoStaffAdmin(admin.ModelAdmin):
