@@ -141,7 +141,7 @@ class SMSViewSet(viewsets.GenericViewSet):
                 headers = {'Content-type': 'application/json',
                            'Accept': 'application/json'
                            }
-                url = "https://docs.gift/send-mms/" # dod로 바꾸기
+                url = "http://docs.gift/api/send-mms/"  # dod로 바꾸기
                 requests.post(url, headers=headers, data=json.dumps(body), timeout=0.0000000001)
             except requests.exceptions.ReadTimeout:
                 pass
@@ -228,6 +228,6 @@ class SendMMSAPIView(APIView):
         success, code = mms_manager.send_mms(phone=phone, image_url=item_url)
         if not success:
             MMSSendLog.objects.create(code=code, phone=phone, item_name=item_name, item_url=item_url, due_date=due_date)
-
+        MMSSendLog.objects.create(code=code, phone=phone, item_name=item_name, item_url=item_url, due_date=due_date)
         return Response(status=status.HTTP_200_OK)
 

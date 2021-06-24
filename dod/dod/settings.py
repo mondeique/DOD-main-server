@@ -67,7 +67,8 @@ THIRD_APPS = [
     # 'wpadmin',
     'storages',
     'debug_toolbar',
-    'crispy_forms'
+    'crispy_forms',
+    'django_crontab'
 ]
 
 INSTALLED_APPS += SECONDS_APPS + THIRD_APPS
@@ -246,3 +247,4 @@ APPEND_SLASH = False
 
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+

@@ -18,7 +18,7 @@ def item_thumb_directory_path(instance, filename):
 def reward_img_directory_path(instance, filename):
     return 'project/{}/item/{}/{}'.format(
         instance.product.project.project_hash_key,
-        instance.product.item.name,
+        instance.product.item.id,
         generate_random_key())
 
 
