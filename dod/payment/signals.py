@@ -17,7 +17,3 @@ def user_deposit_log_send_sms(sender, **kwargs):
             sms_manager.send_sms(phone=phone)
         except:
             pass
-
-    # if confirm:
-        # send sms
-        # pass

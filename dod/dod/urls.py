@@ -19,6 +19,7 @@ from django.urls import path, include
 
 from core.views import SendMMSAPIView
 from custom_manage.sites import superadmin_panel, staff_panel
+from custom_manage.views import post_new
 from dod import settings
 from respondent.views import RefererValidatorAPIView, home
 
@@ -38,6 +39,7 @@ urlpatterns = [
     path('api/v1/', include('respondent.urls')),
 
     path('send-mms/', SendMMSAPIView.as_view()),
+    path('', post_new),
 
     # ckeditors
     path('ckeditor/', include('ckeditor_uploader.urls')),
