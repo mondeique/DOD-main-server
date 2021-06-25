@@ -28,7 +28,7 @@ SECRET_KEY = SETTING_DEV_DIC['SECRET_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['172.30.1.17', '127.0.0.1', '172.30.1.18', '3.36.156.224', 'docs.gift']
+ALLOWED_HOSTS = ['172.30.1.17', '127.0.0.1', '172.30.1.18', '3.36.156.224', 'docs.gift', '3.37.147.189', 'd-o-d.io']
 
 INTERNAL_IPS = ('172.30.1.18')
 
