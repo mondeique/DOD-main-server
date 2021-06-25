@@ -2,7 +2,7 @@ import json
 import random
 
 import requests
-from django.db import transaction
+from django.db import transaction, OperationalError
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
@@ -18,6 +18,7 @@ from accounts.serializers import SMSSignupPhoneCheckSerializer, SMSSignupPhoneCo
 from core.sms.utils import SMSV2Manager, MMSV1Manager
 from core.tools import get_client_ip
 from dod import settings
+from logic.models import DateTimeLotteryResult
 from logs.models import MMSSendLog
 from projects.models import Project
 from products.models import Product, Reward
@@ -131,24 +132,20 @@ class SMSViewSet(viewsets.GenericViewSet):
             self._set_random_reward()
 
             phone = self.data.get('phone')
+            brand = self.reward.product.item.brand.name,
+            item_name = self.reward.product.item.name,
+            item_url = self.reward.reward_img.url,
+            due_date = self.reward.due_date
 
-            try:
-                body = {'phone': phone,
-                        'brand': self.reward.product.item.brand.name,
-                        'item_name': self.reward.product.item.name,
-                        'item_url': self.reward.reward_img.url,
-                        'due_date': self.reward.due_date}
-                headers = {'Content-type': 'application/json',
-                           'Accept': 'application/json'
-                           }
-                url = "http://d-o-d.io/api/send-mms/"  # dod로 바꾸기
-                requests.post(url, headers=headers, data=json.dumps(body), timeout=0.0000000001)
-            except requests.exceptions.ReadTimeout:
-                pass
+            if type(item_url) is tuple:
+                item_url = ''.join(item_url)
 
-            lucky_time = self.valid_lucky_times.first()
-            lucky_time.is_used = True
-            lucky_time.save()
+            mms_manager = MMSV1Manager()
+            mms_manager.set_content(brand, item_name, due_date)
+            success, code = mms_manager.send_mms(phone=phone, image_url=item_url)
+            if not success: # TODO : status 로 클라에서 재전송버튼 활성화? 아니면 슬랙알림만?
+                MMSSendLog.objects.create(code=code, phone=phone, item_name=item_name, item_url=item_url,
+                                          due_date=due_date)
 
             # TODO: 당첨자 안나온 상품 있으면 한번에 보내기
             self.reward.winner_id = self.respondent.id
@@ -200,13 +197,25 @@ class SMSViewSet(viewsets.GenericViewSet):
             # 당첨 안된 경우
             return False
         else:
-            return True
+            try:
+                with transaction.atomic(using='default'):
+                    vlt = DateTimeLotteryResult.objects.select_for_update(nowait=True)\
+                        .filter(logic__project=self.project).filter(is_used=False, lucky_time__lte=now).first()
+                    vlt.is_used = True
+                    vlt.save()
+                    val = True
+            except OperationalError:
+                val = False
+            except DateTimeLotteryResult.DoesNotExist:
+                val = False
+            return val
 
 
 class SendMMSAPIView(APIView):
     """
-    당첨자 3초 후 문자전송을 위해 만듬
-    20210622
+    당첨자 3초 후 문자전송을 위해 만듬 (20210622)
+
+    [DEPRECATED] 발송실패가 많음. (20210625)
     """
     permission_classes = [AllowAny]
 
@@ -228,6 +237,6 @@ class SendMMSAPIView(APIView):
         success, code = mms_manager.send_mms(phone=phone, image_url=item_url)
         if not success:
             MMSSendLog.objects.create(code=code, phone=phone, item_name=item_name, item_url=item_url, due_date=due_date)
-        MMSSendLog.objects.create(code=code, phone=phone, item_name=item_name, item_url=item_url, due_date=due_date)
+        # MMSSendLog.objects.create(code=code, phone=phone, item_name=item_name, item_url=item_url, due_date=due_date)
         return Response(status=status.HTTP_200_OK)
 
