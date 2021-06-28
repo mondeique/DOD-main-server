@@ -169,7 +169,8 @@ class ProjectLinkSerializer(serializers.ModelSerializer):
     def get_url(self, obj): # TODO : respondent validator view api
         hash_key = obj.project_hash_key
         # url = 'https://d-o-d.io/link/{}/'.format(hash_key)
-        url = 'https://docs.gift/link/{}/'.format(hash_key)
+        # url = 'https://docs.gift/link/{}/'.format(hash_key)
+        url = 'https://dod-link.com/{}/'.format(hash_key)
         return url
 
     def get_pc_url(self, obj):
