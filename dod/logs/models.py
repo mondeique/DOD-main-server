@@ -4,6 +4,7 @@ from django.db import models
 class MMSSendLog(models.Model):
     code = models.CharField(max_length=40)
     phone = models.CharField(max_length=30)
+    brand = models.CharField(max_length=30, null=True)
     item_name = models.CharField(max_length=100)
     item_url = models.URLField()
     due_date = models.CharField(max_length=30, null=True)

@@ -121,11 +121,9 @@ class ClientRefererProjectValidateCheckViewSet(viewsets.GenericViewSet):
         return : 100: pass, 400: project is not valid, 999: validator is not valid
         """
         data = request.data
-        print(data)
         serializer = self.get_serializer(data=data)
         if serializer.is_valid(raise_exception=True):
             data = serializer.validated_data
-            print(data)
             validator = self.get_queryset().filter(validator=data.get('validator'))
             if not validator.exists():
                 return Response(status=status.HTTP_404_NOT_FOUND)
@@ -155,9 +153,7 @@ class ClientRefererProjectValidateCheckViewSet(viewsets.GenericViewSet):
 
 def home(request, **kwargs):
     ip = get_client_ip(request)
-    print(ip)
     user_agent = request.META.get('HTTP_USER_AGENT', "")
-    print(user_agent)
     referer = request.META.get('HTTP_REFERER', "")
     d = request.META
     context = {'ip': ip, 'agent': user_agent, 'referer': referer, 'data':d}

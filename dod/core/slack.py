@@ -38,4 +38,14 @@ def staff_reward_didnt_upload_slack_message(message):
     return None
 
 
+def lambda_monitoring_slack_message(message):
+    incomming_url = load_credential("slack", "")['MonitoringUrl']
+    post_data = {"text": '{}'.format(message)}
+    data = json.dumps(post_data)
+    headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}
+    response = requests.post(incomming_url, headers=headers, data=data)
+    return None
+
+
+
 

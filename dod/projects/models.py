@@ -18,6 +18,7 @@ class Project(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     is_active = models.BooleanField(default=False, help_text='프로젝트 유효성을 저장합니다.')
+    monitored = models.BooleanField(default=False, help_text='모니터링 이후 True, 매번 쿼리하지 않기 위해 사용합니다.')
 
     def __str__(self):
         return '[{}]님의 프로젝트{}'.format(self.owner.phone, self.name)

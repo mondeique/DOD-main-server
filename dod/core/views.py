@@ -132,20 +132,23 @@ class SMSViewSet(viewsets.GenericViewSet):
             self._set_random_reward()
 
             phone = self.data.get('phone')
-            brand = self.reward.product.item.brand.name,
-            item_name = self.reward.product.item.name,
-            item_url = self.reward.reward_img.url,
+            brand = self.reward.product.item.brand.name
+            item_name = self.reward.product.item.name
+            item_url = self.reward.reward_img.url
             due_date = self.reward.due_date
 
             if type(item_url) is tuple:
                 item_url = ''.join(item_url)
+
+            if type(item_name) is tuple:
+                item_name = ''.join(item_name)
 
             mms_manager = MMSV1Manager()
             mms_manager.set_content(brand, item_name, due_date)
             success, code = mms_manager.send_mms(phone=phone, image_url=item_url)
             if not success: # TODO : status 로 클라에서 재전송버튼 활성화? 아니면 슬랙알림만?
                 MMSSendLog.objects.create(code=code, phone=phone, item_name=item_name, item_url=item_url,
-                                          due_date=due_date)
+                                          due_date=due_date, brand=brand)
 
             # TODO: 당첨자 안나온 상품 있으면 한번에 보내기
             self.reward.winner_id = self.respondent.id

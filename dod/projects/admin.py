@@ -14,7 +14,8 @@ class ProjectStaffadmin(admin.ModelAdmin):
                     'start_at',
                     'dead_at',
                     'status',
-                    'is_active']
+                    'is_active',
+                    'monitored']
 
     search_fields = ['project_hash_key', 'name', 'owner__phone']
 
