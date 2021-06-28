@@ -70,7 +70,8 @@ class RefererValidatorAPIView(APIView):
                         self.project.start_at,
                         self.project.is_active)
             staff_reward_didnt_upload_slack_message(msg)
-            return False
+            project_not_start_url = base_url + 'invalid'
+            return HttpResponseRedirect(project_not_start_url)
 
         ip = get_client_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', "")  # TODO: if user_agent is null
