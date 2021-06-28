@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 
 
 # Create your views here.
+from core.slack import staff_reward_didnt_upload_slack_message
 from core.tools import get_client_ip
 from projects.models import Project
 from respondent.models import DeviceMetaInfo
@@ -63,6 +64,14 @@ class RefererValidatorAPIView(APIView):
             project_not_start_url = base_url + 'invalid'
             return HttpResponseRedirect(project_not_start_url)
 
+        if self.project.products.filter(rewards__isnull=True).exists():
+            msg = '[기프티콘 업로드 안됨]\n검색 키: {}\n시작 일: {}\n활성화 여부: {}'\
+                .format(self.project.project_hash_key,
+                        self.project.start_at,
+                        self.project.is_active)
+            staff_reward_didnt_upload_slack_message(msg)
+            return False
+
         ip = get_client_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', "")  # TODO: if user_agent is null
         validator = self._generate_validator()
@@ -83,8 +92,6 @@ class RefererValidatorAPIView(APIView):
 
     def _validate_project(self):
         now = datetime.datetime.now()
-        if self.project.products.filter(rewards__isnull=True).exists():
-            return False
         if self.project.dead_at < now:
             return False  # 종료됨
         elif not self.project.status:
