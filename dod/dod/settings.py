@@ -28,7 +28,7 @@ SECRET_KEY = SETTING_DEV_DIC['SECRET_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['172.30.1.17', '127.0.0.1', '172.30.1.18', '3.36.156.224', 'docs.gift', '3.37.147.189', 'd-o-d.io']
+ALLOWED_HOSTS = ['13.209.225.239', '127.0.0.1', 'dod-beta.com', 'dod-link.com', '3.36.156.224', 'docs.gift', '3.37.147.189', 'd-o-d.io']
 
 INTERNAL_IPS = ('172.30.1.18')
 
@@ -230,11 +230,10 @@ CKEDITOR_CONFIGS = {
 }
 ########## END CKEDITOR CONFIGURATION
 # CORS
-CORS_ORIGIN_ALLOW_ALL = True
-# CORS_ORIGIN_WHITELIST = (
-#     'http://localhost:8000',
-#     'http://127.0.0.1:8000',
-# )
+# CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_WHITELIST = (
+    'https://dod-beta.com',
+)
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
