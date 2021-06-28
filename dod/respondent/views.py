@@ -83,6 +83,8 @@ class RefererValidatorAPIView(APIView):
 
     def _validate_project(self):
         now = datetime.datetime.now()
+        if self.project.products.filter(rewards__isnull=True).exists():
+            return False
         if self.project.dead_at < now:
             return False  # 종료됨
         elif not self.project.status:

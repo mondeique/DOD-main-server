@@ -242,7 +242,7 @@ CORS_ALLOW_METHODS = [
     'POST',
     'PUT',
 ]
-APPEND_SLASH = False
+# APPEND_SLASH = False
 
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
