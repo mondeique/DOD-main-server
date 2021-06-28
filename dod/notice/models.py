@@ -5,15 +5,18 @@ from ckeditor_uploader.fields import RichTextUploadingField
 
 
 def icon_thumb_directory_path(instance, filename):
-    return 'dod-explanation/icon/{}'.format(filename)
+    ext = filename.split('.')[-1]
+    return 'dod-explanation/icon/{}.{}'.format(filename, ext)
 
 
 def link_notice_directory_path(instance, filename):
-    return 'link-notice/{}'.format(filename)
+    ext = filename.split('.')[-1]
+    return 'link-notice/{}.{}'.format(filename, ext)
 
 
 def menu_icon_directory_path(instance, filename):
-    return 'menu_icon/{}'.format(filename)
+    ext = filename.split('.')[-1]
+    return 'menu_icon/{}.{}'.format(filename, ext)
 
 
 class LinkCopyNotice(models.Model):

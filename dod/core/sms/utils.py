@@ -1,7 +1,7 @@
 import os
 import string
 import time
-
+from PIL import Image
 import random
 import json
 from accounts.models import PhoneConfirm
@@ -168,6 +168,9 @@ class MMSV1Manager():
                                "※ 사용처: {}\n※ 상품명: {}\n※ 유효기간: {}\n\n▷ 문의하기 \n- 고객센터 : 02-334-1133"\
             .format(brand, product_name, due_date)
 
+    def _convert_png_to_jpg(self):
+        pass
+
     def send_mms(self, phone, image_url):
         sms_dic = load_credential("sms")
         access_key = sms_dic['access_key']
@@ -186,13 +189,20 @@ class MMSV1Manager():
         }
 
         # download gift.jpg from url
-        os.system("curl " + image_url + " > gift.jpg")
+        extension = image_url.split('.')[-1]
+        file_name = 'gift.{}'.format(extension)
+        os.system("curl " + image_url + " > {}".format(file_name))
+
+        if extension not in ['jpg', 'jpeg']:
+            im = Image.open(file_name)
+            rgb_im = im.convert('RGB')
+            rgb_im.save('gift.jpg')
 
         with open("gift.jpg", "rb") as image_file:
             data = base64.b64encode(image_file.read())
 
         self.body['messages'][0]['to'] = phone
-        self.body['files'][0]['name'] = "gift.jpg"
+        self.body['files'][0]['name'] = 'gift.jpg'
         self.body['files'][0]['body'] = data.decode('utf-8')
         request = requests.post(api_url, headers=headers, data=json.dumps(self.body))
 

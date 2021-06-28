@@ -12,14 +12,17 @@ def generate_random_key(length=5):
 
 
 def item_thumb_directory_path(instance, filename):
-    return 'product/{}'.format(filename)
+    ext = filename.split('.')[-1]
+    return 'product/{}.{}'.format(filename, ext)
 
 
 def reward_img_directory_path(instance, filename):
-    return 'project/{}/item/{}/{}'.format(
+    ext = filename.split('.')[-1]
+    return 'project/{}/item/{}/{}.{}'.format(
         instance.product.project.project_hash_key,
         instance.product.item.id,
-        generate_random_key())
+        generate_random_key(),
+        ext)
 
 
 class Brand(models.Model):

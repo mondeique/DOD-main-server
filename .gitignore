@@ -13,6 +13,7 @@ settings/__init__.py
 .config
 *.xlsx
 gift.jpg
+gift.png
 
 # Created by https://www.gitignore.io/api/macos,python,django
 # Edit at https://www.gitignore.io/?templates=macos,python,django
