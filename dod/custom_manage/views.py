@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 from accounts.models import User
 from core.slack import lambda_monitoring_slack_message
 from core.sms.utils import MMSV1Manager
+from core.tools import get_client_ip
 from logs.models import MMSSendLog
 from products.models import Reward
 from projects.models import Project
@@ -39,6 +40,8 @@ def reset_pw(request):
 class AutoSendLeftMMSAPIView(APIView):
     # TODO 외부 서버에서 crontab 또는 Cloudwatch 로 요청
     def get(self, request, *args, **kwargs):
+        ip = get_client_ip(request)
+        print(ip)
         now = datetime.datetime.now()  # every 00:10
         project_qs = Project.objects.filter(monitored=False).filter(dead_at__lte=now)\
             .prefetch_related('products', 'products__rewards', 'respondents', 'respondents__phone_confirm')
@@ -81,10 +84,4 @@ class AutoSendLeftMMSAPIView(APIView):
                                              total_left_rewards, total_succeed_mms)
         lambda_monitoring_slack_message(msg)
         project_qs.update(monitored=True)
-        return Response(status=status.HTTP_200_OK)
-
-
-class TestAPIView(APIView):
-    def get(self, request, *args, **kwargs):
-        print('0asd')
         return Response(status=status.HTTP_200_OK)
