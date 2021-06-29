@@ -38,7 +38,7 @@ def reset_pw(request):
 
 class AutoSendLeftMMSAPIView(APIView):
     # TODO 외부 서버에서 crontab 또는 Cloudwatch 로 요청
-    def post(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         now = datetime.datetime.now()  # every 00:10
         project_qs = Project.objects.filter(monitored=False).filter(dead_at__lte=now)\
             .prefetch_related('products', 'products__rewards', 'respondents', 'respondents__phone_confirm')

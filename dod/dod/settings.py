@@ -233,6 +233,7 @@ CKEDITOR_CONFIGS = {
 # CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_WHITELIST = (
     'https://dod-beta.com',
+    'http://3.36.156.224'
 )
 CORS_ALLOW_METHODS = [
     'DELETE',
