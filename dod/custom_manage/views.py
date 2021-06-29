@@ -4,6 +4,7 @@ import random
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import viewsets, mixins, status
 from rest_framework.views import APIView
@@ -38,11 +39,10 @@ def reset_pw(request):
 
 
 class AutoSendLeftMMSAPIView(APIView):
-    # TODO 외부 서버에서 crontab 또는 Cloudwatch 로 요청
+    permission_classes = [IsAuthenticated,]
+
     def get(self, request, *args, **kwargs):
-        ip = get_client_ip(request)
-        print(ip)
-        print(request.META)
+
         now = datetime.datetime.now()  # every 00:10
         project_qs = Project.objects.filter(monitored=False).filter(dead_at__lte=now)\
             .prefetch_related('products', 'products__rewards', 'respondents', 'respondents__phone_confirm')
