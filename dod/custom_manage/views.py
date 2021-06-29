@@ -87,7 +87,8 @@ class AutoSendLeftMMSAPIView(APIView):
                         reward.save()
                 except:
                     pass
-        msg = '\n현재시간: {}\n' \
+        msg = '\n[재추첨 로그]\n' \
+              '현재시간: {}\n' \
               '재전송 프로젝트: {}개\n' \
               '재전송 설문자수: {}명\n' \
               '재전송 문자개수: {}개\n' \
@@ -108,16 +109,25 @@ class ProjectDeadLinkNotification(APIView):
         buffer_day = now + datetime.timedelta(hours=12)  # 그날 저녁에 끝나는 project들
 
         monitoring_logs = ProjectMonitoringLog.objects.filter(dead_line_notice=False).\
-            filter(project__dead_at__gte=now, project__dead_at__lte=buffer_day)
+            filter(project__dead_at__gte=now, project__dead_at__lte=buffer_day).\
+            filter(project__is_active=True, project__status=True)
         project_qs = Project.objects.filter(monitoring_logs__in=monitoring_logs)\
             .prefetch_related('respondents', 'respondents__phone_confirm')
+        total_succeed_sms = 0
         for project in project_qs:
             phone = project.owner.phone
 
             sms_manager = SMSV2Manager()
             sms_manager.project_deadline_notice_content()
             sms_manager.send_sms(phone=phone)
+            total_succeed_sms = total_succeed_sms + 1
 
+        msg = '\n[프로젝트 마감 안내 로그]\n' \
+              '현재시간: {}\n' \
+              '발송 유저 수: {}명\n' \
+              '전송 문자개수: {}개\n' \
+              '---------------------'.format(datetime.datetime.now(), project_qs.count(), total_succeed_sms)
+        lambda_monitoring_slack_message(msg)
         monitoring_logs.update(dead_line_notice=True)
 
         return Response(status=status.HTTP_200_OK)

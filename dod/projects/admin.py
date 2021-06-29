@@ -2,7 +2,7 @@ from django.contrib import admin
 from custom_manage.sites import staff_panel
 
 # staff
-from projects.models import Project
+from projects.models import Project, ProjectMonitoringLog
 
 
 class ProjectStaffadmin(admin.ModelAdmin):
@@ -27,4 +27,9 @@ class ProjectStaffadmin(admin.ModelAdmin):
     search_fields = ['project_hash_key', 'name', 'owner__phone']
 
 
+class ProjectMonitoringStaffAdmin(admin.ModelAdmin):
+    list_display = ['project', 'draw_again', 'dead_line_notice']
+
+
 staff_panel.register(Project, ProjectStaffadmin)
+staff_panel.register(ProjectMonitoringLog, ProjectMonitoringStaffAdmin)
