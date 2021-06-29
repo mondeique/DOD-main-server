@@ -15,7 +15,7 @@ from core.sms.utils import MMSV1Manager
 from core.tools import get_client_ip
 from logs.models import MMSSendLog
 from products.models import Reward
-from projects.models import Project
+from projects.models import Project, ProjectMonitoringLog
 from .forms import PostForm
 
 
@@ -47,8 +47,14 @@ class AutoSendLeftMMSAPIView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         now = datetime.datetime.now()  # every 00:10
-        project_qs = Project.objects.filter(monitoring_logs__draw_again=False).filter(dead_at__lte=now)\
-            .prefetch_related('products', 'products__rewards', 'respondents', 'respondents__phone_confirm')
+        # TODO QUeryset re
+        monitoring_logs = ProjectMonitoringLog.objects.filter(draw_again=False).filter(project__dead_at__lte=now)
+        project_qs = Project.objects.filter(monitoring_logs__in=monitoring_logs)\
+            .prefetch_related('products',
+                              'products__rewards',
+                              'respondents',
+                              'respondents__phone_confirm',
+                              'monitoring_logs')
         total_left_rewards = 0
         total_succeed_mms = 0
         for project in project_qs:
@@ -90,7 +96,7 @@ class AutoSendLeftMMSAPIView(APIView):
               '---------------------'.format(datetime.datetime.now(), project_qs.count(),
                                              total_left_rewards, total_succeed_mms)
         lambda_monitoring_slack_message(msg)
-        project_qs.update(monitoring_logs__draw_again=True)
+        monitoring_logs.update(draw_again=True)
         return Response(status=status.HTTP_200_OK)
 
 

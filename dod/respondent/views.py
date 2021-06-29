@@ -46,14 +46,13 @@ class RefererValidatorAPIView(APIView):
         # base_url = 'http://172.30.1.26:3000/'
         base_url = 'https://dod-beta.com/'
         # server_url = 'https://docs.gift/'
-        print(base_url)
         self.referer = request.META.get('HTTP_REFERER', "")
         referer = request.META.get('HTTP_REFERER', "")
 
         if not self._check_referer():
             # client forbidden page
             # TODO: client url
-            forbidden_url = base_url + 'invalid'
+            forbidden_url = base_url + 'forbidden'
             return HttpResponseRedirect(forbidden_url)
 
         project_hash_key = kwargs['slug']

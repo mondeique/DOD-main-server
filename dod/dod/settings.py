@@ -36,7 +36,8 @@ ALLOWED_HOSTS = ['13.209.225.239',
                  'docs.gift',
                  '3.37.147.189',
                  'd-o-d.io',
-                 '172.31.6.130']
+                 '172.31.6.130',
+                 '172.30.1.26']
 
 INTERNAL_IPS = ('172.30.1.18')
 
@@ -76,7 +77,7 @@ THIRD_APPS = [
     'storages',
     'debug_toolbar',
     'crispy_forms',
-    'django_crontab'
+    # 'django_crontab'
 ]
 
 INSTALLED_APPS += SECONDS_APPS + THIRD_APPS
