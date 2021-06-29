@@ -26,9 +26,17 @@ SETTING_DEV_DIC = load_credential("develop")
 SECRET_KEY = SETTING_DEV_DIC['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['13.209.225.239', '127.0.0.1', 'dod-beta.com', 'dod-link.com', '3.36.156.224', 'docs.gift', '3.37.147.189', 'd-o-d.io']
+ALLOWED_HOSTS = ['13.209.225.239',
+                 '127.0.0.1',
+                 'dod-beta.com',
+                 'dod-link.com',
+                 '3.36.156.224',
+                 'docs.gift',
+                 '3.37.147.189',
+                 'd-o-d.io',
+                 '172.31.6.130']
 
 INTERNAL_IPS = ('172.30.1.18')
 

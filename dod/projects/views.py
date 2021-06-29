@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from core.slack import deposit_temp_slack_message
 from payment.models import UserDepositLog
 from products.serializers import ProductCreateSerializer
-from projects.models import Project
+from projects.models import Project, ProjectMonitoringLog
 from projects.serializers import ProjectCreateSerializer, ProjectDepositInfoRetrieveSerializer, ProjectUpdateSerializer, \
     ProjectDashboardSerializer, SimpleProjectInfoSerializer, ProjectLinkSerializer, PastProjectSerializer
 from random import sample
@@ -52,6 +52,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.project = serializer.save()
         self._create_products()
+        self._create_project_monitoring_log()
         self._generate_lucky_time()
         self._create_user_deposit_log()
 
@@ -76,6 +77,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
             serializer.save()
         self.project.winner_count = winner_count
         self.project.save()
+
+    def _create_project_monitoring_log(self):
+        ProjectMonitoringLog.objects.create(project=self.project)
 
     def _create_user_deposit_log(self):
         UserDepositLog.objects.create(project=self.project, total_price=self._calculate_total_price())

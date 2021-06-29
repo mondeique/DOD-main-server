@@ -43,8 +43,11 @@ class AutoSendLeftMMSAPIView(APIView):
 
     def get(self, request, *args, **kwargs):
         print(request.META.get('HTTP_USER_AGENT', ""))
+        if 'python-requests' not in request.META.get('HTTP_USER_AGENT', ""):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         now = datetime.datetime.now()  # every 00:10
-        project_qs = Project.objects.filter(monitored=False).filter(dead_at__lte=now)\
+        project_qs = Project.objects.filter(monitoring_logs__draw_again=False).filter(dead_at__lte=now)\
             .prefetch_related('products', 'products__rewards', 'respondents', 'respondents__phone_confirm')
         total_left_rewards = 0
         total_succeed_mms = 0
@@ -87,5 +90,12 @@ class AutoSendLeftMMSAPIView(APIView):
               '---------------------'.format(datetime.datetime.now(), project_qs.count(),
                                              total_left_rewards, total_succeed_mms)
         lambda_monitoring_slack_message(msg)
-        project_qs.update(monitored=True)
+        project_qs.update(monitoring_logs__draw_again=True)
         return Response(status=status.HTTP_200_OK)
+
+
+class ProjectDeadLinkNotification(APIView):
+    def get(self, request, *args, **kwargs):
+        if 'python-requests' not in request.META.get('HTTP_USER_AGENT', ""):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
