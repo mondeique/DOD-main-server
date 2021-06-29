@@ -1,7 +1,7 @@
 from django.db import models
 
 # Create your models here.
-from dod import settings
+from django.conf import settings
 
 
 class Project(models.Model):
