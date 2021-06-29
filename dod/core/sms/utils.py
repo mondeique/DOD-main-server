@@ -158,14 +158,18 @@ class MMSV1Manager():
     def set_content(self, brand, product_name, due_date):
         self.body['content'] = "[디오디 당첨 안내]\n안녕하세요 설문추첨서비스 디오디입니다. \n당첨되신걸 축하드립니다 :)\n" \
                                "다음번 설문에도 꼭 참여해주세요!\n\n" \
-                               "※ 사용처: {}\n※ 상품명: {}\n※ 유효기간: {}\n\n▷ 문의하기 \n- 고객센터 : 02-334-1133"\
+                               "※ 사용처: {}\n※ 상품명: {}\n※ 유효기간: {}\n\n▷ 문의하기 \n- 고객센터 : 02-334-1133\n\n\n" \
+                               "dod 알아보러가기\n" \
+                               "https://bit.ly/3w6LRUG"\
             .format(brand, product_name, due_date)
 
     def set_monitored_content(self, brand, product_name, due_date):
         self.body['content'] = "[디오디 재추첨 당첨 안내]\n안녕하세요 설문추첨서비스 디오디입니다.\n참여해주신 설문조사 리워드 재추첨을 통해 당첨되셨습니다 :)\n" \
                                "축하드립니다!\n" \
                                "다음번 설문에도 꼭 참여해주세요!\n\n" \
-                               "※ 사용처: {}\n※ 상품명: {}\n※ 유효기간: {}\n\n▷ 문의하기 \n- 고객센터 : 02-334-1133"\
+                               "※ 사용처: {}\n※ 상품명: {}\n※ 유효기간: {}\n\n▷ 문의하기 \n- 고객센터 : 02-334-1133\n\n\n" \
+                               "dod 알아보러가기\n" \
+                               "https://bit.ly/3w6LRUG"\
             .format(brand, product_name, due_date)
 
     def _convert_png_to_jpg(self):
@@ -188,11 +192,20 @@ class MMSV1Manager():
             'x-ncp-apigw-signature-v2': signature
         }
 
+        try:
+            # for except duplicated image
+            os.remove('gift.jpg')
+        except:
+            pass
+
         # download gift.jpg from url
         extension = image_url.split('.')[-1]
         file_name = 'gift.{}'.format(extension)
+        if extension == 'jpeg':
+            file_name = 'gift.jpg'
         os.system("curl " + image_url + " > {}".format(file_name))
 
+        # transfer png to jpg
         if extension not in ['jpg', 'jpeg']:
             im = Image.open(file_name)
             rgb_im = im.convert('RGB')
