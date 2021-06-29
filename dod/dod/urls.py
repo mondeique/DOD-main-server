@@ -20,7 +20,7 @@ from django.urls import path, include
 from core.views import SendMMSAPIView
 from custom_manage.sites import superadmin_panel, staff_panel
 from custom_manage.views import AutoSendLeftMMSAPIView
-from dod.settings import develop
+from django.conf import settings
 from respondent.views import RefererValidatorAPIView, home
 
 urlpatterns = [
@@ -46,7 +46,7 @@ urlpatterns = [
     path('ckeditor/', include('ckeditor_uploader.urls')),
 ]
 
-if develop.DEBUG:
+if settings.DEBUG:
     import debug_toolbar
     urlpatterns += [
         path('__debug__/', include(debug_toolbar.urls)),

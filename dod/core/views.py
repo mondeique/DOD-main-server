@@ -17,7 +17,7 @@ from accounts.models import PhoneConfirm, User
 from accounts.serializers import SMSSignupPhoneCheckSerializer, SMSSignupPhoneConfirmSerializer
 from core.sms.utils import SMSV2Manager, MMSV1Manager
 from core.tools import get_client_ip
-from dod import settings
+from django.conf import settings
 from logic.models import DateTimeLotteryResult
 from logs.models import MMSSendLog
 from projects.models import Project

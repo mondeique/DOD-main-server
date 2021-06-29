@@ -30,6 +30,7 @@ class StaffLoginForm(AuthenticationForm):
 
         # Set the label for the "username" field.
         UserModel = get_user_model()
+
         self.username_field = UserModel._meta.get_field('email')
         if self.fields['username'].label is None:
             self.fields['username'].label = capfirst(self.username_field.verbose_name)
@@ -37,9 +38,15 @@ class StaffLoginForm(AuthenticationForm):
     def clean(self):
         username = self.cleaned_data.get('username')
         password = self.cleaned_data.get('password')
-
         if username and password:
-            user = get_user_model().objects.get(email=username)
+            try:
+                user = get_user_model().objects.get(email=username)
+            except:
+                raise forms.ValidationError(
+                    self.error_messages['invalid_login'],
+                    code='invalid_login',
+                    params={'username': self.username_field.verbose_name},
+                )
 
             authenticate = check_password(password, user.password)
             if authenticate:
