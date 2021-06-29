@@ -42,6 +42,7 @@ class AutoSendLeftMMSAPIView(APIView):
     def get(self, request, *args, **kwargs):
         ip = get_client_ip(request)
         print(ip)
+        print(request.META)
         now = datetime.datetime.now()  # every 00:10
         project_qs = Project.objects.filter(monitored=False).filter(dead_at__lte=now)\
             .prefetch_related('products', 'products__rewards', 'respondents', 'respondents__phone_confirm')
