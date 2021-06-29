@@ -118,4 +118,6 @@ class ProjectDeadLinkNotification(APIView):
             sms_manager.project_deadline_notice_content()
             sms_manager.send_sms(phone=phone)
 
+        monitoring_logs.update(dead_line_notice=True)
+
         return Response(status=status.HTTP_200_OK)
