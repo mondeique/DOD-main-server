@@ -82,3 +82,9 @@ class AutoSendLeftMMSAPIView(APIView):
         lambda_monitoring_slack_message(msg)
         project_qs.update(monitored=True)
         return Response(status=status.HTTP_200_OK)
+
+
+class TestAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        print('0asd')
+        return Response(status=status.HTTP_200_OK)
