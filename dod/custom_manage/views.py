@@ -42,7 +42,7 @@ class AutoSendLeftMMSAPIView(APIView):
     # permission_classes = [IsAuthenticated,]
 
     def get(self, request, *args, **kwargs):
-
+        print(request.META.get('HTTP_USER_AGENT', ""))
         now = datetime.datetime.now()  # every 00:10
         project_qs = Project.objects.filter(monitored=False).filter(dead_at__lte=now)\
             .prefetch_related('products', 'products__rewards', 'respondents', 'respondents__phone_confirm')
@@ -55,28 +55,31 @@ class AutoSendLeftMMSAPIView(APIView):
                 total_left_rewards = total_left_rewards + left_count
                 phone_list = list(project.respondents.filter(is_win=False).
                                   values_list('phone_confirm__phone', 'id'))
-                new_winners = random.sample(phone_list, left_count)
-                for i, reward in enumerate(left_rewards):
-                    winner = new_winners[i][0]  # phone
-                    brand = reward.product.item.brand.name
-                    item_name = reward.product.item.name
-                    item_url = reward.reward_img.url
-                    due_date = reward.due_date
-                    if type(item_url) is tuple:
-                        item_url = ''.join(item_url)
-                    if type(item_name) is tuple:
-                        item_name = ''.join(item_name)
+                try:
+                    new_winners = random.sample(phone_list, left_count)
+                    for i, reward in enumerate(left_rewards):
+                        winner = new_winners[i][0]  # phone
+                        brand = reward.product.item.brand.name
+                        item_name = reward.product.item.name
+                        item_url = reward.reward_img.url
+                        due_date = reward.due_date
+                        if type(item_url) is tuple:
+                            item_url = ''.join(item_url)
+                        if type(item_name) is tuple:
+                            item_name = ''.join(item_name)
 
-                    mms_manager = MMSV1Manager()
-                    mms_manager.set_monitored_content(brand, item_name, due_date)
-                    success, code = mms_manager.send_mms(phone=winner, image_url=item_url)
-                    if not success:
-                        MMSSendLog.objects.create(code=code, phone=winner, item_name=item_name, item_url=item_url,
-                                                  due_date=due_date, brand=brand)
-                    else:
-                        total_succeed_mms = total_succeed_mms + 1
-                    reward.winner_id = new_winners[i][1]
-                    reward.save()
+                        mms_manager = MMSV1Manager()
+                        mms_manager.set_monitored_content(brand, item_name, due_date)
+                        success, code = mms_manager.send_mms(phone=winner, image_url=item_url)
+                        if not success:
+                            MMSSendLog.objects.create(code=code, phone=winner, item_name=item_name, item_url=item_url,
+                                                      due_date=due_date, brand=brand)
+                        else:
+                            total_succeed_mms = total_succeed_mms + 1
+                        reward.winner_id = new_winners[i][1]
+                        reward.save()
+                except:
+                    pass
         msg = '\n현재시간: {}\n' \
               '재전송 프로젝트: {}개\n' \
               '재전송 설문자수: {}명\n' \
