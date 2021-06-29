@@ -115,6 +115,10 @@ class SMSV2Manager():
     def deposit_confirm_content(self):
         self.body['content'] = "[디오디] 추첨링크가 활성화되었습니다."
 
+    def project_deadline_notice_content(self):
+        self.body['content'] = "[디오디] 추첨이 오늘 밤 12시에 마감됩니다.\n" \
+                               "추첨기간 연장을 원하시면 문의해주세요."
+
     def send_sms(self, phone):
         sms_dic = load_credential("sms")
         access_key = sms_dic['access_key']

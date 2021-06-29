@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 
 from accounts.models import User
 from core.slack import lambda_monitoring_slack_message
-from core.sms.utils import MMSV1Manager
+from core.sms.utils import MMSV1Manager, SMSV2Manager
 from core.tools import get_client_ip
 from logs.models import MMSSendLog
 from products.models import Reward
@@ -42,12 +42,10 @@ class AutoSendLeftMMSAPIView(APIView):
     # permission_classes = [IsAuthenticated,]
 
     def get(self, request, *args, **kwargs):
-        print(request.META.get('HTTP_USER_AGENT', ""))
         if 'python-requests' not in request.META.get('HTTP_USER_AGENT', ""):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        now = datetime.datetime.now()  # every 00:10
-        # TODO QUeryset re
+        now = datetime.datetime.now()  # every 09:10
         monitoring_logs = ProjectMonitoringLog.objects.filter(draw_again=False).filter(project__dead_at__lte=now)
         project_qs = Project.objects.filter(monitoring_logs__in=monitoring_logs)\
             .prefetch_related('products',
@@ -101,7 +99,23 @@ class AutoSendLeftMMSAPIView(APIView):
 
 
 class ProjectDeadLinkNotification(APIView):
+
     def get(self, request, *args, **kwargs):
         if 'python-requests' not in request.META.get('HTTP_USER_AGENT', ""):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        now = datetime.datetime.now()  # every 16:10
+        buffer_day = now + datetime.timedelta(hours=12)  # 그날 저녁에 끝나는 project들
+
+        monitoring_logs = ProjectMonitoringLog.objects.filter(dead_line_notice=False).\
+            filter(project__dead_at__gte=now, project__dead_at__lte=buffer_day)
+        project_qs = Project.objects.filter(monitoring_logs__in=monitoring_logs)\
+            .prefetch_related('respondents', 'respondents__phone_confirm')
+        for project in project_qs:
+            phone = project.owner.phone
+
+            sms_manager = SMSV2Manager()
+            sms_manager.project_deadline_notice_content()
+            sms_manager.send_sms(phone=phone)
+
+        return Response(status=status.HTTP_200_OK)
