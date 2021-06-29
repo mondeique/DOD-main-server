@@ -39,7 +39,7 @@ def reset_pw(request):
 
 
 class AutoSendLeftMMSAPIView(APIView):
-    permission_classes = [IsAuthenticated,]
+    # permission_classes = [IsAuthenticated,]
 
     def get(self, request, *args, **kwargs):
 
