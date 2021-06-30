@@ -6,7 +6,7 @@ from projects.models import Project
 
 def qrimg_directory_path(instance, filename):
     ext = filename.split('.')[-1]
-    return 'deposit_without_bankbook/{}/qr/{}.{}'.format(instance.company_name, filename, ext)
+    return 'deposit_without_bankbook/{}/qr/{}'.format(instance.company_name, filename)
 
 
 class UserDepositLog(models.Model):
