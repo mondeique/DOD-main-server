@@ -70,12 +70,10 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         """
         api: POST accounts/v1/login/
         """
-        print(request.data)
         try:
             self.serializer = self.get_serializer(data=request.data)
             self.serializer.is_valid(raise_exception=True)
             self._login()
-            print(self.serializer.validated_data)
             user = self.serializer.validated_data['user']
         except Exception as e:
             return Response({"non_field_errors": ['Failed to login.']},

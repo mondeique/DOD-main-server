@@ -14,4 +14,3 @@ class OrganizationMiddleware(object):
             except Token.DoesNotExist:
                 pass
             #This is now the correct user
-            print (request.user)

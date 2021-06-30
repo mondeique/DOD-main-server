@@ -181,7 +181,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     @action(methods=['put'], detail=True)
     def depositor(self, request, *args, **kwargs):
-        print('asdasd')
         project = self.get_object()
         if project.owner != request.user:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
