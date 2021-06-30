@@ -28,7 +28,7 @@ def reset_pw(request):
             user = User.objects.get(phone=phone)
             user.set_password(pw)
             user.save()
-            return HttpResponseRedirect("staff/")
+            return HttpResponseRedirect("/staff/")
     else:
         if request.user.is_anonymous:
             return HttpResponseRedirect("/staff/")

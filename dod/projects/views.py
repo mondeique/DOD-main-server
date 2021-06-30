@@ -55,6 +55,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         self._create_project_monitoring_log()
         self._generate_lucky_time()
         self._create_user_deposit_log()
+        self._check_undefined_projects()
 
         project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
 
@@ -83,6 +84,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def _create_user_deposit_log(self):
         UserDepositLog.objects.create(project=self.project, total_price=self._calculate_total_price())
+
+    def _check_undefined_projects(self):
+        user = self.request.user
+        undefined_projects = user.projects.filter(is_active=True).filter(deposit_logs__depositor__isnull=True)
+        undefined_projects.update(is_active=False)
 
     def _calculate_total_price(self):
         counts = self.project.products.all().values_list('count', flat=True)

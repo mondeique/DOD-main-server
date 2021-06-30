@@ -96,6 +96,8 @@ class RefererValidatorAPIView(APIView):
             return False  # 종료됨
         elif not self.project.status:
             return False  # 입금대기중
+        elif not self.project.is_active:
+            return False  # 프로젝트 삭제됨(환불시)
         elif self.project.start_at > now:
             return False  # 프로젝트 대기중
         else:
