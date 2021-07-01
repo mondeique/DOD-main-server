@@ -1,4 +1,9 @@
 from dod.settings.base import *
+
+DEVEL = True
+PROD = False
+STAG = False
+
 SETTING_DEV_DIC = load_credential("develop")
 SECRET_KEY = SETTING_DEV_DIC['SECRET_KEY']
 DEBUG = True

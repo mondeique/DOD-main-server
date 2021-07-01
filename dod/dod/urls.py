@@ -28,8 +28,6 @@ urlpatterns = [
     path('superadmin/', superadmin_panel.urls),
     path('staff/', staff_panel.urls, name='staff'),
 
-    path('<slug:slug>/', RefererValidatorAPIView.as_view()),
-
     path('accounts/v1/', include('accounts.urls')),
     path('api/v1/', include('projects.urls')),
     path('api/v1/', include('products.urls')),
@@ -45,6 +43,14 @@ urlpatterns = [
     # ckeditors
     path('ckeditor/', include('ckeditor_uploader.urls')),
 ]
+if settings.DEVEL or settings.STAG:
+    urlpatterns += [
+        path('link/<slug:slug>/', RefererValidatorAPIView.as_view()),
+    ]
+if settings.PROD:
+    urlpatterns += [
+        path('<slug:slug>/', RefererValidatorAPIView.as_view()),
+    ]
 
 if settings.DEBUG:
     import debug_toolbar

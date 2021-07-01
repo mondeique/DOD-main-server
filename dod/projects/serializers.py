@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers
 import random
 import string
@@ -170,8 +171,10 @@ class ProjectLinkSerializer(serializers.ModelSerializer):
         hash_key = obj.project_hash_key
         # url = 'https://d-o-d.io/link/{}/'.format(hash_key)
         # url = 'http://3.37.147.189:8000/link/{}/'.format(hash_key)
-        # url = 'https://docs.gift/link/{}/'.format(hash_key)
-        url = 'https://dod-link.com/{}/'.format(hash_key)
+        if settings.DEVEL or settings.STAG:
+            url = 'https://docs.gift/link/{}/'.format(hash_key)
+        else:
+            url = 'https://dod-link.com/{}/'.format(hash_key) # TODO : link api 수정
         return url
 
     def get_pc_url(self, obj):
