@@ -46,7 +46,8 @@ class AutoSendLeftMMSAPIView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         now = datetime.datetime.now()  # every 09:10
-        monitoring_logs = ProjectMonitoringLog.objects.filter(draw_again=False).filter(project__dead_at__lte=now)
+        monitoring_logs = ProjectMonitoringLog.objects.filter(draw_again=False).filter(project__dead_at__lte=now).\
+            filter(project__is_active=True, project__status=True)
         project_qs = Project.objects.filter(monitoring_logs__in=monitoring_logs)\
             .prefetch_related('products',
                               'products__rewards',
