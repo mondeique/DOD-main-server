@@ -124,6 +124,7 @@ class TermsOfServiceLink(models.Model):
 
 
 class MainPageDodExplanation(models.Model):
+    order = models.IntegerField(null=True)
     title = RichTextUploadingField()
     text = RichTextUploadingField()
     icon = models.ImageField(upload_to=icon_thumb_directory_path)

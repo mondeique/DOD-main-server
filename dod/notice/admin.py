@@ -33,7 +33,7 @@ class TermsOfServiceLinkStaffAdmin(admin.ModelAdmin):
 
 
 class MainPageDodExplanationStaffAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'title', 'is_active', 'created_at']
+    list_display = ['pk', 'order', 'title', 'is_active', 'created_at']
 
 
 staff_panel.register(LinkCopyNotice, LinkCopyNoticeStaffAdmin)

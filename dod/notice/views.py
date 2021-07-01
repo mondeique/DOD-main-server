@@ -14,7 +14,7 @@ from notice.serializers import DodExplanationSerializer, ThirdPartyMenuListSeria
 class DodExplanationAPIView(viewsets.GenericViewSet,
                             mixins.ListModelMixin,):
     permission_classes = [AllowAny]
-    queryset = MainPageDodExplanation.objects.filter(is_active=True).order_by('id')
+    queryset = MainPageDodExplanation.objects.filter(is_active=True).order_by('order')
     serializer_class = DodExplanationSerializer
     pagination_class = None
     """
