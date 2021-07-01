@@ -16,6 +16,7 @@ from core.tools import get_client_ip
 from logs.models import MMSSendLog
 from products.models import Reward
 from projects.models import Project, ProjectMonitoringLog
+from respondent.models import RespondentPhoneConfirm
 from .forms import PostForm
 
 
@@ -46,9 +47,9 @@ class AutoSendLeftMMSAPIView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         now = datetime.datetime.now()  # every 09:10
-        monitoring_logs = ProjectMonitoringLog.objects.filter(draw_again=False).filter(project__dead_at__lte=now).\
+        monitoring_logs = ProjectMonitoringLog.objects.filter(draw_again=False).filter(project__dead_at__lte=now). \
             filter(project__is_active=True, project__status=True)
-        project_qs = Project.objects.filter(monitoring_logs__in=monitoring_logs)\
+        project_qs = Project.objects.filter(monitoring_logs__in=monitoring_logs) \
             .prefetch_related('products',
                               'products__rewards',
                               'respondents',
@@ -109,10 +110,10 @@ class ProjectDeadLinkNotification(APIView):
         now = datetime.datetime.now()  # every 16:10
         buffer_day = now + datetime.timedelta(hours=12)  # 그날 저녁에 끝나는 project들
 
-        monitoring_logs = ProjectMonitoringLog.objects.filter(dead_line_notice=False).\
-            filter(project__dead_at__gte=now, project__dead_at__lte=buffer_day).\
+        monitoring_logs = ProjectMonitoringLog.objects.filter(dead_line_notice=False). \
+            filter(project__dead_at__gte=now, project__dead_at__lte=buffer_day). \
             filter(project__is_active=True, project__status=True)
-        project_qs = Project.objects.filter(monitoring_logs__in=monitoring_logs)\
+        project_qs = Project.objects.filter(monitoring_logs__in=monitoring_logs) \
             .prefetch_related('respondents', 'respondents__phone_confirm')
         total_succeed_sms = 0
         for project in project_qs:
@@ -123,7 +124,7 @@ class ProjectDeadLinkNotification(APIView):
             sms_manager.send_sms(phone=phone)
             total_succeed_sms = total_succeed_sms + 1
 
-        msg = '\n[프로젝트 마감 안내 로그]\n' \
+        msg = '\n[추첨링크 마감 안내 로그]\n' \
               '현재시간: {}\n' \
               '발송 유저 수: {}명\n' \
               '전송 문자개수: {}개\n' \
@@ -132,3 +133,31 @@ class ProjectDeadLinkNotification(APIView):
         monitoring_logs.update(dead_line_notice=True)
 
         return Response(status=status.HTTP_200_OK)
+
+
+class RespondentCheckMonitoring(APIView):
+
+    def post(self, request, *args, **kwargs):
+        token = request.data.get('token', '')
+        if token != 'ttlcT3WNbqEQuwE424Tp8nxD':
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        staff_phone_list = list(User.objects.filter(is_staff=True).values_list('phone', flat=True))
+        today = datetime.date.today()
+        now = datetime.datetime.now()
+        now = now.strftime('%Y년 %m월 %d일 %H:%M:%S')
+        respondents = RespondentPhoneConfirm.objects.filter(is_confirmed=True).exclude(phone__in=staff_phone_list).prefetch_related('respondent')
+        today_respondents = respondents.filter(created_at__gt=today)
+        today_respondents_winner = today_respondents.filter(respondent__is_win=True)
+        today_respondents_failed = today_respondents.filter(respondent__is_win=False)
+        msg = "\n\n 응답자 현황을 알려줄게\n" \
+              "<{}시 기준>\n\n" \
+              "[오늘]" \
+              "응답: {}명\n" \
+              "당첨: {}명\n" \
+              "탈락: {}명\n" \
+              "\n" \
+              "[누적]" \
+              '응답: {}명\n'.format(now, today_respondents.count(), today_respondents_winner.count(), today_respondents_failed.count(), respondents.count())
+        lambda_monitoring_slack_message(msg)
+        return Response(status=status.HTTP_200_OK)
+
