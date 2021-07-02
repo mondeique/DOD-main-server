@@ -18,6 +18,7 @@ from products.models import Reward
 from projects.models import Project, ProjectMonitoringLog
 from respondent.models import RespondentPhoneConfirm
 from .forms import PostForm
+from .loader import load_credential
 
 
 def reset_pw(request):
@@ -139,7 +140,8 @@ class RespondentCheckMonitoring(APIView):
 
     def post(self, request, *args, **kwargs):
         token = request.data.get('token', '')
-        if token != 'ttlcT3WNbqEQuwE424Tp8nxD':
+        slack_token = load_credential('slack')['RespondentMonitoringToken']
+        if token != slack_token:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         staff_phone_list = list(User.objects.filter(is_staff=True).values_list('phone', flat=True))
         today = datetime.date.today()
@@ -161,3 +163,25 @@ class RespondentCheckMonitoring(APIView):
         lambda_monitoring_slack_message(msg)
         return Response(status=status.HTTP_200_OK)
 
+
+class UserCheckMonitoring(APIView):
+
+    def post(self, request, *args, **kwargs):
+        token = request.data.get('token', '')
+        slack_token = load_credential('slack')['UserMonitoringToken']
+        if token != slack_token:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        today = datetime.date.today()
+        now = datetime.datetime.now()
+        now = now.strftime('%Y년 %m월 %d일 %H:%M:%S')
+        users = User.objects.exclude(is_staff=True).prefetch_related('projects')
+        today_users = users.filter(created_at__gt=today)
+        msg = "\n\n 가입자 현황을 알려줄게\n" \
+              "<{}시 기준>\n\n" \
+              "[오늘]" \
+              "가입자: {}명\n" \
+              "\n" \
+              "[누적]" \
+              '가입자: {}명\n'.format(now, today_users.count(), users.count())
+        lambda_monitoring_slack_message(msg)
+        return Response(status=status.HTTP_200_OK)
