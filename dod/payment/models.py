@@ -25,13 +25,14 @@ class Payment(models.Model):
         (-20, '결제취소실패'),
         (-30, '결제취소진행중'),
         (-1, '오류로 인한 결제실패'),
-        (-2, '결제승인실패')
+        (-2, '결제승인실패'),
+        (999, '서버오류발생.'),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='유저')
     receipt_id = models.CharField(max_length=100, verbose_name='영수증키', db_index=True)
     status = models.IntegerField(choices=STATUS, verbose_name='결제상태', default=0)
-
+    project = models.OneToOneField(Project, null=True, on_delete=models.SET_NULL)
     price = models.IntegerField(verbose_name='결제금액', null=True)
     name = models.CharField(max_length=100, verbose_name='대표상품명')
 
@@ -53,6 +54,21 @@ class Payment(models.Model):
             return self.name
         else:
             return
+
+
+class PaymentErrorLog(models.Model):
+    """
+    부트페이에선 결제가 되었지만, done api 호출 시 에러가 나, 서버상에선 결제 완료 처리가 되지 않았을 경우 환불 or 결제 완료
+    처리해야 하기 때문에 로그 생성
+    """
+
+    # TODO : statelessful 하지 않도록 server side 렌더링이 필요
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+    temp_payment = models.ForeignKey(Payment, null=True, blank=True, on_delete=models.SET_NULL)
+    description = models.CharField(max_length=100)
+    bootpay_receipt_id = models.TextField(null=True, blank=True)
+    is_refunded = models.BooleanField(default=False)
 
 
 class UserDepositLog(models.Model):

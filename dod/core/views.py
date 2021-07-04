@@ -150,7 +150,6 @@ class SMSViewSet(viewsets.GenericViewSet):
                 MMSSendLog.objects.create(code=code, phone=phone, item_name=item_name, item_url=item_url,
                                           due_date=due_date, brand=brand)
 
-            # TODO: 당첨자 안나온 상품 있으면 한번에 보내기
             self.reward.winner_id = self.respondent.id
             self.reward.save()
             item_name = self.reward.product.item.short_name

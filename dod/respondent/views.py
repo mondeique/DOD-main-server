@@ -55,7 +55,6 @@ class RefererValidatorAPIView(APIView):
 
         if not self._check_referer():
             # client forbidden page
-            # TODO: client url
             forbidden_url = base_url + 'forbidden'
             return HttpResponseRedirect(forbidden_url)
 

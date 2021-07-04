@@ -18,6 +18,25 @@ from random import sample
 from logic.models import UserSelectLogic, DateTimeLotteryResult
 
 
+def _convert_dict_to_tuple(dic):
+    tuple_list = []
+    for _, v in enumerate(dic):
+        temp_tuple = []
+        for key, val in v.items():
+            temp_tuple.append(val)
+        temp_tuple = tuple(temp_tuple)
+        tuple_list.append(temp_tuple)
+    return tuple_list
+
+
+def _sum_same_tuple_first_values(tuple_list):
+    d = {q: 0 for q, _ in tuple_list}
+    for name, num in tuple_list:
+        d[name] += num
+    val = list(map(tuple, d.items()))
+    return val
+
+
 class ProjectViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, ]
     queryset = Project.objects.all().select_related('owner')
@@ -55,7 +74,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         self._create_products()
         self._create_project_monitoring_log()
         self._generate_lucky_time()
-        self._create_user_deposit_log()
+        # self._create_user_deposit_log()
         self._check_undefined_projects()
 
         project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
@@ -156,14 +175,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
         self.project = serializer.save()
 
         previous_items = list(self.project.products.values('item', 'count'))
+        previous_items = sorted(previous_items, key=itemgetter('item'))
 
         # UPDATED 2021.07.04
-        d = {q: 0 for q, _ in previous_items}
-        for name, num in previous_items:
-            d[name] += num
-        previous_items = list(map(tuple, d.items()))
-        previous_items = sorted(previous_items, key=itemgetter('item'))
-        present_items = sorted(items, key=itemgetter('item'))
+        # Convert list of dict to list of tuple
+        previous_tuple_list = _convert_dict_to_tuple(previous_items)
+        # Sum same item id : [(1,1), (1,1), (2,1)] => [(1,2), (2,1)]
+        previous_items = _sum_same_tuple_first_values(previous_tuple_list)
+
+        present_tuple_list = _convert_dict_to_tuple(sorted(items, key=itemgetter('item')))
+        present_items = _sum_same_tuple_first_values(present_tuple_list)
+
         if previous_items == present_items:
             # item 변화 없는 경우
             project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
@@ -172,11 +194,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
             # delete previous data
             self.project.products.all().delete()
             self.project.select_logics.all().delete()
-            self.project.deposit_logs.all().delete()
+            # self.project.deposit_logs.all().delete()
             # create new data
             self._create_products()
             self._generate_lucky_time()
-            self._create_user_deposit_log()
+            # self._create_user_deposit_log()
             project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
             return Response(project_info_serializer.data, status=status.HTTP_206_PARTIAL_CONTENT)
 
@@ -209,6 +231,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     @action(methods=['put'], detail=True)
     def depositor(self, request, *args, **kwargs):
+        """
+        [DEPRECATED] 2021.07.04
+        """
         project = self.get_object()
         if project.owner != request.user:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
@@ -232,6 +257,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     @action(methods=['put'], detail=True)
     def set_name(self, request, *args, **kwargs):
+        """
+        추첨링크(프로젝트)명 변경하는 api
+        """
         project = self.get_object()
         if project.owner != request.user:
             return Response(status=status.HTTP_401_UNAUTHORIZED)

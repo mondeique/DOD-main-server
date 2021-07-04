@@ -12,17 +12,13 @@
         $.ajaxSetup({
             headers: {"Authorization": "Token 3887e955bd5307ba007109ad98479dcb7c995d1c"}
         });
-        var trade = [5];
-        var address = {"name":"이름","phone": '01032423121', "zipNo":'12345', "Addr":'서울시 관악구', "detailAddr": '302호'}
-        console.log(trade);
-        console.log(address);
+        var project = 5;
+        console.log(project);
         jQuery.ajaxSettings.traditional = true;
         $.ajax({
             type: 'POST',
             url: '/api/v1/payment/',
-            data: {"trade": trade, "price": 100,
-                "address":JSON.stringify(address),
-                "memo":'', "application_id": 1},
+            data: {"project": project, "price": 100},
             async: false,
             traditional : true,
             success: function (data) {
@@ -34,7 +30,7 @@
                 } else {
                     var order_id = data['results']['order_id'];
                     var daa = data['results'];
-                    console.log(daa['payform'])
+                    console.log(daa['payform']);
                     BootPay.request(data['results']
                     ).error(function (data) {
                         //결제 진행시 에러가 발생하면 수행됩니다.
