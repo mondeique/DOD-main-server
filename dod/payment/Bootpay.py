@@ -1,4 +1,5 @@
 import requests
+import json
 
 
 class BootpayApi:
@@ -44,7 +45,7 @@ class BootpayApi:
             'Authorization': self.token
         }).json()
 
-    def subscribe_billing(self, billing_key, item_name, price, order_id, items=None, user_info=None):
+    def subscribe_billing(self, billing_key, item_name, price, order_id, items=None, user_info=None, extra=None):
         if items is None:
             items = {}
         payload = {
@@ -53,10 +54,12 @@ class BootpayApi:
             'price': price,
             'order_id': order_id,
             'items': items,
-            'user_info': user_info
+            'user_info': user_info,
+            'extra': extra
         }
-        return requests.post(self.api_url(['subscribe', 'billing.json']), data=payload, headers={
-            'Authorization': self.token
+        return requests.post(self.api_url(['subscribe', 'billing.json']), data=json.dumps(payload), headers={
+            'Authorization': self.token,
+            'Content-Type': 'application/json'
         }).json()
 
     def subscribe_billing_reserve(self, billing_key, item_name, price, order_id, execute_at, feedback_url, items=None):
@@ -72,8 +75,15 @@ class BootpayApi:
             'execute_at': execute_at,
             'feedback_url': feedback_url
         }
-        return requests.post(self.api_url(['subscribe', 'billing', 'reserve.json']), data=payload, headers={
-            'Authorization': self.token
+        return requests.post(self.api_url(['subscribe', 'billing', 'reserve.json']), data=json.dumps(payload), headers={
+            'Authorization': self.token,
+            'Content-Type': 'application/json'
+        }).json()
+
+    def subscribe_billing_reserve_cancel(self, reserve_id):
+        return requests.delete(self.api_url(['subscribe', 'billing', 'reserve', reserve_id]), headers={
+            'Authorization': self.token,
+            'Content-Type': 'application/json'
         }).json()
 
     def get_subscribe_billing_key(self, pg, order_id, item_name, card_no, card_pw, expire_year, expire_month,
@@ -92,12 +102,18 @@ class BootpayApi:
             'user_info': user_info,
             'extra': extra
         }
-        return requests.post(self.api_url(['request', 'card_rebill.json']), data=payload, headers={
-            'Authorization': self.token
+        return requests.post(self.api_url(['request', 'card_rebill.json']), data=json.dumps(payload), headers={
+            'Authorization': self.token,
+            'Content-Type': 'application/json'
         }).json()
 
     def destroy_subscribe_billing_key(self, billing_key):
         return requests.delete(self.api_url(['subscribe', 'billing', billing_key]), headers={
+            'Authorization': self.token
+        }).json()
+
+    def request_payment(self, payload={}):
+        return requests.post(self.api_url(['request', 'payment.json']), data=payload, headers={
             'Authorization': self.token
         }).json()
 
@@ -151,4 +167,18 @@ class BootpayApi:
     def certificate(self, receipt_id):
         return requests.get(self.api_url(['certificate', receipt_id]), headers={
             'Authorization': self.token
+        }).json()
+
+    def submit(self, receipt_id):
+        payload = {
+            'receipt_id': receipt_id
+        }
+        return requests.post(self.api_url(['submit.json']), data=payload, headers={
+            'Authorization': self.token
+        }).json()
+
+    def get_user_token(self, data={}):
+        return requests.post(self.api_url(['request', 'user', 'token.json']), data=data, headers={
+            'Authorization': self.token,
+            'Content-Type': 'application/json'
         }).json()

@@ -9,6 +9,7 @@ import datetime
 from rest_framework.views import APIView
 from core.slack import deposit_temp_slack_message
 from payment.models import UserDepositLog
+from products.models import Item
 from products.serializers import ProductCreateSerializer
 from projects.models import Project, ProjectMonitoringLog
 from projects.serializers import ProjectCreateSerializer, ProjectDepositInfoRetrieveSerializer, ProjectUpdateSerializer, \
@@ -67,15 +68,22 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         winner_count = 0
         for val in items:
-            self.product_data = {
-                'item': val.get('item'),
-                'count': val.get('count'),
-                'project': self.project.id
-            }
             winner_count += val.get('count')
-            serializer = ProductCreateSerializer(data=self.product_data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+            item_id = val.get('item')
+            pay_price = Item.objects.get(pk=item_id).price
+
+            for i in range(val.get('count')):
+                # UPDATED 2021.07.04
+                # 결제가 붙으면서 업데이트함.
+                self.product_data = {
+                    'item': item_id,
+                    'project': self.project.id,
+                    'price': pay_price
+                }
+                serializer = ProductCreateSerializer(data=self.product_data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+
         self.project.winner_count = winner_count
         self.project.save()
 
@@ -92,11 +100,19 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def _calculate_total_price(self):
         counts = self.project.products.all().values_list('count', flat=True)
-        prices = self.project.products.all().values_list('item__price', flat=True)
-        mul_price = list(map(lambda x,y: x*y, counts, prices))
-        total_price = 0
-        for i in mul_price:
-            total_price += int(i)
+        if not all(i == 1 for i in counts):
+            # Before Payment
+            prices = self.project.products.all().values_list('item__price', flat=True)
+            mul_price = list(map(lambda x, y: x * y, counts, prices))
+            total_price = 0
+            for i in mul_price:
+                total_price += int(i)
+        else:
+            # UPDATED 2021.07.04
+            # Payment Attached
+            products_price = self.project.products.all().values_list('price', flat=True)
+            total_price = sum(products_price)
+
         return total_price
 
     def _generate_lucky_time(self):
@@ -140,6 +156,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
         self.project = serializer.save()
 
         previous_items = list(self.project.products.values('item', 'count'))
+
+        # UPDATED 2021.07.04
+        d = {q: 0 for q, _ in previous_items}
+        for name, num in previous_items:
+            d[name] += num
+        previous_items = list(map(tuple, d.items()))
         previous_items = sorted(previous_items, key=itemgetter('item'))
         present_items = sorted(items, key=itemgetter('item'))
         if previous_items == present_items:

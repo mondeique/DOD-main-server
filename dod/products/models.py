@@ -67,15 +67,26 @@ class Product(models.Model):
     """
     프로젝트 생성시 유저가 선택하는 상품입니다.
     중복선택 가능.
+    결제시 해당 모델로 상품을 관리하며, 결제완료시 STATUS가 1로 바뀝니다.
+    부분취소 또는 프로젝트 수정시에 이 모델의 STATUS로 기록하며, 추후 Payment 모델에서 결제 금액을 관리합니다.
     """
+
+    STATUS = [
+        (0, '결제 전'),
+        (1, '상품결제완료'),
+        (2, '상품결제취소'),
+    ]
+
+    status = models.IntegerField(choices=STATUS, default=0)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='products')
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
-    count = models.IntegerField(help_text="상품당 개수입니다. Reward object 수와 같아야 합니다.")
+    price = models.IntegerField(help_text='결제금액입니다. 변동될 수 있기 때문에 따로 저장합니다.', default=0)
+    count = models.IntegerField(help_text="결제 연동을 하면서 product가 상품단위가 되었습니다. count로 관리하지 않고, 무조건 하나씩 생성합니다.", default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name_plural = '기프티콘업로드'
+        verbose_name_plural = '결제상품'
 
     def __str__(self):
         return '[{}]유저 [{}] [{}]상품 [{}]개 생성'.format(

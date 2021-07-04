@@ -7,7 +7,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['project', 'item', 'count']
+        fields = ['project', 'item', 'price']
 
 
 class ProductSimpleDashboardSerializer(serializers.ModelSerializer):

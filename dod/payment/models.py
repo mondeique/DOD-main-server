@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from ckeditor_uploader.fields import RichTextUploadingField
 # Create your models here.
@@ -7,6 +8,51 @@ from projects.models import Project
 def qrimg_directory_path(instance, filename):
     ext = filename.split('.')[-1]
     return 'deposit_without_bankbook/{}/qr/{}'.format(instance.company_name, filename)
+
+
+class Payment(models.Model):
+    """
+    결제시 생성되는 모델입니다.
+    여러개의 상품을 한번에 결제하면 하나의 Payment obj 가 생성됩니다.
+    """
+    STATUS = [
+        (0, '결제대기'),
+        (1, '결제완료'),
+        (2, '결제승인전'),
+        (3, '결제승인중'),
+        (20, '결제취소'),
+        (21, '부분결제취소'),
+        (-20, '결제취소실패'),
+        (-30, '결제취소진행중'),
+        (-1, '오류로 인한 결제실패'),
+        (-2, '결제승인실패')
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='유저')
+    receipt_id = models.CharField(max_length=100, verbose_name='영수증키', db_index=True)
+    status = models.IntegerField(choices=STATUS, verbose_name='결제상태', default=0)
+
+    price = models.IntegerField(verbose_name='결제금액', null=True)
+    name = models.CharField(max_length=100, verbose_name='대표상품명')
+
+    # bootpay data
+    tax_free = models.IntegerField(verbose_name='면세금액', null=True)
+    remain_price = models.IntegerField(verbose_name='남은금액', null=True)
+    remain_tax_free = models.IntegerField(verbose_name='남은면세금액', null=True)
+    cancelled_price = models.IntegerField(verbose_name='취소금액', null=True)
+    cancelled_tax_free = models.IntegerField(verbose_name='취소면세금액', null=True)
+    pg = models.TextField(default='inicis', verbose_name='pg사')
+    method = models.TextField(verbose_name='결제수단')
+    payment_data = models.TextField(verbose_name='raw데이터')
+    requested_at = models.DateTimeField(blank=True, null=True)
+    purchased_at = models.DateTimeField(blank=True, null=True)
+    revoked_at = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        if self.name:
+            return self.name
+        else:
+            return
 
 
 class UserDepositLog(models.Model):

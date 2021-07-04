@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from payment.views import DepositInfoAPIView, DepositSuccessAPIView
+from payment.views import DepositInfoAPIView, DepositSuccessAPIView, BootpayFeedbackAPIView
 
 app_name = 'payment'
 
@@ -11,4 +11,5 @@ router.register('deposit-success', DepositSuccessAPIView, basename='deposit-info
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('bootpay_feedback/', BootpayFeedbackAPIView.as_view()),
 ]
