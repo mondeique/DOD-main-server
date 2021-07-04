@@ -87,14 +87,16 @@ class PaymentViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
     @staticmethod
     def get_access_token():
-        bootpay = BootpayApi(application_id=load_credential("rest_application_id"),
-                             private_key=load_credential("private_key"))
+        secrets = load_credential("bootpay", "")
+        bootpay = BootpayApi(application_id=secrets["rest_application_id"],
+                             private_key=secrets["private_key"])
         result = bootpay.get_access_token()
         if result['status'] is 200:
             return bootpay
         else:
             raise exceptions.APIException(detail='bootpay access token 확인바람')
 
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         """
         boot pay 결제 시작
@@ -180,7 +182,7 @@ class PaymentViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         result = bootpay.verify(receipt_id)
         if result['status'] == 200:
             # 성공!
-            if result['data']['status'] is 1 and payment.price is result['data']['price']:
+            if int(result['data']['status']) == 1 and int(payment.price) == int(result['data']['price']):
                 serializer = PaymentDoneSerialzier(payment, data=result['data'])
                 if serializer.is_valid():
                     serializer.save()
@@ -193,14 +195,53 @@ class PaymentViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
                     payment.status = 1
                     payment.save()
 
+                    # Project 활성화
+                    project = payment.project
+                    project.status = True
+                    project.is_active = True
+                    project.save()
+
                     return Response(status.HTTP_200_OK)
+            else:
+                # payment : 결제 승인 실패
+                payment.status = -2
+                payment.save()
+
+                # bootpay 취소 요청
+                result = bootpay.cancel(receipt_id, '{}'.format(payment.price), '디오디', '디오디 서버 결제승인 실패로 인한 결제취소')
+                serializer = PaymentCancelSerialzier(payment, data=result['data'])
+
+                if serializer.is_valid():
+                    serializer.save()
+                    PaymentErrorLog.objects.create(user=request.user, temp_payment=payment,
+                                                   description='(환불완료)[결제 완료 중 에러] bootpay 결제 실패, *취소 완료',
+                                                   is_refunded=True)
+
+                    # trade : bootpay 환불 완료
+                    Product.objects.filter(project__payment=payment).update(status=2)  # 결제되었다가 취소이므로 환불.
+
+                    # payment : 결제 취소 완료
+                    payment.status = 20
+                    payment.save()
+
+                    return Response({'detail': 'canceled'}, status=status.HTTP_200_OK)
+                else:
+                    PaymentErrorLog.objects.create(user=request.user, temp_payment=payment,
+                                                   description='(환불안됨)[결제 완료 중 에러] bootpay 결제 되었지만 서버에러로 취소 요청 중 실패.'
+                                                               ' 부트페이 확인 후 처리 필요.',
+                                                   bootpay_receipt_id=receipt_id)
+
+                    # 결제취소실패
+                    payment.status = -20
+                    payment.save()
+
         else:
             # payment : 결제 승인 실패
             payment.status = -2
             payment.save()
 
             # bootpay 취소 요청
-            result = bootpay.cancel(receipt_id, name='dod', reason='디오디 서버 결제승인 실패로 인한 결제취소')
+            result = bootpay.cancel(receipt_id, '{}'.format(payment.price), '디오디', '디오디 서버 결제승인 실패로 인한 결제취소')
             serializer = PaymentCancelSerialzier(payment, data=result['data'])
 
             if serializer.is_valid():
@@ -238,7 +279,7 @@ class PaymentViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         """
         payment = Payment.objects.get(pk=request.data.get('order_id'))
         bootpay = self.get_access_token()
-        result = bootpay.cancel(payment.receipt_id, name='dod', reason='유저 결제취소')
+        result = bootpay.cancel(payment.receipt_id, '{}'.format(payment.price), '디오디', '결제취소')
         serializer = PaymentCancelSerialzier(payment, data=result['data'])
 
         # 결제취소진행중
@@ -277,7 +318,7 @@ class PaymentViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
         payment = Payment.objects.get(pk=request.data.get('order_id'))
         bootpay = self.get_access_token()
-        result = bootpay.cancel(payment.receipt_id, name='dod', reason='결제 과정 중 에러발생')
+        result = bootpay.cancel(payment.receipt_id, '{}'.format(payment.price), '디오디', '결제 과정 중 에러발생. 디오디로 문의해주세요.')
         serializer = PaymentCancelSerialzier(payment, data=result['data'])
 
         # 오류로 인한 결제실패
@@ -313,7 +354,7 @@ class PaymentViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
     def check_price(self):
         price = sum(list(self.products.values_list('price', flat=True)))
-        if self.data.price != price:
+        if int(self.data['price']) != int(price):
             raise exceptions.NotAcceptable(detail='가격을 확인해주시길 바랍니다.')
 
     def check_product_filled(self):
@@ -323,18 +364,20 @@ class PaymentViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
     def create_payment(self):
         name = self._set_products_name()
-        price = self.data.price
+        price = self.data['price']
         self.payment = Payment.objects.create(user=self.user,
                                               name=name,
                                               price=price,
-                                              project=self.project)
+                                              project=self.project,
+                                              pg='payapp',
+                                              method='card')
 
     def _set_products_name(self):
         item_names = list(self.products.values_list('item__name', flat=True))
         name_counts = {i: item_names.count(i) for i in item_names}
         name = ''
         for i, val in enumerate(name_counts):
-            if i < len(val) - 1:
+            if i < len(name_counts) - 1:
                 name += '{} x{}, '.format(val, name_counts[val])
             else:
                 name += '{} x{}'.format(val, name_counts[val])

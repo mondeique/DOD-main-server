@@ -36,8 +36,8 @@ class PayformSerializer(serializers.ModelSerializer):
     order_id = serializers.IntegerField(source='id')
     items = serializers.SerializerMethodField()
     user_info = serializers.SerializerMethodField()
-    pg = serializers.CharField(default='inicis')
-    method = serializers.CharField(default='')
+    pg = serializers.CharField(default='payapp')
+    method = serializers.CharField(default='kakao')
 
     class Meta:
         model = Payment
@@ -53,7 +53,7 @@ class PayformSerializer(serializers.ModelSerializer):
         }
 
     def get_application_id(self, obj):
-        return load_credential('application_id')
+        return load_credential("bootpay", "")['application_id']
 
 
 class PaymentConfirmSerializer(serializers.Serializer):

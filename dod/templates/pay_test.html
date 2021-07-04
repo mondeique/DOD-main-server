@@ -10,15 +10,15 @@
 <script>
     function pay() {
         $.ajaxSetup({
-            headers: {"Authorization": "Token 3887e955bd5307ba007109ad98479dcb7c995d1c"}
+            headers: {"Authorization": "Token "}
         });
-        var project = 5;
+        var project = 17;
         console.log(project);
         jQuery.ajaxSettings.traditional = true;
         $.ajax({
             type: 'POST',
             url: '/api/v1/payment/',
-            data: {"project": project, "price": 100},
+            data: {"project": project, "price": 1000},
             async: false,
             traditional : true,
             success: function (data) {

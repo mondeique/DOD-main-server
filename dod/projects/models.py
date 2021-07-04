@@ -12,7 +12,7 @@ class Project(models.Model):
     # project_url = models.URLField(help_text="referrer로 유효성 검증. 해당 Url 접속시 핸드폰 인증 화면으로")
     project_hash_key = models.CharField(max_length=100)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='projects')
-    status = models.BooleanField(default=False, help_text="결제하기전에는 False, staff 결제확인시 True : 무통장입금 결제 확인용") #Todo payment 붙으면 나중가서 힘내자
+    status = models.BooleanField(default=False, help_text="결제하기전에는 False, staff 결제확인시 True : 무통장입금 결제 확인용")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

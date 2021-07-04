@@ -21,6 +21,8 @@ from core.views import SendMMSAPIView
 from custom_manage.sites import superadmin_panel, staff_panel
 from custom_manage.views import AutoSendLeftMMSAPIView
 from django.conf import settings
+
+from payment.views import pay_test
 from respondent.views import RefererValidatorAPIView, home
 
 urlpatterns = [
@@ -38,7 +40,8 @@ urlpatterns = [
     path('api/manage/', include('custom_manage.urls')),
 
 
-    path('api/send-mms/', SendMMSAPIView.as_view()),
+    # path('api/send-mms/', SendMMSAPIView.as_view()),
+    path('pay_test/', pay_test, name='paytest'),
 
     # ckeditors
     path('ckeditor/', include('ckeditor_uploader.urls')),

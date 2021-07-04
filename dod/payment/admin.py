@@ -2,7 +2,11 @@ from django.contrib import admin
 
 from custom_manage.sites import staff_panel
 from payment.models import UserDepositLog, DepositWithoutBankbookShortCutLink, DepositWithoutBankbookQRimage, \
-    DepositWithoutBankbookNotice
+    DepositWithoutBankbookNotice, Payment
+
+
+class PaymentStaffAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'status', 'user', 'project_id', 'price', 'name']
 
 
 class UserDepositNameListFilter(admin.SimpleListFilter):
@@ -58,3 +62,4 @@ staff_panel.register(UserDepositLog, UserDepositLogStaffAdmin)
 staff_panel.register(DepositWithoutBankbookShortCutLink, DepositWithoutBankbookShortCutLinkStaffAdmin)
 staff_panel.register(DepositWithoutBankbookQRimage, DepositWithoutBankbookQRimageStaffAdmin)
 staff_panel.register(DepositWithoutBankbookNotice, DepositWithoutBankbookNoticeStaffAdmin)
+staff_panel.register(Payment, PaymentStaffAdmin)
