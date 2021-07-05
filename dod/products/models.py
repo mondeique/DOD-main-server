@@ -68,6 +68,13 @@ class Product(models.Model):
     프로젝트 생성시 유저가 선택하는 상품입니다.
     중복선택 가능.
     """
+    STATUS = [
+        (0, '결제 전'),
+        (1, '상품결제완료'),
+        (2, '상품결제취소'),
+    ]
+
+    status = models.IntegerField(choices=STATUS, default=0)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='products')
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     count = models.IntegerField(help_text="상품당 개수입니다. Reward object 수와 같아야 합니다.")
