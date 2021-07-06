@@ -70,6 +70,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer = serializer(data=self.data, context={'request': request,
                                                          'user': request.user})
         serializer.is_valid(raise_exception=True)
+        print(self.data)
         self.project = serializer.save()
         self._create_products()
         self._create_project_monitoring_log()

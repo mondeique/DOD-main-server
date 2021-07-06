@@ -105,9 +105,20 @@ class ProjectDashboardSerializer(serializers.ModelSerializer):
         return count
 
     def get_products(self, obj):
+        data = []
         products = obj.products.all()
-        serializer = ProductSimpleDashboardSerializer(products, many=True)
-        return serializer.data
+        item_id_list = list(products.values_list('item_id', flat=True).distinct())
+        for item in item_id_list:
+            dic = {}
+            products_qs = products.filter(item__id=item)
+            thumbnail = products_qs.last().item.thumbnail.url
+            winner_count = products_qs.count()
+            remain_winner_count = products_qs.filter(rewards__winner_id__isnull=True).count()
+            dic['item_thumbnail'] = thumbnail
+            dic['remain_winner_count'] = remain_winner_count
+            dic['winner_count'] = winner_count
+            data.append(dic)
+        return data
 
     def get_start_at(self, obj):  # humanize
         return obj.start_at.strftime("%m월 %d일")
@@ -124,7 +135,7 @@ class ProjectDashboardSerializer(serializers.ModelSerializer):
         elif obj.start_at > now:
             return 300  # 프로젝트 대기중
         else:
-            return 100  # 진행중
+            return 100  # 진행중F
 
     def get_depositor(self, obj):
         if obj.deposit_logs.exists():

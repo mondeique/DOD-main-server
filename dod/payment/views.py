@@ -369,8 +369,7 @@ class PaymentViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
                                               name=name,
                                               price=price,
                                               project=self.project,
-                                              pg='payapp',
-                                              method='card')
+                                              pg='payapp')
 
     def _set_products_name(self):
         item_names = list(self.products.values_list('item__name', flat=True))

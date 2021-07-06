@@ -7,13 +7,13 @@ from django.db import models
 from projects.models import Project
 
 
-def generate_random_key(length=5):
+def generate_random_key(length):
     return ''.join(random.choices(string.digits+string.ascii_letters, k=length))
 
 
 def item_thumb_directory_path(instance, filename):
     ext = filename.split('.')[-1]
-    return 'product/{}.{}'.format(filename, ext)
+    return 'product/{}.{}'.format(generate_random_key(7), ext)
 
 
 def reward_img_directory_path(instance, filename):
@@ -21,7 +21,7 @@ def reward_img_directory_path(instance, filename):
     return 'project/{}/item/{}/{}.{}'.format(
         instance.product.project.project_hash_key,
         instance.product.item.id,
-        generate_random_key(),
+        generate_random_key(5),
         ext)
 
 
