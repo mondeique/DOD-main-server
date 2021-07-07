@@ -49,13 +49,12 @@ class RefererValidatorAPIView(APIView):
         if settings.DEVEL or settings.STAG:
             base_url = 'http://172.30.1.26:3000/'
         else:
-            base_url = 'https://dod-beta.com/'
+            base_url = 'https://d-o-d.io/'
 
         self.referer = request.META.get('HTTP_REFERER', "")
 
         if not self._check_referer():
             # client forbidden page
-            # TODO: client url
             forbidden_url = base_url + 'forbidden'
             return HttpResponseRedirect(forbidden_url)
 

@@ -174,7 +174,7 @@ class ProjectLinkSerializer(serializers.ModelSerializer):
         if settings.DEVEL or settings.STAG:
             url = 'http://3.36.156.224:8010/link/{}/'.format(hash_key)  # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
         else:
-            url = 'https://dod-link.com/{}/'.format(hash_key) # TODO : link api 수정
+            url = 'https://d-o-d.io/checklink/{}/'.format(hash_key)
         return url
 
     def get_pc_url(self, obj):
