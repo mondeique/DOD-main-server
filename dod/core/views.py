@@ -172,7 +172,7 @@ class SMSViewSet(viewsets.GenericViewSet):
 
     def _set_project(self):
         project_queryset = Project.objects.filter(project_hash_key=self.data.get('project_key'))\
-            .prefetch_related('respondents', 'respondents__phone_confirm')
+            .prefetch_related('respondents', 'respondents__phone_confirm', 'products', 'products__rewards')  # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
 
         self.project = project_queryset.get(project_hash_key=self.data.get('project_key'))
         self.phone_confirm = RespondentPhoneConfirm.objects.filter(phone=self.data.get('phone'),
@@ -193,6 +193,10 @@ class SMSViewSet(viewsets.GenericViewSet):
         # 프로젝트 생성자는 무조건 꽝!
         if self.phone_confirm.phone == self.project.owner.phone:
             return False
+        # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
+        if self.project.products.filter(rewards__isnull=True).exists():
+            return False
+        # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
         self.lucky_times = self.project.select_logics.last().lottery_times.filter(is_used=False)
         now = datetime.datetime.now()
         self.valid_lucky_times = self.lucky_times.filter(lucky_time__lte=now)

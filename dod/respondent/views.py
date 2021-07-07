@@ -73,8 +73,6 @@ class RefererValidatorAPIView(APIView):
                         self.project.start_at,
                         self.project.is_active)
             staff_reward_didnt_upload_slack_message(msg)
-            project_not_start_url = base_url + 'invalid'
-            return HttpResponseRedirect(project_not_start_url)
 
         ip = get_client_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', "")  # TODO: if user_agent is null
@@ -89,6 +87,8 @@ class RefererValidatorAPIView(APIView):
         return HttpResponseRedirect(respondent_phone_register_url)
 
     def _check_referer(self):
+        if settings.DEVEL or settings.STAG:
+            return True  # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
         if "google.com" in self.referer:
             return True
         else:
