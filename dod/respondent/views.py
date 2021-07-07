@@ -84,7 +84,9 @@ class RefererValidatorAPIView(APIView):
         # client phone confirm(Success) page with query: project, validator
         # TODO: client url
         respondent_phone_register_url = base_url + 'link?p={}&v={}'.format(project_hash_key, validator)
-        return HttpResponseRedirect(respondent_phone_register_url)
+        # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
+        respondent_phone_register_url_with_utm = respondent_phone_register_url + '?utm_source=dod&utm_medium=service&utm_campaign=lottery'
+        return HttpResponseRedirect(respondent_phone_register_url_with_utm)
 
     def _check_referer(self):
         if settings.DEVEL or settings.STAG:
@@ -96,9 +98,9 @@ class RefererValidatorAPIView(APIView):
 
     def _validate_project(self):
         now = datetime.datetime.now()
-        if self.project.dead_at < now:
-            return False  # 종료됨
-        elif not self.project.status:
+        # if self.project.dead_at < now: # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
+        #     return False  # 종료됨
+        if not self.project.status:
             return False  # 입금대기중
         elif not self.project.is_active:
             return False  # 프로젝트 삭제됨(환불시)
@@ -146,9 +148,9 @@ class ClientRefererProjectValidateCheckViewSet(viewsets.GenericViewSet):
 
     def _validate_project(self):
         now = datetime.datetime.now()
-        if self.project.dead_at < now:
-            return False  # 종료됨
-        elif not self.project.status:
+        # if self.project.dead_at < now:  # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
+        #     return False  # 종료됨
+        if not self.project.status:
             return False  # 입금대기중
         elif not self.project.is_active:
             return False  # 프로젝트 삭제됨(환불시)

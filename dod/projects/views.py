@@ -102,8 +102,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def _generate_lucky_time(self):
         # project 생성과 동시에 당첨 logic 자동 생성
         logic = UserSelectLogic.objects.create(kind=1, project=self.project)
-        dt_hours = int((self.project.dead_at - self.project.start_at).total_seconds() / 60 / 60)
-        random_hours = sorted(sample(range(0, dt_hours), self.project.winner_count - 1))
+        renewal_dead_at = self.project.start_at + datetime.timedelta(days=4)  # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
+        dt_hours = int((renewal_dead_at - self.project.start_at).total_seconds() / 60 / 60)
+        random_hours = sorted(sample(range(0, dt_hours), self.project.winner_count))
         bulk_datetime_lottery_result = []
         for i in range(len(random_hours)):
             bulk_datetime_lottery_result.append(DateTimeLotteryResult(
@@ -111,10 +112,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 logic=logic
             ))
         DateTimeLotteryResult.objects.bulk_create(bulk_datetime_lottery_result)
-        DateTimeLotteryResult.objects.create(
-            lucky_time=self.project.dead_at - datetime.timedelta(hours=self._last_day_random_hour()),
-            logic=logic
-        )
+        # DateTimeLotteryResult.objects.create(   # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
+        #     lucky_time=self.project.dead_at - datetime.timedelta(hours=self._last_day_random_hour()),
+        #     logic=logic
+        # )
 
     def _last_day_random_hour(self):
         return sample(range(1, 25), 1)[0]
