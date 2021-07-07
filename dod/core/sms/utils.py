@@ -113,11 +113,15 @@ class SMSV2Manager():
         self.body['content'] = "[디오디] 당첨확인을 위해 인증번호 {}를 입력해 주세요.".format(self.confirm_key)
 
     def deposit_confirm_content(self):
-        self.body['content'] = "[디오디] 추첨링크가 활성화되었습니다."
+        self.body['content'] = "[디오디] 추첨링크가 활성화되었습니다.\n\n" \
+                               "dod 바로가기\n" \
+                               "https://bit.ly/3ytDgNt"
 
     def project_deadline_notice_content(self):
         self.body['content'] = "[디오디] 추첨이 오늘 밤 12시에 마감됩니다.\n" \
-                               "추첨기간 연장을 원하시면 문의해주세요."
+                               "추첨기간 연장을 원하시면 문의해주세요.\n\n" \
+                               "dod 바로가기\n" \
+                               "https://bit.ly/3yuJCfI"
 
     def send_sms(self, phone):
         sms_dic = load_credential("sms")
@@ -164,7 +168,7 @@ class MMSV1Manager():
                                "다음번 설문에도 꼭 참여해주세요!\n\n" \
                                "※ 사용처: {}\n※ 상품명: {}\n※ 유효기간: {}\n\n▷ 문의하기 \n- 고객센터 : 02-334-1133\n\n\n" \
                                "dod 알아보러가기\n" \
-                               "https://bit.ly/3w6LRUG"\
+                               "https://bit.ly/3jQkj3C"\
             .format(brand, product_name, due_date)
 
     def set_monitored_content(self, brand, product_name, due_date):
@@ -173,7 +177,7 @@ class MMSV1Manager():
                                "다음번 설문에도 꼭 참여해주세요!\n\n" \
                                "※ 사용처: {}\n※ 상품명: {}\n※ 유효기간: {}\n\n▷ 문의하기 \n- 고객센터 : 02-334-1133\n\n\n" \
                                "dod 알아보러가기\n" \
-                               "https://bit.ly/3w6LRUG"\
+                               "https://bit.ly/3jQkj3C"\
             .format(brand, product_name, due_date)
 
     def _convert_png_to_jpg(self):
