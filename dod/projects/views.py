@@ -103,12 +103,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
         # project 생성과 동시에 당첨 logic 자동 생성
         logic = UserSelectLogic.objects.create(kind=1, project=self.project)
         renewal_dead_at = self.project.start_at + datetime.timedelta(days=4)  # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
+        now = datetime.datetime.now()
         dt_hours = int((renewal_dead_at - self.project.start_at).total_seconds() / 60 / 60)
         random_hours = sorted(sample(range(0, dt_hours), self.project.winner_count))
         bulk_datetime_lottery_result = []
         for i in range(len(random_hours)):
             bulk_datetime_lottery_result.append(DateTimeLotteryResult(
-                lucky_time=self.project.start_at + datetime.timedelta(hours=random_hours[i]),
+                lucky_time=now + datetime.timedelta(hours=random_hours[i]),
                 logic=logic
             ))
         DateTimeLotteryResult.objects.bulk_create(bulk_datetime_lottery_result)
