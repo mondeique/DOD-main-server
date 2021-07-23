@@ -16,7 +16,7 @@ class DodExplanationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MainPageDodExplanation
-        fields = ['id', 'title', 'text', 'icon']
+        fields = ['id', 'title', 'text', 'icon', 'link_url']
 
     def get_icon(self, obj):
         return obj.icon.url
