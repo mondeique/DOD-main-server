@@ -37,6 +37,7 @@ urlpatterns = [
     path('api/v1/', include('payment.urls')),
     path('api/v1/', include('core.urls')),
     path('api/v1/', include('respondent.urls')),
+    path('api/v1/', include('board.urls')),
     path('api/manage/', include('custom_manage.urls')),
 
 
