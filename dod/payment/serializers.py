@@ -36,8 +36,8 @@ class PayformSerializer(serializers.ModelSerializer):
     order_id = serializers.IntegerField(source='id')
     items = serializers.SerializerMethodField()
     user_info = serializers.SerializerMethodField()
-    pg = serializers.CharField(default='payapp')
-    method = serializers.CharField(default='kakao')
+    pg = serializers.CharField(default='welcome')
+    method = serializers.CharField(default='digital_card')
 
     class Meta:
         model = Payment

@@ -1,3 +1,4 @@
+import random
 from operator import itemgetter
 
 from django.db import transaction
@@ -10,12 +11,12 @@ from rest_framework.views import APIView
 from core.slack import deposit_temp_slack_message
 from payment.models import UserDepositLog
 from products.models import Item
-from products.serializers import ProductCreateSerializer
+from products.serializers import ProductCreateSerializer, CustomGifticonCreateSerializer
 from projects.models import Project, ProjectMonitoringLog
 from projects.serializers import ProjectCreateSerializer, ProjectDepositInfoRetrieveSerializer, ProjectUpdateSerializer, \
     ProjectDashboardSerializer, SimpleProjectInfoSerializer, ProjectLinkSerializer, PastProjectSerializer
 from random import sample
-from logic.models import UserSelectLogic, DateTimeLotteryResult
+from logic.models import UserSelectLogic, DateTimeLotteryResult, DODAveragePercentage, PercentageResult
 
 
 def _convert_dict_to_tuple(dic):
@@ -41,6 +42,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, ]
     queryset = Project.objects.all().select_related('owner')
 
+    def __init__(self, *args, **kwargs):
+        super(ProjectViewSet, self).__init__(*args, **kwargs)
+        self.data = None
+        self.serializer = None
+        self.products = None
+        self.project = None
+
     def get_serializer_class(self):
         if self.action == 'create':
             return ProjectCreateSerializer
@@ -61,8 +69,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
         api: api/v1/project
         method : POST
         :data:
-        {'start_at', 'dead_at',
-        items': [{'item':'item.id', 'count':'3'}, {'item':'', 'count':''}]}
+        1. payment
+            {'start_at', 'dead_at',
+                items':
+                    [{'item':'item.id', 'count':'3'}, {'item':'', 'count':''}]
+            }
+        2. custom upload
+            {'start_at', 'dead_at',
+                'custom_upload':
+                    ['...1.jpg', '...2.jpg']
+            }
         :return: {'id', 'name', 'winner_count', 'total_price'}
         """
         self.data = request.data.copy()
@@ -70,17 +86,43 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer = serializer(data=self.data, context={'request': request,
                                                          'user': request.user})
         serializer.is_valid(raise_exception=True)
-        print(self.data)
         self.project = serializer.save()
-        self._create_products()
         self._create_project_monitoring_log()
-        self._generate_lucky_time()
-        # self._create_user_deposit_log()
-        self._check_undefined_projects()
 
-        project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
+        # UPDATED 20210725 custom upload
+        if self.data.get('custom_upload'):
+            self._create_custom_gifticon()
+            self._generate_percentage()
+            return Response(status=status.HTTP_201_CREATED)
 
-        return Response(project_info_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            self._create_products()
+            # self._generate_lucky_time()  # [DEPRECATED] 20210725 not use lucky time
+            self._generate_percentage()
+            # self._check_undefined_projects() # UPDATED 20210725 not use deposit logs
+
+            project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
+
+            return Response(project_info_serializer.data, status=status.HTTP_201_CREATED)
+
+    def _create_custom_gifticon(self):
+        custom_upload = self.data.get('custom_upload')
+        item = Item.objects.get(order=999)
+
+        for img in custom_upload:
+            data = {
+                    'item': item.id,
+                    'project': self.project.id,
+                    'gifticon_img': img
+                }
+            serializer = CustomGifticonCreateSerializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        self.project.winner_count = len(custom_upload)
+        self.project.status = True
+        self.project.is_active = True
+        self.project.save()
 
     def _create_products(self):
         items = self.data.get('items')
@@ -137,6 +179,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def _generate_lucky_time(self):
         # project 생성과 동시에 당첨 logic 자동 생성
+        # [DEPRECATED] 20210725 logic -> percentage 2-5%
         logic = UserSelectLogic.objects.create(kind=1, project=self.project)
         dt_hours = int((self.project.dead_at - self.project.start_at).total_seconds() / 60 / 60)
         random_hours = sorted(sample(range(0, dt_hours), self.project.winner_count - 1))
@@ -151,6 +194,20 @@ class ProjectViewSet(viewsets.ModelViewSet):
             lucky_time=self.project.dead_at - datetime.timedelta(hours=self._last_day_random_hour()),
             logic=logic
         )
+
+    def _generate_percentage(self):
+        # UPDATED 20210725 logic -> percentage
+        logic = UserSelectLogic.objects.create(kind=3, project=self.project)
+        total_counts = self.project.winner_count
+        dod_average_percentage = DODAveragePercentage.objects.last().percentage
+        average = dod_average_percentage * 10
+        for i in range(total_counts):
+            # dod 평균확률 +- 1%
+            percentage = round(random.randint(abs(average-10), abs(average+10))/1000*100, 2)
+            PercentageResult.objects.create(
+                percentage=percentage,
+                logic=logic
+            )
 
     def _last_day_random_hour(self):
         return sample(range(1, 25), 1)[0]
@@ -206,6 +263,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(methods=['get'], detail=True)
     def link_notice(self, request, *args, **kwargs):
         """
+        링크안내 페이지
         api: api/v1/project/<id>/link_notice
         :return: {
             "url" ,

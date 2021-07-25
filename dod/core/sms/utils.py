@@ -167,6 +167,14 @@ class MMSV1Manager():
                                "https://bit.ly/3w6LRUG"\
             .format(brand, product_name, due_date)
 
+    def set_custom_upload_content(self):
+        self.body['content'] = "[디오디 당첨 안내]\n안녕하세요 설문추첨서비스 디오디입니다. \n당첨되신걸 축하드립니다 :)\n" \
+                               "다음번 설문에도 꼭 참여해주세요!\n\n" \
+                               "※ 설문작성자가 직접 업로드한 기프티콘입니다.\n" \
+                               "기프티콘 사용에 문제가 있을경우 디오디에 문의해주세요.\n\n▷ 문의하기 \n- 고객센터 : 02-334-1133\n\n\n" \
+                               "dod 알아보러가기\n" \
+                               "https://bit.ly/3w6LRUG"
+
     def set_monitored_content(self, brand, product_name, due_date):
         self.body['content'] = "[디오디 재추첨 당첨 안내]\n안녕하세요 설문추첨서비스 디오디입니다.\n참여해주신 설문조사 리워드 재추첨을 통해 당첨되셨습니다 :)\n" \
                                "축하드립니다!\n" \

@@ -1,6 +1,14 @@
 from rest_framework import serializers
 
-from products.models import Product, Item
+from products.models import Product, Item, CustomGifticon
+
+
+# UPDATED 20210725 custom upload
+class CustomGifticonCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CustomGifticon
+        fields = ['project', 'gifticon_img', 'item']
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):

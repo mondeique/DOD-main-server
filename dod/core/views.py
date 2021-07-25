@@ -18,7 +18,7 @@ from accounts.serializers import SMSSignupPhoneCheckSerializer, SMSSignupPhoneCo
 from core.sms.utils import SMSV2Manager, MMSV1Manager
 from core.tools import get_client_ip
 from django.conf import settings
-from logic.models import DateTimeLotteryResult
+from logic.models import DateTimeLotteryResult, PercentageResult
 from logs.models import MMSSendLog
 from projects.models import Project
 from products.models import Product, Reward
@@ -128,35 +128,66 @@ class SMSViewSet(viewsets.GenericViewSet):
 
         # 여기까지가 유저 당첨확인 및 생성
         item_name = ''
+        won_thumbnail = ''
         if self.is_win:
-            self._set_random_reward()
+            if self.project.custom_gifticons.exists():
+                # UPDATED 20210725 직접 업로드
+                self._set_custom_gifticon()
+                phone = self.data.get('phone')
+                item_url = self.reward.reward_img.url
+                item_name = '직접 업로드'
 
-            phone = self.data.get('phone')
-            brand = self.reward.product.item.brand.name
-            item_name = self.reward.product.item.name
-            item_url = self.reward.reward_img.url
-            due_date = self.reward.due_date
+                if type(item_url) is tuple:
+                    item_url = ''.join(item_url)
 
-            if type(item_url) is tuple:
-                item_url = ''.join(item_url)
+                mms_manager = MMSV1Manager()
+                mms_manager.set_custom_upload_content()
+                success, code = mms_manager.send_mms(phone=phone, image_url=item_url)
+                if not success:
+                    MMSSendLog.objects.create(code=code, phone=phone, item_name=item_name, item_url=item_url)
 
-            if type(item_name) is tuple:
-                item_name = ''.join(item_name)
+                self.gifticon.winner_id = self.respondent.id
+                self.gifticon.save()
+                won_thumbnail = self.gifticon.item.won_thumbnail.url
 
-            mms_manager = MMSV1Manager()
-            mms_manager.set_content(brand, item_name, due_date)
-            success, code = mms_manager.send_mms(phone=phone, image_url=item_url)
-            if not success: # TODO : status 로 클라에서 재전송버튼 활성화? 아니면 슬랙알림만?
-                MMSSendLog.objects.create(code=code, phone=phone, item_name=item_name, item_url=item_url,
-                                          due_date=due_date, brand=brand)
+            else:
+                # UPDATED 20210725 구매
+                self._set_random_reward()
 
-            self.reward.winner_id = self.respondent.id
-            self.reward.save()
-            item_name = self.reward.product.item.short_name
+                phone = self.data.get('phone')
+                brand = self.reward.product.item.brand.name
+                item_name = self.reward.product.item.name
+                item_url = self.reward.reward_img.url
+                due_date = self.reward.due_date
+
+                if type(item_url) is tuple:
+                    item_url = ''.join(item_url)
+
+                if type(item_name) is tuple:
+                    item_name = ''.join(item_name)
+
+                mms_manager = MMSV1Manager()
+                mms_manager.set_content(brand, item_name, due_date)
+                success, code = mms_manager.send_mms(phone=phone, image_url=item_url)
+                if not success:
+                    MMSSendLog.objects.create(code=code, phone=phone, item_name=item_name, item_url=item_url,
+                                              due_date=due_date, brand=brand)
+
+                self.reward.winner_id = self.respondent.id
+                self.reward.save()
+                item_name = self.reward.product.item.short_name
+                won_thumbnail = self.reward.product.item.won_thumbnail.url
 
         return Response({'id': self.project.id,
                          'is_win': self.is_win,
-                         'item_name': item_name}, status=status.HTTP_200_OK)
+                         'is_owner': True if self.phone_confirm.phone == self.project.owner.phone else False,  # UPDATED 20210725 작성자여부
+                         'item_name': item_name,  # WILL BE DEPRECATED
+                         'won_thumbnail': won_thumbnail  # UPDATED 20210725 당첨이미지
+                         }, status=status.HTTP_200_OK)
+
+    def _set_custom_gifticon(self):
+        custom_gifticons = self.project.custom_gifticons.filter(winner_id__isnull=True)
+        self.gifticon = random.choices(custom_gifticons)[0]
 
     def _set_random_reward(self): # TODO: 에러날경우 패스 혹은 문의하기로
         reward_queryset = Reward.objects.filter(winner_id__isnull=True) \
@@ -171,7 +202,7 @@ class SMSViewSet(viewsets.GenericViewSet):
 
     def _set_project(self):
         project_queryset = Project.objects.filter(project_hash_key=self.data.get('project_key'))\
-            .prefetch_related('respondents', 'respondents__phone_confirm')
+            .prefetch_related('respondents', 'respondents__phone_confirm', 'custom_gifticons')
 
         self.project = project_queryset.get(project_hash_key=self.data.get('project_key'))
         self.phone_confirm = RespondentPhoneConfirm.objects.filter(phone=self.data.get('phone'),
@@ -192,25 +223,53 @@ class SMSViewSet(viewsets.GenericViewSet):
         # 프로젝트 생성자는 무조건 꽝!
         if self.phone_confirm.phone == self.project.owner.phone:
             return False
-        self.lucky_times = self.project.select_logics.last().lottery_times.filter(is_used=False)
-        now = datetime.datetime.now()
-        self.valid_lucky_times = self.lucky_times.filter(lucky_time__lte=now)
-        if not self.valid_lucky_times.exists():
-            # 당첨 안된 경우
-            return False
-        else:
-            try:
-                with transaction.atomic(using='default'):
-                    vlt = DateTimeLotteryResult.objects.select_for_update(nowait=True)\
-                        .filter(logic__project=self.project).filter(is_used=False, lucky_time__lte=now).first()
-                    vlt.is_used = True
-                    vlt.save()
-                    val = True
-            except OperationalError:
-                val = False
-            except DateTimeLotteryResult.DoesNotExist:
-                val = False
-            return val
+
+        if self.project.select_logics.last().kind == 1:
+            # BEFORE v2 update
+            self.lucky_times = self.project.select_logics.last().lottery_times.filter(is_used=False)
+            now = datetime.datetime.now()
+            self.valid_lucky_times = self.lucky_times.filter(lucky_time__lte=now)
+            if not self.valid_lucky_times.exists():
+                # 당첨 안된 경우
+                return False
+            else:
+                try:
+                    with transaction.atomic(using='default'):
+                        vlt = DateTimeLotteryResult.objects.select_for_update(nowait=True)\
+                            .filter(logic__project=self.project).filter(is_used=False, lucky_time__lte=now).first()
+                        vlt.is_used = True
+                        vlt.save()
+                        val = True
+                except OperationalError:
+                    val = False
+                except DateTimeLotteryResult.DoesNotExist:
+                    val = False
+                return val
+        elif self.project.select_logics.last().kind == 3:
+            # UPDATED v2 : percentage
+            self.left_percentages = self.project.select_logics.last().percentages.filter(is_used=False)
+            if not self.left_percentages.exists():
+                # 추첨 다 됨
+                return False
+            else:
+                percentage = self.left_percentages.first().percentage  # 당첨확률 : ex: 2.1
+                result = random.choices([True, False], weights=[percentage, 100])  # ex: True 일 확률 2.1
+                if not result:
+                    return False
+                else:
+                    try:
+                        # 만약 동시에 호출하여 연속 접속자가 당첨인 경우, db lock걸어 중복 전송 방지
+                        with transaction.atomic(using='default'):
+                            vlt = PercentageResult.objects.select_for_update(nowait=True) \
+                                .filter(logic__project=self.project).filter(is_used=False).first()
+                            vlt.is_used = True
+                            vlt.save()
+                            val = True
+                    except OperationalError:
+                        val = False
+                    except PercentageResult.DoesNotExist:
+                        val = False
+                    return val
 
 
 class SendMMSAPIView(APIView):

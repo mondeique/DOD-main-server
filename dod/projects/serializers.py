@@ -201,7 +201,6 @@ class ProjectLinkSerializer(serializers.ModelSerializer):
         return None
 
 
-
 class PastProjectSerializer(serializers.ModelSerializer):
     """
     마이페이지 또는 메뉴에서 지난프로젝트 데이터를 보내주는 serializer 입니다.

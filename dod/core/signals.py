@@ -17,13 +17,23 @@ def slack_notice_failed_send_mms(sender, **kwargs):
         except:
             pass
     else:
-        phone = mms_send_log.phone
-        brand = mms_send_log.brand
-        item_name = mms_send_log.item_name
-        item_url = mms_send_log.item_url
-        due_date = mms_send_log.due_date
-        mms_manager = MMSV1Manager()
-        mms_manager.set_content(brand, item_name, due_date)
-        success, code = mms_manager.send_mms(phone=phone, image_url=item_url)
-        if not success:
-            MMSSendLog.objects.create(code="Staff 재발송도 실패", phone=phone, item_name=item_name, item_url=item_url, due_date=due_date)
+        if mms_send_log.due_date:
+            phone = mms_send_log.phone
+            brand = mms_send_log.brand
+            item_name = mms_send_log.item_name
+            item_url = mms_send_log.item_url
+            due_date = mms_send_log.due_date
+            mms_manager = MMSV1Manager()
+            mms_manager.set_content(brand, item_name, due_date)
+            success, code = mms_manager.send_mms(phone=phone, image_url=item_url)
+            if not success:
+                MMSSendLog.objects.create(code="Staff 재발송도 실패", phone=phone, item_name=item_name, item_url=item_url, due_date=due_date)
+        else:
+            # UPDATED 20210725 custom upload resend
+            phone = mms_send_log.phone
+            item_url = mms_send_log.item_url
+            mms_manager = MMSV1Manager()
+            mms_manager.set_custom_upload_content()
+            success, code = mms_manager.send_mms(phone=phone, image_url=item_url)
+            if not success:
+                MMSSendLog.objects.create(code="Staff 재발송도 실패", phone=phone, item_name='', item_url=item_url)

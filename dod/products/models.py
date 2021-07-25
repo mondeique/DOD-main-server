@@ -16,9 +16,23 @@ def item_thumb_directory_path(instance, filename):
     return 'product/{}.{}'.format(generate_random_key(7), ext)
 
 
+def won_thumb_directory_path(instance, filename):
+    ext = filename.split('.')[-1]
+    return 'product/{}.{}'.format(generate_random_key(7), ext)
+
+
 def reward_img_directory_path(instance, filename):
     ext = filename.split('.')[-1]
     return 'project/{}/item/{}/{}.{}'.format(
+        instance.product.project.project_hash_key,
+        instance.product.item.id,
+        generate_random_key(5),
+        ext)
+
+
+def custom_gifticon_img_directory_path(instance, filename):
+    ext = filename.split('.')[-1]
+    return 'project/{}/custom_gifticon/{}/{}.{}'.format(
         instance.product.project.project_hash_key,
         instance.product.item.id,
         generate_random_key(5),
@@ -48,6 +62,7 @@ class Item(models.Model):#TODO : 미리 채워두는 모델
     order = models.IntegerField(unique=True)
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='items')
     thumbnail = models.ImageField(upload_to=item_thumb_directory_path)
+    won_thumbnail = models.ImageField(upload_to=won_thumb_directory_path, null=True, help_text='당첨자 페이지에 사용하는 이미지')
     name = models.CharField(max_length=50)
     is_active = models.BooleanField(default=True)
     short_name = models.CharField(max_length=30, null=True, blank=True)
@@ -116,3 +131,18 @@ class Reward(models.Model):
             self.product.item.name,
             self.id
         )
+
+
+class CustomGifticon(models.Model):
+    """
+    유저가 직접 업로드시 사용하는 모델입니다.
+    기존과 동일하게 이용하는건 Item의 Thumbnail뿐.
+    이 하나의 모델 내에서 당첨자관리(기존 Reward), 직접업로드한 이미지 관리(기존 Reward)를 합니다.
+    수정은 구현 x / 삭제는 구현 o (시작 전 일 때)
+    """
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='custom_gifticons')
+    item = models.ForeignKey(Item, null=True, on_delete=models.SET_NULL, related_name='custom_gifticons', help_text='대표이미지 사용을 위함.')
+    gifticon_img = models.ImageField(upload_to=custom_gifticon_img_directory_path)
+    winner_id = models.IntegerField(null=True, blank=True, help_text="당첨자(Respondent)의 id를 저장합니다.")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

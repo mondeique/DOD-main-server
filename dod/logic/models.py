@@ -12,9 +12,11 @@ class UserSelectLogic(models.Model):
     """
     DateTime = 1
     RandomNumber = 2
+    Percentage = 3
     KINDS = (
         (DateTime, '시간별'),
         (RandomNumber, '숫자'),
+        (Percentage, '확률'),
     )
     kind = models.IntegerField(choices=KINDS)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="select_logics")
@@ -29,3 +31,23 @@ class DateTimeLotteryResult(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_used = models.BooleanField(default=False)
+
+
+class PercentageResult(models.Model):
+    """
+    확률로 추첨하는 로직의 '확률정보'를 저장합니다.
+    """
+    percentage = models.FloatField(help_text='당첨확률')
+    logic = models.ForeignKey(UserSelectLogic, null=True, on_delete=models.CASCADE, related_name='percentages')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_used = models.BooleanField(default=False)
+
+
+class DODAveragePercentage(models.Model):
+    """
+    dod 평균 당첨확률
+    """
+    average_percentage = models.FloatField(help_text='dod 평균 당첨 확률')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
