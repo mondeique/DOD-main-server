@@ -49,7 +49,7 @@ class RefererValidatorAPIView(APIView):
         if settings.DEVEL or settings.STAG:
             base_url = 'http://172.30.1.26:3000/'
         else:
-            base_url = 'https://dod-beta.com/'
+            base_url = 'https://d-o-d.io/'
 
         self.referer = request.META.get('HTTP_REFERER', "")
 
@@ -155,6 +155,21 @@ class ClientRefererProjectValidateCheckViewSet(viewsets.GenericViewSet):
             return False  # 프로젝트 대기중
         else:
             return True  # 진행중
+
+
+def test_send(request):
+    referer = request.META.get('HTTP_REFERER', "")
+    if settings.DEVEL or settings.STAG:
+        base_url = 'http://172.30.1.26:3000/'
+    else:
+        base_url = 'https://d-o-d.io/'
+
+    if "google.com" not in referer:
+        forbidden_url = base_url + 'forbidden'
+        return HttpResponseRedirect(forbidden_url)
+
+    client_test_page = base_url + 'test-link'
+    return HttpResponseRedirect(client_test_page)
 
 
 def home(request, **kwargs):

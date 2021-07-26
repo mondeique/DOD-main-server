@@ -23,7 +23,7 @@ from custom_manage.views import AutoSendLeftMMSAPIView
 from django.conf import settings
 
 from payment.views import pay_test
-from respondent.views import RefererValidatorAPIView, home
+from respondent.views import RefererValidatorAPIView, home, test_send
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -37,11 +37,15 @@ urlpatterns = [
     path('api/v1/', include('payment.urls')),
     path('api/v1/', include('core.urls')),
     path('api/v1/', include('respondent.urls')),
+    path('api/v1/', include('board.urls')),
     path('api/manage/', include('custom_manage.urls')),
 
 
     # path('api/send-mms/', SendMMSAPIView.as_view()),
     path('pay_test/', pay_test, name='paytest'),
+
+    # test send
+    path('즉시추첨', test_send, name='test-send'),
 
     # ckeditors
     path('ckeditor/', include('ckeditor_uploader.urls')),
@@ -52,7 +56,7 @@ if settings.DEVEL or settings.STAG:
     ]
 if settings.PROD:
     urlpatterns += [
-        path('<slug:slug>/', RefererValidatorAPIView.as_view()),
+        path('checklink/<slug:slug>/', RefererValidatorAPIView.as_view()),
     ]
 
 if settings.DEBUG:

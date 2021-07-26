@@ -128,6 +128,7 @@ class MainPageDodExplanation(models.Model):
     title = RichTextUploadingField()
     text = RichTextUploadingField()
     icon = models.ImageField(upload_to=icon_thumb_directory_path)
+    link_url = models.URLField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
