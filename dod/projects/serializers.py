@@ -64,9 +64,6 @@ class ProjectUpdateSerializer(serializers.ModelSerializer):
 class ProjectDepositInfoRetrieveSerializer(serializers.ModelSerializer):
     """
     프로젝트 생성버튼클릭시 리턴하는 데이터입니다.
-    해당 데이터를 사용하여 무통장입금 안내시 가격, 프로젝트 기본정보, 입금 안내링크를 제공합니다.
-
-    * project id를 가지고 입금확인 버튼을 요청해야 입금자명을 저장할 수 있습니다.
     """
 
     total_price = serializers.SerializerMethodField()
@@ -76,6 +73,8 @@ class ProjectDepositInfoRetrieveSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'winner_count', 'total_price']
 
     def get_total_price(self, obj):
+        if obj.custom_gifticons.exists():
+            return 0
         products = obj.products.all()
         total_price = 0
         for product in products:
@@ -183,9 +182,9 @@ class ProjectLinkSerializer(serializers.ModelSerializer):
         # url = 'https://d-o-d.io/link/{}/'.format(hash_key)
         # url = 'http://3.37.147.189:8000/link/{}/'.format(hash_key)
         if settings.DEVEL or settings.STAG:
-            url = 'https://docs.gift/link/{}/'.format(hash_key)
+            url = 'http://3.36.156.224:8000/link/{}/'.format(hash_key)  # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
         else:
-            url = 'https://dod-link.com/{}/'.format(hash_key) # TODO : link api 수정
+            url = 'https://d-o-d.io/checklink/{}/'.format(hash_key)
         return url
 
     def get_pc_url(self, obj):

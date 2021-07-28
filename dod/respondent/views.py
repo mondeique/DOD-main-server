@@ -42,9 +42,6 @@ class RefererValidatorAPIView(APIView):
         return : None,
         redirect : client_ip/<confirm_page>/?val=~~&?p=~~/
         """
-        # base_url = 'https://d-o-d.io/'
-        # base_url = 'http://3.37.147.189:8000'/
-        # base_url = 'http://172.30.1.26:3000/'
 
         if settings.DEVEL or settings.STAG:
             base_url = 'http://172.30.1.26:3000/'
@@ -72,8 +69,6 @@ class RefererValidatorAPIView(APIView):
                         self.project.start_at,
                         self.project.is_active)
             staff_reward_didnt_upload_slack_message(msg)
-            project_not_start_url = base_url + 'invalid'
-            return HttpResponseRedirect(project_not_start_url)
 
         ip = get_client_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', "")  # TODO: if user_agent is null
@@ -85,9 +80,13 @@ class RefererValidatorAPIView(APIView):
         # client phone confirm(Success) page with query: project, validator
         # TODO: client url
         respondent_phone_register_url = base_url + 'link?p={}&v={}'.format(project_hash_key, validator)
-        return HttpResponseRedirect(respondent_phone_register_url)
+        # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
+        respondent_phone_register_url_with_utm = respondent_phone_register_url + '&utm_source=dod&utm_medium=service&utm_campaign=lottery'
+        return HttpResponseRedirect(respondent_phone_register_url_with_utm)
 
     def _check_referer(self):
+        if settings.DEVEL or settings.STAG:
+            return True  # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
         if "google.com" in self.referer:
             return True
         else:
@@ -95,9 +94,9 @@ class RefererValidatorAPIView(APIView):
 
     def _validate_project(self):
         now = datetime.datetime.now()
-        if self.project.dead_at < now:
-            return False  # 종료됨
-        elif not self.project.status:
+        # if self.project.dead_at < now: # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
+        #     return False  # 종료됨
+        if not self.project.status:
             return False  # 입금대기중
         elif not self.project.is_active:
             return False  # 프로젝트 삭제됨(환불시)
@@ -145,9 +144,9 @@ class ClientRefererProjectValidateCheckViewSet(viewsets.GenericViewSet):
 
     def _validate_project(self):
         now = datetime.datetime.now()
-        if self.project.dead_at < now:
-            return False  # 종료됨
-        elif not self.project.status:
+        # if self.project.dead_at < now:  # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
+        #     return False  # 종료됨
+        if not self.project.status:
             return False  # 입금대기중
         elif not self.project.is_active:
             return False  # 프로젝트 삭제됨(환불시)

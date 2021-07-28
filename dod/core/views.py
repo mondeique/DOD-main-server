@@ -180,7 +180,7 @@ class SMSViewSet(viewsets.GenericViewSet):
 
         return Response({'id': self.project.id,
                          'is_win': self.is_win,
-                         'is_owner': True if self.phone_confirm.phone == self.project.owner.phone else False,  # UPDATED 20210725 작성자여부
+                         # 'is_owner': True if self.phone_confirm.phone == self.project.owner.phone else False,  # UPDATED 20210725 작성자여부
                          'item_name': item_name,  # WILL BE DEPRECATED
                          'won_thumbnail': won_thumbnail  # UPDATED 20210725 당첨이미지
                          }, status=status.HTTP_200_OK)
@@ -226,6 +226,11 @@ class SMSViewSet(viewsets.GenericViewSet):
 
         if self.project.select_logics.last().kind == 1:
             # BEFORE v2 update
+
+            if self.project.products.filter(rewards__isnull=True).exists():
+                # staff 업로드 하지 않았다면 꽝
+                return False
+
             self.lucky_times = self.project.select_logics.last().lottery_times.filter(is_used=False)
             now = datetime.datetime.now()
             self.valid_lucky_times = self.lucky_times.filter(lucky_time__lte=now)
@@ -245,6 +250,7 @@ class SMSViewSet(viewsets.GenericViewSet):
                 except DateTimeLotteryResult.DoesNotExist:
                     val = False
                 return val
+
         elif self.project.select_logics.last().kind == 3:
             # UPDATED v2 : percentage
             self.left_percentages = self.project.select_logics.last().percentages.filter(is_used=False)

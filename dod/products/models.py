@@ -21,6 +21,11 @@ def won_thumb_directory_path(instance, filename):
     return 'product/{}.{}'.format(generate_random_key(7), ext)
 
 
+def brand_logo_directory_path(instance, filename):
+    ext = filename.split('.')[-1]
+    return 'product/{}.{}'.format(generate_random_key(7), ext)
+
+
 def reward_img_directory_path(instance, filename):
     ext = filename.split('.')[-1]
     return 'project/{}/item/{}/{}.{}'.format(
@@ -33,8 +38,8 @@ def reward_img_directory_path(instance, filename):
 def custom_gifticon_img_directory_path(instance, filename):
     ext = filename.split('.')[-1]
     return 'project/{}/custom_gifticon/{}/{}.{}'.format(
-        instance.product.project.project_hash_key,
-        instance.product.item.id,
+        instance.project.project_hash_key,
+        instance.item.id,
         generate_random_key(5),
         ext)
 
@@ -61,8 +66,9 @@ class Item(models.Model):#TODO : 미리 채워두는 모델
     """
     order = models.IntegerField(unique=True)
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='items')
-    thumbnail = models.ImageField(upload_to=item_thumb_directory_path)
+    thumbnail = models.ImageField(upload_to=item_thumb_directory_path, null=True, blank=True)
     won_thumbnail = models.ImageField(upload_to=won_thumb_directory_path, null=True, help_text='당첨자 페이지에 사용하는 이미지')
+    brand_logo = models.ImageField(upload_to=brand_logo_directory_path, null=True, blank=True, help_text='당첨자 페이지에 사용하는 이미지')
     name = models.CharField(max_length=50)
     is_active = models.BooleanField(default=True)
     short_name = models.CharField(max_length=30, null=True, blank=True)

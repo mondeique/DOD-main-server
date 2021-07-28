@@ -10,14 +10,15 @@ import datetime
 from rest_framework.views import APIView
 from core.slack import deposit_temp_slack_message
 from payment.models import UserDepositLog
-from products.models import Item
+from products.models import Item, CustomGifticon
 from products.serializers import ProductCreateSerializer, CustomGifticonCreateSerializer
 from projects.models import Project, ProjectMonitoringLog
 from projects.serializers import ProjectCreateSerializer, ProjectDepositInfoRetrieveSerializer, ProjectUpdateSerializer, \
     ProjectDashboardSerializer, SimpleProjectInfoSerializer, ProjectLinkSerializer, PastProjectSerializer
 from random import sample
 from logic.models import UserSelectLogic, DateTimeLotteryResult, DODAveragePercentage, PercentageResult
-
+import io
+from django.core.files.images import ImageFile
 
 def _convert_dict_to_tuple(dic):
     tuple_list = []
@@ -45,9 +46,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def __init__(self, *args, **kwargs):
         super(ProjectViewSet, self).__init__(*args, **kwargs)
         self.data = None
+        self.files = None
         self.serializer = None
         self.products = None
         self.project = None
+        self.custom_upload = None
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -82,6 +85,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
         :return: {'id', 'name', 'winner_count', 'total_price'}
         """
         self.data = request.data.copy()
+        self.files = request.FILES
+
+        # test
+        self.data['start_at'] = datetime.datetime.now()
+        self.data['dead_at'] = datetime.datetime.now() + datetime.timedelta(days=3)
+
         serializer = self.get_serializer_class()
         serializer = serializer(data=self.data, context={'request': request,
                                                          'user': request.user})
@@ -90,10 +99,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
         self._create_project_monitoring_log()
 
         # UPDATED 20210725 custom upload
-        if self.data.get('custom_upload'):
+        if self.files.get('custom_upload'):
+            self.custom_upload = self.files.pop('custom_upload')
             self._create_custom_gifticon()
             self._generate_percentage()
-            return Response(status=status.HTTP_201_CREATED)
 
         else:
             self._create_products()
@@ -101,15 +110,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
             self._generate_percentage()
             # self._check_undefined_projects() # UPDATED 20210725 not use deposit logs
 
-            project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
+        project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
 
-            return Response(project_info_serializer.data, status=status.HTTP_201_CREATED)
+        return Response(project_info_serializer.data, status=status.HTTP_201_CREATED)
 
     def _create_custom_gifticon(self):
-        custom_upload = self.data.get('custom_upload')
         item = Item.objects.get(order=999)
 
-        for img in custom_upload:
+        for img in self.custom_upload:
             data = {
                     'item': item.id,
                     'project': self.project.id,
@@ -119,7 +127,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
-        self.project.winner_count = len(custom_upload)
+        self.project.winner_count = len(self.custom_upload)
         self.project.status = True
         self.project.is_active = True
         self.project.save()
@@ -181,25 +189,23 @@ class ProjectViewSet(viewsets.ModelViewSet):
         # project 생성과 동시에 당첨 logic 자동 생성
         # [DEPRECATED] 20210725 logic -> percentage 2-5%
         logic = UserSelectLogic.objects.create(kind=1, project=self.project)
-        dt_hours = int((self.project.dead_at - self.project.start_at).total_seconds() / 60 / 60)
-        random_hours = sorted(sample(range(0, dt_hours), self.project.winner_count - 1))
+        renewal_dead_at = self.project.start_at + datetime.timedelta(days=4)  # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 : 앞쪽에 몰기 ####
+        now = datetime.datetime.now()
+        dt_hours = int((renewal_dead_at - self.project.start_at).total_seconds() / 60 / 60)
+        random_hours = sorted(sample(range(0, dt_hours), self.project.winner_count))
         bulk_datetime_lottery_result = []
         for i in range(len(random_hours)):
             bulk_datetime_lottery_result.append(DateTimeLotteryResult(
-                lucky_time=self.project.start_at + datetime.timedelta(hours=random_hours[i]),
+                lucky_time=now + datetime.timedelta(hours=random_hours[i]),
                 logic=logic
             ))
         DateTimeLotteryResult.objects.bulk_create(bulk_datetime_lottery_result)
-        DateTimeLotteryResult.objects.create(
-            lucky_time=self.project.dead_at - datetime.timedelta(hours=self._last_day_random_hour()),
-            logic=logic
-        )
 
     def _generate_percentage(self):
         # UPDATED 20210725 logic -> percentage
         logic = UserSelectLogic.objects.create(kind=3, project=self.project)
         total_counts = self.project.winner_count
-        dod_average_percentage = DODAveragePercentage.objects.last().percentage
+        dod_average_percentage = DODAveragePercentage.objects.last().average_percentage
         average = dod_average_percentage * 10
         for i in range(total_counts):
             # dod 평균확률 +- 1%
@@ -228,6 +234,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         self.data = request.data.copy()
+        self.files = request.FILES
         serializer = self.get_serializer(self.get_object(), data=self.data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.project = serializer.save()
@@ -254,10 +261,21 @@ class ProjectViewSet(viewsets.ModelViewSet):
             self.project.select_logics.all().delete()
             # self.project.deposit_logs.all().delete()
             # create new data
-            self._create_products()
-            self._generate_lucky_time()
-            # self._create_user_deposit_log()
-            project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
+
+            # UPDATED 20210725 custom upload
+            if self.data.get('custom_upload'):
+                self.custom_upload = self.files.pop('custom_upload')
+                self._create_custom_gifticon()
+                self._generate_percentage()
+                project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
+
+            else:
+                self._create_products()
+                # self._generate_lucky_time()  # [DEPRECATED] 20210725 not use lucky time
+                self._generate_percentage()
+                # self._check_undefined_projects() # UPDATED 20210725 not use deposit logs
+                project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
+
             return Response(project_info_serializer.data, status=status.HTTP_206_PARTIAL_CONTENT)
 
     @action(methods=['get'], detail=True)

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from custom_manage.sites import staff_panel
-from logic.models import DateTimeLotteryResult
+from logic.models import DateTimeLotteryResult, PercentageResult, DODAveragePercentage
 
 
 class DateTimeLotteryResultStaffAdmin(admin.ModelAdmin):
@@ -17,4 +17,27 @@ class DateTimeLotteryResultStaffAdmin(admin.ModelAdmin):
         return None
 
 
+class PercentageResultStaffAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'project_name', 'project_key', 'percentage', 'is_used', 'created_at']
+
+    def project_name(self, obj):
+        if hasattr(obj.logic, 'project'):
+            return obj.logic.project.name
+        return None
+
+    def project_key(self, obJ):
+        if hasattr(obJ.logic, 'project'):
+            return obJ.logic.project.project_hash_key
+        return None
+
+
+class DODAveragePercentageStaffAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'average', 'created_at', 'updated_at']
+
+    def average(self, obj):
+        return str(obj.average_percentage) + '%'
+
+
 staff_panel.register(DateTimeLotteryResult, DateTimeLotteryResultStaffAdmin)
+staff_panel.register(PercentageResult, PercentageResultStaffAdmin)
+staff_panel.register(DODAveragePercentage, DODAveragePercentageStaffAdmin)

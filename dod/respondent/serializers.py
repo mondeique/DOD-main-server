@@ -23,8 +23,12 @@ class SMSRespondentPhoneConfirmSerializer(serializers.Serializer):
         phone_confirm_queryset = RespondentPhoneConfirm.objects.filter(phone=phone)\
             .prefetch_related('respondent', 'respondent__project')
         real_phone_confirm_queryset = phone_confirm_queryset.filter(respondent__project__project_hash_key=project_key)
+        project = Project.objects.get(project_hash_key=project_key)
         if real_phone_confirm_queryset.filter(is_confirmed=True).exists():
             msg = '이미 추첨에 참여하셨어요!'
+            raise exceptions.ValidationError(msg)
+        elif phone == project.owner.phone:
+            msg = '추첨생성자는 참여할 수 없습니다.'
             raise exceptions.ValidationError(msg)
         elif not phone_confirm_queryset.filter(confirm_key=confirm_key, is_confirmed=False).exists():
             msg = '잘못된 인증번호 입니다.'

@@ -9,7 +9,7 @@ from rest_framework import viewsets, mixins, status
 from rest_framework import exceptions
 from rest_framework.decorators import authentication_classes, action
 
-from core.slack import deposit_success_slack_message, bootpay_feedback_slack_message
+from core.slack import deposit_success_slack_message, payment_slack_message
 from payment.Bootpay import BootpayApi
 from payment.loader import load_credential
 from payment.models import DepositWithoutBankbookShortCutLink, DepositWithoutBankbookQRimage, Payment, PaymentErrorLog
@@ -62,7 +62,7 @@ class BootpayFeedbackAPIView(APIView):
         price = data.get('price', '')
         method_name = data.get('method_name', '')
         msg = data
-        bootpay_feedback_slack_message(msg)
+        payment_slack_message(msg)
         return Response(status=status.HTTP_200_OK)
 
 # TODO : BootPay
@@ -200,6 +200,13 @@ class PaymentViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
                     project.status = True
                     project.is_active = True
                     project.save()
+
+                    msg = '[결제알림]\n' \
+                          '금액: {}'.format(payment.price)
+                    try:
+                        payment_slack_message(msg)
+                    except:
+                        pass
 
                     return Response(status.HTTP_200_OK)
             else:

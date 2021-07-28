@@ -15,3 +15,4 @@ class ItemListViewSet(mixins.ListModelMixin,
     serializer_class = ItemRetrieveSerializer
     pagination_class = None
 
+    # TODO : project 생성페이지 리뉴얼

@@ -45,7 +45,6 @@ class ItemRetrieveSerializer(serializers.ModelSerializer):
     thumbnail_image = serializers.SerializerMethodField()
     discount_rate = serializers.SerializerMethodField()
 
-
     class Meta:
         model = Item
         fields = ['id', 'brand', 'name', 'thumbnail_image', 'price', 'origin_price', 'discount_rate']

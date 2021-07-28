@@ -55,7 +55,8 @@ class AutoSendLeftMMSAPIView(APIView):
                               'products__rewards',
                               'respondents',
                               'respondents__phone_confirm',
-                              'monitoring_logs')
+                              'monitoring_logs',
+                              'custom_gifticons')
         total_left_rewards = 0
         total_succeed_mms = 0
         for project in project_qs:
@@ -90,6 +91,35 @@ class AutoSendLeftMMSAPIView(APIView):
                         reward.save()
                 except:
                     pass
+            elif project.custom_gifticons.filter(winner_id__isnull=True).exists():
+                # UPDATED 20210727 custom gifticon
+                left_gifticons = project.custom_gifticons.filter(winner_id__isnull=True)
+                left_count = left_gifticons.count()
+                total_left_rewards = total_left_rewards + left_count
+                phone_list = list(project.respondents.filter(is_win=False).
+                                  values_list('phone_confirm__phone', 'id'))
+                try:
+                    new_winners = random.sample(phone_list, left_count)
+                    for i, gifticon in enumerate(left_gifticons):
+                        winner = new_winners[i][0]  # phone
+                        item_url = gifticon.gifticon_img.url
+                        item_name = '직접 업로드'
+
+                        if type(item_url) is tuple:
+                            item_url = ''.join(item_url)
+
+                        mms_manager = MMSV1Manager()
+                        mms_manager.set_custom_upload_content()
+                        success, code = mms_manager.send_mms(phone=winner, image_url=item_url)
+                        if not success:
+                            MMSSendLog.objects.create(code=code, phone=winner, item_name=item_name, item_url=item_url)
+                        else:
+                            total_succeed_mms = total_succeed_mms + 1
+                        gifticon.winner_id = new_winners[i][1]
+                        gifticon.save()
+                except:
+                    pass
+
         msg = '\n[재추첨 로그]\n' \
               '현재시간: {}\n' \
               '재전송 프로젝트: {}개\n' \
@@ -119,7 +149,6 @@ class ProjectDeadLinkNotification(APIView):
         total_succeed_sms = 0
         for project in project_qs:
             phone = project.owner.phone
-
             sms_manager = SMSV2Manager()
             sms_manager.project_deadline_notice_content()
             sms_manager.send_sms(phone=phone)

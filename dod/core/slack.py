@@ -47,7 +47,7 @@ def lambda_monitoring_slack_message(message):
     return None
 
 
-def bootpay_feedback_slack_message(message):
+def payment_slack_message(message):
     incomming_url = load_credential("slack", "")['PaymentNoticeUrl']
     post_data = {"text": '{}'.format(message)}
     data = json.dumps(post_data)

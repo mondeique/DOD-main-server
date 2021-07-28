@@ -48,6 +48,9 @@ class DODAveragePercentage(models.Model):
     """
     dod 평균 당첨확률
     """
-    average_percentage = models.FloatField(help_text='dod 평균 당첨 확률')
+    average_percentage = models.FloatField(help_text='dod 평균 당첨 확률: 퍼센트 소수점으로 작성')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = '디오디 평균 당첨 확률'
