@@ -8,7 +8,7 @@ from projects.models import Project
 
 class Board(models.Model):
     form_link = models.URLField(help_text="DOD 가 붙은 설문일수도 있고 아닐수도 있음")
-    title = models.CharField(max_length=30)
+    title = models.CharField(max_length=100)
     content = models.TextField()
     # start_at = models.DateTimeField(null=True, blank=True, help_text="프로젝트 실행일. DOD 없는 경우는 null")
     # dead_at = models.DateTimeField(null=True, blank=True, help_text="프로젝트 마감일. DOD 없는 경우는 null")

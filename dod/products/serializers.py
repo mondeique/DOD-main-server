@@ -43,18 +43,24 @@ class ProductSimpleDashboardSerializer(serializers.ModelSerializer):
 class ItemRetrieveSerializer(serializers.ModelSerializer):
     brand = serializers.SerializerMethodField()
     thumbnail_image = serializers.SerializerMethodField()
+    logo_image = serializers.SerializerMethodField()
     discount_rate = serializers.SerializerMethodField()
 
     class Meta:
         model = Item
-        fields = ['id', 'brand', 'name', 'thumbnail_image', 'price', 'origin_price', 'discount_rate']
+        fields = ['id', 'brand', 'name', 'thumbnail_image', 'logo_image', 'price', 'origin_price', 'discount_rate']
 
     def get_brand(self, obj):
         if obj.brand:
             return obj.brand.name
 
     def get_thumbnail_image(self, obj):
-        return obj.thumbnail.url
+        if obj.thumbnail:
+            return obj.thumbnail.url
+
+    def get_logo_image(self, obj):
+        if obj.brand_logo:
+            return obj.brand_logo.url
 
     def get_discount_rate(self, obj):
         discount_rate = round((obj.origin_price - obj.price) / obj.origin_price * 100)

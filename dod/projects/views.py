@@ -86,10 +86,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         """
         self.data = request.data.copy()
         self.files = request.FILES
-
-        # test
-        self.data['start_at'] = datetime.datetime.now()
-        self.data['dead_at'] = datetime.datetime.now() + datetime.timedelta(days=3)
+        self.data['start_at'] = datetime.datetime.strptime(self.data['start_at'], '%Y/%m/%d')
+        self.data['dead_at'] = datetime.datetime.strptime(self.data['dead_at'], '%Y/%m/%d')
 
         serializer = self.get_serializer_class()
         serializer = serializer(data=self.data, context={'request': request,
@@ -155,6 +153,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 serializer.save()
 
         self.project.winner_count = winner_count
+        print('inin')
+        print(self.project.winner_count)
         self.project.save()
 
     def _create_project_monitoring_log(self):

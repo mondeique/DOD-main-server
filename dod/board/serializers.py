@@ -1,6 +1,9 @@
+import datetime
+
 from django.conf import settings
 from rest_framework import serializers
 from board.models import Board
+from products.models import Item
 from projects.models import Project
 
 
@@ -13,21 +16,33 @@ class BoardCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
 
-        project_id = validated_data['project']
-        if project_id:
-            self.project = Project.objects.get(id=project_id)
-            validated_data['start_at'] = self.project.start_at
-            validated_data['dead_at'] = self.project.dead_at
-            # TODO: reward_text 어떻게 채움?? 직접업로드시...
-            products_name_list = self.project.products.values_list('item__short_name', flat=True)
-            for i in range(len(products_name_list) - 1):
-                if products_name_list[i] == products_name_list[i+1]:
-                    products_string = products_name_list[i] + ' ' + str(len(products_name_list)) + '개'
-                else:
-                    products_string = products_name_list[0] + ' 외' + str(len(products_name_list) - 1) + '개'
-            validated_data['reward_text'] = products_string
+        project = validated_data['project']
+        if project:
+            self.project = project
+            self._set_reward_text()
+            validated_data['reward_text'] = self.reward_text
             validated_data['is_dod'] = True
-        super(BoardCreateSerializer, self).create(validated_data)
+        board = super(BoardCreateSerializer, self).create(validated_data)
+        return board
+
+    def _set_reward_text(self):
+        if self.project.custom_gifticons.exists():
+            count = self.project.custom_gifticons.all().count()
+            reward_text = '기프티콘 {}개'.format(count)
+        else:
+            products = self.project.products.all()
+            products_id_list = products.order_by('-item__price').values_list('item', flat=True)
+            products_count = products_id_list.count()  # 전체 개수
+            products_distinct_count = products_id_list.distinct().count()  # 중복제거 후 개수
+            representative_item = Item.objects.get(id=products_id_list[0])
+            if products_distinct_count > 1:
+                # 여러개 기프티콘: 비싼 상품 + 외 개수
+                count = products_count - 1
+                reward_text = '{} 외 {}개'.format(representative_item.short_name, count)
+            else:
+                count = products_count
+                reward_text = '{} {}개'.format(representative_item.short_name, count)
+        self.reward_text = reward_text
 
 
 class BoardUpdateSerializer(serializers.ModelSerializer):
@@ -37,22 +52,44 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
         fields = ['title', 'content']
 
 
-class BoardListSerializer(serializers.ModelSerializer):
-    total_respondent = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Board
-        fields = ['id', 'title', 'start_at', 'dead_at', 'reward_text', 'total_respondent', 'is_dod']
-
-    def get_total_respondent(self, obj):
-        count = obj.project.respondents.all().count()
-        return count
-
-
 class BoardInfoSerializer(serializers.ModelSerializer):
     total_respondent = serializers.SerializerMethodField()
+    period = serializers.SerializerMethodField()
+    project_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Board
-        fields = ['__all__']
+        fields = ['id', 'title', 'period', 'reward_text', 'total_respondent', 'is_dod', 'project_status']
 
+    @staticmethod
+    def get_period(obj):
+        if obj.project:
+            start_at = obj.project.start_at
+            dead_at = obj.project.dead_at
+            period = '{}~{}'.format(start_at.strftime('%m/%d'), dead_at.strftime('%m/%d'))
+        else:
+            period = None
+        return period
+
+    @staticmethod
+    def get_total_respondent(obj):
+        if obj.project:
+            count = obj.project.respondents.all().count()
+        else:
+            count = None
+        return count
+
+    @staticmethod
+    def get_project_status(obj):
+        status = 0
+        if obj.project:
+            start_at = obj.project.start_at
+            dead_at = obj.project.dead_at
+            now = datetime.datetime.now()
+            if now > dead_at:  # end
+                status = -2
+            elif now < start_at:  # not started
+                status = -1
+            else:
+                status = 1  # working
+        return status

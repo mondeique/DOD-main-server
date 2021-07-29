@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from board.models import Board
 from core.permissions import BoardViewPermission
 from projects.models import Project
-from board.serializers import BoardCreateSerializer, BoardUpdateSerializer, BoardListSerializer, BoardInfoSerializer
+from board.serializers import BoardCreateSerializer, BoardUpdateSerializer, BoardInfoSerializer
 from core.pagination import DodPagination
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
@@ -18,11 +18,10 @@ def _google_info_crawler(form_url):
         source = BeautifulSoup(html, 'html.parser')
         dod_html = source.find_all('script', type='text/javascript')
         dod_html_link = dod_html[-1]
-
         string_html = str(dod_html_link)
         list_html = string_html.split('https://d-o-d.io/checklink')
         hash_key = list_html[1].split('/')[1]
-        time.sleep(2)
+        time.sleep(1.4)
     except Exception:
         hash_key = None
     return hash_key
@@ -37,10 +36,8 @@ class BoardViewSet(viewsets.ModelViewSet):
             return BoardCreateSerializer
         elif self.action in 'update':
             return BoardUpdateSerializer
-        elif self.action in 'retrieve':
+        elif self.action in ['retrieve', 'list']:
             return BoardInfoSerializer
-        elif self.action in 'list':
-            return BoardListSerializer
         else:
             return super(BoardViewSet, self).get_serializer_class()
 
@@ -50,16 +47,16 @@ class BoardViewSet(viewsets.ModelViewSet):
         api: api/v1/board/check_dod/
         method : POST
         data: {'form_link'}
-        return : {'is_dod', 'project_id'}
+        return : {'is_dod', 'project'}
         """
         google_form_link = request.data.get('form_link')
         is_dod = False
         project_id = None
-        project_hask_key = _google_info_crawler(google_form_link)
-        if Project.objects.filter(owner=request.user, project_hash_key=project_hask_key).exists():
+        project_hash_key = _google_info_crawler(google_form_link)
+        if Project.objects.filter(owner=request.user, project_hash_key=project_hash_key).exists():
             is_dod = True
-            project_id = Project.objects.get(owner=request.user, project_hask_key=project_hask_key).id
-        return Response({"is_dod": is_dod, "project_id": project_id})
+            project_id = Project.objects.get(owner=request.user, project_hash_key=project_hash_key).id
+        return Response({"is_dod": is_dod, "project": project_id})
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
