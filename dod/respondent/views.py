@@ -44,7 +44,7 @@ class RefererValidatorAPIView(APIView):
         """
 
         if settings.DEVEL or settings.STAG:
-            base_url = 'http://172.30.1.26:3000/'
+            base_url = 'http://docs.gift/'
         else:
             base_url = 'https://d-o-d.io/'
 

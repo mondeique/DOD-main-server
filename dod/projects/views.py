@@ -9,16 +9,20 @@ from rest_framework.response import Response
 import datetime
 from rest_framework.views import APIView
 from core.slack import deposit_temp_slack_message
-from payment.models import UserDepositLog
-from products.models import Item, CustomGifticon
+from payment.Bootpay import BootpayApi
+from payment.loader import load_credential
+from payment.models import UserDepositLog, PaymentErrorLog
+from payment.serializers import PaymentCancelSerialzier
+from products.models import Item, CustomGifticon, Product
 from products.serializers import ProductCreateSerializer, CustomGifticonCreateSerializer
 from projects.models import Project, ProjectMonitoringLog
 from projects.serializers import ProjectCreateSerializer, ProjectDepositInfoRetrieveSerializer, ProjectUpdateSerializer, \
-    ProjectDashboardSerializer, SimpleProjectInfoSerializer, ProjectLinkSerializer, PastProjectSerializer
+    ProjectDashboardSerializer, SimpleProjectInfoSerializer, ProjectLinkSerializer, PastProjectSerializer, \
+    ProjectGifticonSerializer
 from random import sample
 from logic.models import UserSelectLogic, DateTimeLotteryResult, DODAveragePercentage, PercentageResult
-import io
-from django.core.files.images import ImageFile
+from rest_framework import exceptions
+
 
 def _convert_dict_to_tuple(dic):
     tuple_list = []
@@ -292,6 +296,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(project)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @transaction.atomic
     def destroy(self, request, *args, **kwargs):
         """
         프로젝트 삭제 api
@@ -302,9 +307,66 @@ class ProjectViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         if instance.owner != user:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
+
         instance.is_active = False
         instance.save()
+
+        if hasattr(instance, 'payment'):
+            payment = instance.payment
+            bootpay = self.get_access_token()
+            result = bootpay.cancel(payment.receipt_id, '{}'.format(payment.price), '디오디', '결제취소')
+            if result['status'] != 200:
+                error_data = {
+                    'kind': 10,
+                    'user': user,
+                    'temp_payment': payment,
+                    'description': '유저 결제취소 실패',
+                    'bootpay_receipt_id' : payment.receipt_id
+                }
+                PaymentErrorLog.objects.create(**error_data)
+                # 결제취소실패
+                payment.status = -20
+                payment.save()
+
+                return Response(status=status.HTTP_204_NO_CONTENT)
+
+            serializer = PaymentCancelSerialzier(payment, data=result['data'])
+            # 결제취소진행중
+            payment.status = -30
+            payment.save()
+
+            if serializer.is_valid():
+                serializer.save()
+
+                # trade : bootpay 환불 완료
+                Product.objects.filter(project__payment=payment).update(status=2)  # 결제되었다가 취소이므로 환불.
+
+                # payment : 결제 취소 완료
+                payment.status = 20
+                payment.save()
+
+            else:
+                PaymentErrorLog.objects.create(user=request.user, temp_payment=payment,
+                                               description='유저 결제취소 실패',
+                                               bootpay_receipt_id=payment.receipt_id)
+
+                # 결제취소실패
+                payment.status = -20
+                payment.save()
+
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @staticmethod
+    def get_access_token():
+        secrets = load_credential("bootpay", "")
+        bootpay = BootpayApi(application_id=secrets["rest_application_id"],
+                             private_key=secrets["private_key"])
+        result = bootpay.get_access_token()
+        if result['status'] is 200:
+            return bootpay
+        else:
+            raise exceptions.APIException(detail='bootpay access token 확인바람')
+
 
     @action(methods=['put'], detail=True)
     def depositor(self, request, *args, **kwargs):
@@ -354,6 +416,12 @@ class ProjectDashboardViewSet(viewsets.GenericViewSet,
     permission_classes = [IsAuthenticated, ]
     queryset = Project.objects.filter(is_active=True)
     serializer_class = ProjectDashboardSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = self.queryset.filter(owner=user).order_by('-id')
+        return queryset
 
     def list(self, request, *args, **kwargs):
         """
@@ -361,11 +429,7 @@ class ProjectDashboardViewSet(viewsets.GenericViewSet,
         method: GET
         :return
         [
-          {"id", "name", "total_respondent",
-            "products":[
-                        {"id", "item_thumbnail", "present_winner_count", "winner_count"},
-                         {}
-                       ],
+          {"id", "name", "total_respondent", "progress",
           "dead_at", "start_at", "project_status"
           },
         {
@@ -374,12 +438,7 @@ class ProjectDashboardViewSet(viewsets.GenericViewSet,
         ]
 
         """
-        user = request.user
-        now = datetime.datetime.now()
-        buffer_day = now - datetime.timedelta(days=2)
-        queryset = self.get_queryset().filter(owner=user).filter(dead_at__gte=buffer_day).order_by('-id')
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return super(ProjectDashboardViewSet, self).list(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
         """
@@ -388,6 +447,12 @@ class ProjectDashboardViewSet(viewsets.GenericViewSet,
         pagination 안됨(조회이기 떄문).
         """
         return super(ProjectDashboardViewSet, self).retrieve(request, args, kwargs)
+
+    @action(methods=['get'], detail=True)
+    def gifticons(self, request, *args, **kwargs):
+        project = self.get_object()
+        serializer = ProjectGifticonSerializer(project)
+        return Response(serializer.data)
 
 
 class PastProjectViewSet(viewsets.GenericViewSet,

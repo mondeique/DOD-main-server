@@ -4,9 +4,10 @@ from django.shortcuts import render
 from rest_framework import viewsets, mixins, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from notice.models import MainPageDodExplanation, FAQLink, NoticeLink, SuggestionLink, PrivacyPolicyLink, \
-    TermsOfServiceLink, ContactLink
+    TermsOfServiceLink, ContactLink, TestGoogleFormsUrl
 from notice.serializers import DodExplanationSerializer, ThirdPartyMenuListSerializer, FAQMenuSerializer, \
     NoticeMenuSerializer, SuggestionMenuSerializer, ContactMenuSerializer
 
@@ -73,3 +74,9 @@ class ThirdPartyMenuListAPIView(viewsets.GenericViewSet,
         return val
 
 
+class TestGoogleFormsAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        url = TestGoogleFormsUrl.objects.filter(is_active=True).last().forms_url
+        return Response({'url': url}, status=status.HTTP_200_OK)

@@ -135,3 +135,13 @@ class MainPageDodExplanation(models.Model):
 
     class Meta:
         verbose_name_plural = '[2] 디오디설명'
+
+
+class TestGoogleFormsUrl(models.Model):
+    forms_url = models.URLField()
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = '[9] 디오디-테스트-구글폼링크'

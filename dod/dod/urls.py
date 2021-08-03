@@ -17,11 +17,13 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path, include
 
+from board.views import CumulativeDrawsCountAPIView
 from core.views import SendMMSAPIView
 from custom_manage.sites import superadmin_panel, staff_panel
 from custom_manage.views import AutoSendLeftMMSAPIView
 from django.conf import settings
 
+from notice.views import TestGoogleFormsAPIView
 from payment.views import pay_test
 from respondent.views import RefererValidatorAPIView, home, test_send
 
@@ -47,18 +49,19 @@ urlpatterns = [
     # test send
     path('즉시추첨', test_send, name='test-send'),
 
+    # test forms url in main page
+    path('test_forms/', TestGoogleFormsAPIView.as_view(), name='test-forms'),
+
+    # total respondents count
+    path('total_repondents/', CumulativeDrawsCountAPIView.as_view(), name='total-respondents'),
+
     # ckeditors
     path('ckeditor/', include('ckeditor_uploader.urls')),
-]
-if settings.DEVEL or settings.STAG:
-    urlpatterns += [
-        path('link/<slug:slug>/', RefererValidatorAPIView.as_view()),
-    ]
-if settings.PROD:
-    urlpatterns += [
-        path('checklink/<slug:slug>/', RefererValidatorAPIView.as_view()),
-    ]
 
+    # user copy this link
+    path('checklink/<slug:slug>/', RefererValidatorAPIView.as_view()),
+
+]
 if settings.DEBUG:
     import debug_toolbar
     urlpatterns += [

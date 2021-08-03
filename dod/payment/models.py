@@ -61,8 +61,13 @@ class PaymentErrorLog(models.Model):
     부트페이에선 결제가 되었지만, done api 호출 시 에러가 나, 서버상에선 결제 완료 처리가 되지 않았을 경우 환불 or 결제 완료
     처리해야 하기 때문에 로그 생성
     """
+    STATUS = [
+        (1, '결제진행실패 중 취소에러'),
+        (10, '유저결제취소 에러'),
+    ]
 
     # TODO : statelessful 하지 않도록 server side 렌더링이 필요
+    kind = models.IntegerField(choices=STATUS, default=1, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
     temp_payment = models.ForeignKey(Payment, null=True, blank=True, on_delete=models.SET_NULL)

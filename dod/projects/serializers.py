@@ -6,6 +6,7 @@ import datetime
 
 from notice.models import LinkCopyNotice
 from notice.serializers import LinkNoticeSerializer
+from products.models import Product, CustomGifticon
 from products.serializers import ProductSimpleDashboardSerializer
 from projects.models import Project
 
@@ -85,39 +86,21 @@ class ProjectDepositInfoRetrieveSerializer(serializers.ModelSerializer):
 
 
 class ProjectDashboardSerializer(serializers.ModelSerializer):
-    products = serializers.SerializerMethodField()
     total_respondent = serializers.SerializerMethodField()
     start_at = serializers.SerializerMethodField()
     dead_at = serializers.SerializerMethodField()
     project_status = serializers.SerializerMethodField()
-    depositor = serializers.SerializerMethodField()
-    total_price = serializers.SerializerMethodField()
+    progress = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
         fields = ['id', 'name', 'total_respondent',
-                  'products', 'start_at', 'dead_at',
-                  'project_status', 'depositor', 'total_price']
+                  'start_at', 'dead_at',
+                  'project_status', 'progress']
 
     def get_total_respondent(self, obj):
         count = obj.respondents.all().count()
         return count
-
-    def get_products(self, obj):
-        data = []
-        products = obj.products.all()
-        item_id_list = list(products.values_list('item_id', flat=True).distinct())
-        for item in item_id_list:
-            dic = {}
-            products_qs = products.filter(item__id=item)
-            thumbnail = products_qs.last().item.thumbnail.url
-            winner_count = products_qs.count()
-            remain_winner_count = products_qs.filter(rewards__winner_id__isnull=True).count()
-            dic['item_thumbnail'] = thumbnail
-            dic['remain_winner_count'] = remain_winner_count
-            dic['winner_count'] = winner_count
-            data.append(dic)
-        return data
 
     def get_start_at(self, obj):  # humanize
         return obj.start_at.strftime("%m월 %d일")
@@ -134,19 +117,19 @@ class ProjectDashboardSerializer(serializers.ModelSerializer):
         elif obj.start_at > now:
             return 300  # 프로젝트 대기중
         else:
-            return 100  # 진행중F
+            return 100  # 진행중
 
-    def get_depositor(self, obj):
-        if obj.deposit_logs.exists():
-            return obj.deposit_logs.last().depositor
+    def get_progress(self, obj):  # humanize
+        project = obj
+        if project.custom_gifticons.exists():
+            total_count = project.custom_gifticons.all().count()
+            used_count = project.custom_gifticons.filter(winner_id__isnull=False).count()
         else:
-            return None
-
-    def get_total_price(self, obj):
-        if obj.deposit_logs.exists():
-            return obj.deposit_logs.last().total_price
-        else:
-            return 0
+            project_qs = project.products.all().prefetch_related('rewards', 'rewards__winner_id')
+            total_count = project_qs.count()
+            used_count = project_qs.filter(rewards__winner_id__isnull=False).count()
+        progress = int(round(used_count / total_count, 2) * 100)
+        return progress
 
 
 class SimpleProjectInfoSerializer(serializers.ModelSerializer):
@@ -182,9 +165,9 @@ class ProjectLinkSerializer(serializers.ModelSerializer):
         # url = 'https://d-o-d.io/link/{}/'.format(hash_key)
         # url = 'http://3.37.147.189:8000/link/{}/'.format(hash_key)
         if settings.DEVEL or settings.STAG:
-            url = 'http://3.36.156.224:8000/link/{}/'.format(hash_key)  # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
+            url = 'http://3.36.156.224:8010/checklink/{}'.format(hash_key)  # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
         else:
-            url = 'https://d-o-d.io/checklink/{}/'.format(hash_key)
+            url = 'https://d-o-d.io/checklink/{}'.format(hash_key)
         return url
 
     def get_pc_url(self, obj):
@@ -239,3 +222,77 @@ class PastProjectSerializer(serializers.ModelSerializer):
         return obj.respondents.filter(is_win=True).count()
 
 
+class ProjectGifticonSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
+    data = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Project
+        fields = ['id', 'data', 'type']
+
+    def project_type(self):
+        if self.obj.products.exists():
+            return 1
+        elif self.obj.custom_gifticons.exists():
+            return 2
+        else:
+            return 0
+
+    def get_type(self, obj):
+        self.obj = obj
+        return self.project_type()
+
+    def get_data(self, obj):
+        self.obj = obj
+        project_type = self.project_type()
+        if project_type == 1:  # pay
+            products_distinct_ids = self.obj.products.all().values_list('item__id', flat=True).distinct()
+            distinct_products = self.obj.products.filter(item__id__in=products_distinct_ids)
+            empty_dict = {}
+            for product in distinct_products:
+                empty_dict[product.item.id] = product
+            serializer = ProjectProductsGifticonsDetailSerializer(empty_dict.values(), many=True, context={'project': self.obj})
+        else:  # custom upload
+            custom_gifticons = self.obj.custom_gifticons.all()
+            serializer = ProjectCustomGifticonsDetailSerializer(custom_gifticons, many=True)
+
+        return serializer.data
+
+
+class ProjectProductsGifticonsDetailSerializer(serializers.ModelSerializer):
+    thumbnail = serializers.SerializerMethodField()
+    total_count = serializers.SerializerMethodField()
+    left_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+        fields = ['id', 'thumbnail', 'total_count', 'left_count']
+
+    def get_thumbnail(self, obj):
+        return obj.item.thumbnail.url
+
+    def get_total_count(self, obj):
+        project = self.context['project']
+        return project.products.filter(item__id=obj.item.id).count()
+
+    def get_left_count(self, obj):
+        project = self.context['project']
+        return project.products.filter(item__id=obj.item.id, rewards__winner_id__isnull=True).count()
+
+
+class ProjectCustomGifticonsDetailSerializer(serializers.ModelSerializer):
+    thumbnail = serializers.SerializerMethodField()
+    is_used = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomGifticon
+        fields = ['id', 'thumbnail', 'is_used']
+
+    def get_thumbnail(self, obj):
+        return obj.gifticon_img.url
+
+    def get_is_used(self, obj):
+        if obj.winner_id:
+            return True
+        else:
+            return False

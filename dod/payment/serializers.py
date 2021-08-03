@@ -70,6 +70,7 @@ class PaymentDoneSerialzier(serializers.ModelSerializer):
             'requested_at', 'purchased_at', 'status'
         ]
 
+
 class PaymentCancelSerialzier(serializers.ModelSerializer):
     class Meta:
         model = Payment

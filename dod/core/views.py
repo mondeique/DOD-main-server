@@ -134,7 +134,7 @@ class SMSViewSet(viewsets.GenericViewSet):
                 # UPDATED 20210725 직접 업로드
                 self._set_custom_gifticon()
                 phone = self.data.get('phone')
-                item_url = self.reward.reward_img.url
+                item_url = self.gifticon.gifticon_img.url
                 item_name = '직접 업로드'
 
                 if type(item_url) is tuple:

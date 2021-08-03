@@ -56,10 +56,11 @@ class BoardInfoSerializer(serializers.ModelSerializer):
     total_respondent = serializers.SerializerMethodField()
     period = serializers.SerializerMethodField()
     project_status = serializers.SerializerMethodField()
+    is_owner = serializers.SerializerMethodField()
 
     class Meta:
         model = Board
-        fields = ['id', 'title', 'period', 'reward_text', 'total_respondent', 'is_dod', 'project_status']
+        fields = ['id', 'is_owner', 'form_link', 'title', 'content', 'period', 'reward_text', 'total_respondent', 'is_dod', 'project_status']
 
     @staticmethod
     def get_period(obj):
@@ -93,3 +94,11 @@ class BoardInfoSerializer(serializers.ModelSerializer):
             else:
                 status = 1  # working
         return status
+
+    def get_is_owner(self, obj):
+        owner = obj.owner
+        user = self.context['user']
+        if user == owner:
+            return True
+        else:
+            return False

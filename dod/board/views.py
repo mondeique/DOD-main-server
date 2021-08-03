@@ -1,35 +1,63 @@
+import math
+
+from django.conf import settings
 from django.db import transaction
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from board.models import Board
 from core.permissions import BoardViewPermission
 from projects.models import Project
 from board.serializers import BoardCreateSerializer, BoardUpdateSerializer, BoardInfoSerializer
 from core.pagination import DodPagination
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 from bs4 import BeautifulSoup
 import time
+
+from respondent.models import Respondent
 
 
 def _google_info_crawler(form_url):
     try:
-        html = urlopen(form_url)
+        headers = {'User-Agent': 'Chrome/66.0.3359.181'}
+        req = Request(form_url, headers=headers)
+        html = urlopen(req)
         source = BeautifulSoup(html, 'html.parser')
+        if source.find('div', 'freebirdFormviewerViewFormContentWrapper'):
+            # docs.google.com 인지 확인
+            valid = True
+        else:
+            valid = False
         dod_html = source.find_all('script', type='text/javascript')
         dod_html_link = dod_html[-1]
         string_html = str(dod_html_link)
-        list_html = string_html.split('https://d-o-d.io/checklink')
-        hash_key = list_html[1].split('/')[1]
-        time.sleep(1.4)
+
+        if settings.DEVEL or settings.STAG:
+            check_link = 'http://3.36.156.224:8010/checklink'
+        else:
+            check_link = 'https://d-o-d.io/checklink'
+
+        if check_link in string_html:
+            list_html = string_html.split(check_link)
+            hash_key = list_html[1].split('/')[1]
+            if not len(hash_key) == 12:
+                hash_key = hash_key[:12]
+        else:
+            hash_key = None
+        html.close()
     except Exception:
         hash_key = None
-    return hash_key
+        valid = False
+    print(hash_key)
+    return hash_key, valid
 
 
 class BoardViewSet(viewsets.ModelViewSet):
     permission_classes = [BoardViewPermission, ]
-    queryset = Board.objects.filter(is_active=True)
+    queryset = Board.objects.filter(is_active=True).order_by('-id')
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -52,11 +80,11 @@ class BoardViewSet(viewsets.ModelViewSet):
         google_form_link = request.data.get('form_link')
         is_dod = False
         project_id = None
-        project_hash_key = _google_info_crawler(google_form_link)
+        project_hash_key, valid = _google_info_crawler(google_form_link)
         if Project.objects.filter(owner=request.user, project_hash_key=project_hash_key).exists():
             is_dod = True
             project_id = Project.objects.get(owner=request.user, project_hash_key=project_hash_key).id
-        return Response({"is_dod": is_dod, "project": project_id})
+        return Response({"valid": valid, "is_dod": is_dod, "project": project_id})
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -116,4 +144,26 @@ class BoardViewSet(viewsets.ModelViewSet):
         method: GET
         pagination 안됨(조회이기 떄문).
         """
-        return super(BoardViewSet, self).retrieve(request, args, kwargs)
+        return super(BoardViewSet, self).retrieve(request, *args, **kwargs)
+
+    def get_serializer_context(self):
+        context = super(BoardViewSet, self).get_serializer_context()
+        context.update({"request": self.request})
+        context.update({"user": self.request.user})
+        return context
+
+
+class CumulativeDrawsCountAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        respondents = Respondent.objects.all().count()
+        count = 4000 + respondents
+        if count >= 1000000:
+            value = "%.0f%s" % (count / 1000000.00, 'M')
+        else:
+            if count >= 1000:
+                value = "{}{}".format(round(count / 1000.0, 1), 'k')
+            else:
+                value = count
+        return Response({'count': value}, status=status.HTTP_200_OK)

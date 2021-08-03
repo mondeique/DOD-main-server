@@ -32,9 +32,14 @@ class DodPagination(PageNumberPagination):
         page_number = self.page.previous_page_number()
         return page_number
 
+    def total_page(self):
+        page_number = self.page.paginator.num_pages
+        return page_number
+
     def get_paginated_response(self, data):
         return Response(OrderedDict([
              ('count', self.page.paginator.count),
+             ('total_page', self.total_page()),
              ('next', self.get_next_page_num()),
              ('previous', self.get_prev_page_num()),
              ('results', data)
