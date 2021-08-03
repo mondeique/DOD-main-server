@@ -260,7 +260,7 @@ class SMSViewSet(viewsets.GenericViewSet):
             else:
                 percentage = self.left_percentages.first().percentage  # 당첨확률 : ex: 2.1
                 result = random.choices([True, False], weights=[percentage, 100])  # ex: True 일 확률 2.1
-                if not result:
+                if not result[0]:
                     return False
                 else:
                     try:
