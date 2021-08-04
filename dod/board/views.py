@@ -51,7 +51,6 @@ def _google_info_crawler(form_url):
     except Exception:
         hash_key = None
         valid = False
-    print(hash_key)
     return hash_key, valid
 
 
@@ -81,9 +80,9 @@ class BoardViewSet(viewsets.ModelViewSet):
         is_dod = False
         project_id = None
         project_hash_key, valid = _google_info_crawler(google_form_link)
-        if Project.objects.filter(owner=request.user, project_hash_key=project_hash_key).exists():
+        if Project.objects.filter(project_hash_key=project_hash_key).exists():
             is_dod = True
-            project_id = Project.objects.get(owner=request.user, project_hash_key=project_hash_key).id
+            project_id = Project.objects.get(project_hash_key=project_hash_key).id
         return Response({"valid": valid, "is_dod": is_dod, "project": project_id})
 
     @transaction.atomic
@@ -160,10 +159,10 @@ class CumulativeDrawsCountAPIView(APIView):
         respondents = Respondent.objects.all().count()
         count = 4000 + respondents
         if count >= 1000000:
-            value = "%.0f%s" % (count / 1000000.00, 'M')
+            value = "%.0f%s" % (count / 1000000.00, 'M+')
         else:
             if count >= 1000:
-                value = "{}{}".format(round(count / 1000.0, 1), 'k')
+                value = "{}{}".format(round(count / 1000.0, 1), 'k+')
             else:
                 value = count
         return Response({'count': value}, status=status.HTTP_200_OK)

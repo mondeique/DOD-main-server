@@ -60,7 +60,7 @@ class Brand(models.Model):
         verbose_name_plural = '상품-브랜드'
 
 
-class Item(models.Model):#TODO : 미리 채워두는 모델
+class Item(models.Model):
     """
     아이스아메리카노 등 상품 목록
     """

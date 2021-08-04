@@ -47,3 +47,27 @@ class DeviceMetaInfo(models.Model):
     is_confirmed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class TestRespondentPhoneConfirm(models.Model):
+    """
+    메인페이지 테스트 설문자에게만 이용되는 핸드폰인증 모델입니다.
+    """
+    phone = models.CharField(max_length=20)
+    confirm_key = models.CharField(max_length=4)
+    is_confirmed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return '테스트) [{}]님, 인증번호 {} 확인{}'.format(self.phone, self.confirm_key, self.is_confirmed)
+
+
+class TestRespondent(models.Model):
+    """
+    테스트 프로젝트당 설문응모자 모델입니다.
+    RewardPhoneConfirm 이 is_confirmed = True 시 생성되며, 항상 당첨.
+    """
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="test_respondents")
+    phone_confirm = models.OneToOneField(TestRespondentPhoneConfirm, on_delete=models.CASCADE, related_name='test_respondent',
+                                         help_text="Phone Confirm 이 True 일때만 Reward 생성")
+    is_win = models.BooleanField(default=True, help_text="Reward의 winner_id로 사용해도 되지만, 대시보드 쿼리 속도 향상을 위해 사용")

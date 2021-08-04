@@ -296,6 +296,19 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(project)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(methods=['get'], detail=True)
+    def deletable(self, request, *args, **kwargs):
+        user = request.user
+        instance = self.get_object()
+        if instance.owner != user:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        if instance.products.filter(rewards__winner_id__isnull=False).exists() or \
+                instance.custom_gifticons.filter(winner_id__isnull=False).exists():
+            return Response({'deletable': False})
+        else:
+            return Response({'deletable': True})
+
     @transaction.atomic
     def destroy(self, request, *args, **kwargs):
         """
@@ -307,6 +320,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         if instance.owner != user:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        if instance.products.filter(rewards__winner_id__isnull=False).exists() or \
+            instance.custom_gifticons.filter(winner_id__isnull=False).exists():
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         instance.is_active = False
         instance.save()
@@ -366,7 +383,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return bootpay
         else:
             raise exceptions.APIException(detail='bootpay access token 확인바람')
-
 
     @action(methods=['put'], detail=True)
     def depositor(self, request, *args, **kwargs):

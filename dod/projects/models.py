@@ -5,6 +5,13 @@ from django.conf import settings
 
 
 class Project(models.Model):
+    NORMAL = 1
+    TEST = 999
+    KINDS = (
+        (NORMAL, 'normal'),
+        (TEST, 'test'),
+    )
+    kind = models.IntegerField(choices=KINDS, default=NORMAL)
     name = models.CharField(max_length=30)
     winner_count = models.IntegerField(null=True, help_text="유저가 설정한 당첨자수. UX상 필요. 현재는 이 숫자로 사용/ 추후 차등지급 붙을시는 로직 필요")
     start_at = models.DateTimeField(help_text="프로젝트 실행일. 프로젝트가 시작되는 날짜와 시간을 입력해야합니다.")

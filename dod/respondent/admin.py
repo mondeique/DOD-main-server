@@ -2,7 +2,8 @@ from django.contrib import admin
 from custom_manage.sites import staff_panel
 
 # staff
-from respondent.models import RespondentPhoneConfirm, Respondent, DeviceMetaInfo
+from respondent.models import RespondentPhoneConfirm, Respondent, DeviceMetaInfo, TestRespondentPhoneConfirm, \
+    TestRespondent
 
 
 class RespondentPhoneConfirmStaffadmin(admin.ModelAdmin):
@@ -33,5 +34,7 @@ class DeviceMetaInfoStaffAdmin(admin.ModelAdmin):
 
 
 staff_panel.register(RespondentPhoneConfirm, RespondentPhoneConfirmStaffadmin)
+staff_panel.register(TestRespondentPhoneConfirm, RespondentPhoneConfirmStaffadmin)
 staff_panel.register(Respondent, RespondentStaffadmin)
+staff_panel.register(TestRespondent, RespondentStaffadmin)
 staff_panel.register(DeviceMetaInfo, DeviceMetaInfoStaffAdmin)

@@ -87,7 +87,7 @@ class BoardInfoSerializer(serializers.ModelSerializer):
             start_at = obj.project.start_at
             dead_at = obj.project.dead_at
             now = datetime.datetime.now()
-            if now > dead_at:  # end
+            if now > dead_at or not obj.project.is_active:  # end
                 status = -2
             elif now < start_at:  # not started
                 status = -1

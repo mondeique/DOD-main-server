@@ -21,9 +21,10 @@ from django.conf import settings
 from logic.models import DateTimeLotteryResult, PercentageResult
 from logs.models import MMSSendLog
 from projects.models import Project
-from products.models import Product, Reward
-from respondent.models import RespondentPhoneConfirm, Respondent
-from respondent.serializers import SMSRespondentPhoneCheckSerializer, RespondentCreateSerializer, SMSRespondentPhoneConfirmSerializer
+from products.models import Product, Reward, Item
+from respondent.models import RespondentPhoneConfirm, Respondent, TestRespondentPhoneConfirm
+from respondent.serializers import SMSRespondentPhoneCheckSerializer, RespondentCreateSerializer, \
+    SMSRespondentPhoneConfirmSerializer, TestRespondentCreateSerializer
 
 
 class SMSViewSet(viewsets.GenericViewSet):
@@ -97,7 +98,7 @@ class SMSViewSet(viewsets.GenericViewSet):
             phone = serializer.validated_data['phone']
             sms_manager = SMSV2Manager()
             sms_manager.set_respondent_content()
-            sms_manager.create_respondent_send_instance(phone=phone)
+            sms_manager.create_respondent_send_instance(phone=phone, project_key=data.get('project_key'))
 
             if not sms_manager.send_sms(phone=phone):
                 return Response("Failed send sms", status=status.HTTP_410_GONE)
@@ -124,9 +125,18 @@ class SMSViewSet(viewsets.GenericViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         self.data = serializer.validated_data
         self._set_project()
-        self._create_respondent()
 
-        # 여기까지가 유저 당첨확인 및 생성
+        if self.project.kind == Project.TEST:
+
+            self._create_test_respondent()
+            won_thumbnail = Item.objects.first().won_thumbnail.url
+
+            return Response({'id': self.project.id,
+                             'is_win': True,
+                             'won_thumbnail': won_thumbnail  # UPDATED 20210725 당첨이미지
+                             }, status=status.HTTP_200_OK)
+
+        self._create_respondent()
         item_name = ''
         won_thumbnail = ''
         if self.is_win:
@@ -205,9 +215,14 @@ class SMSViewSet(viewsets.GenericViewSet):
             .prefetch_related('respondents', 'respondents__phone_confirm', 'custom_gifticons')
 
         self.project = project_queryset.get(project_hash_key=self.data.get('project_key'))
-        self.phone_confirm = RespondentPhoneConfirm.objects.filter(phone=self.data.get('phone'),
-                                                                   confirm_key=self.data.get('confirm_key'),
-                                                                   is_confirmed=True).first()
+        if self.project.kind == Project.TEST:
+            self.phone_confirm = TestRespondentPhoneConfirm.objects.filter(phone=self.data.get('phone'),
+                                                                           confirm_key=self.data.get('confirm_key'),
+                                                                           is_confirmed=True).first()
+        else:
+            self.phone_confirm = RespondentPhoneConfirm.objects.filter(phone=self.data.get('phone'),
+                                                                       confirm_key=self.data.get('confirm_key'),
+                                                                       is_confirmed=True).first()
 
     def _create_respondent(self):
         self.is_win = self._am_i_winner()
@@ -216,6 +231,15 @@ class SMSViewSet(viewsets.GenericViewSet):
                 'is_win': self.is_win}
 
         serializer = RespondentCreateSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.respondent = serializer.save()
+
+    def _create_test_respondent(self):
+        data = {'project': self.project.id,
+                'phone_confirm': self.phone_confirm.id,
+                'is_win': True}
+
+        serializer = TestRespondentCreateSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.respondent = serializer.save()
 

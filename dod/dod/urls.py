@@ -50,10 +50,10 @@ urlpatterns = [
     path('즉시추첨', test_send, name='test-send'),
 
     # test forms url in main page
-    path('test_forms/', TestGoogleFormsAPIView.as_view(), name='test-forms'),
+    path('api/v1/test_forms/', TestGoogleFormsAPIView.as_view(), name='test-forms'),
 
     # total respondents count
-    path('total_repondents/', CumulativeDrawsCountAPIView.as_view(), name='total-respondents'),
+    path('api/v1/total_repondents/', CumulativeDrawsCountAPIView.as_view(), name='total-respondents'),
 
     # ckeditors
     path('ckeditor/', include('ckeditor_uploader.urls')),
