@@ -131,6 +131,8 @@ class ProjectDashboardSerializer(serializers.ModelSerializer):
         if total_count == 0:
             total_count = 1
         progress = int(round(used_count / total_count, 2) * 100)
+        if progress > 100:
+            progress = 100
         return progress
 
 
