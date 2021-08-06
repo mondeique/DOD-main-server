@@ -83,7 +83,7 @@ class RefererValidatorAPIView(APIView):
             return HttpResponseRedirect(test_register_url_with_utm)
 
         respondent_phone_register_url = base_url + 'link?p={}&v={}'.format(project_hash_key, validator)
-        respondent_phone_register_url_with_utm = respondent_phone_register_url + '&utm_source=dod&utm_medium=service&utm_campaign=lottery'
+        respondent_phone_register_url_with_utm = respondent_phone_register_url + '&utm_source=lottery&utm_medium=service&utm_campaign=lottery'
         return HttpResponseRedirect(respondent_phone_register_url_with_utm)
 
     def _check_referer(self):
