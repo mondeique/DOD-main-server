@@ -60,6 +60,7 @@ urlpatterns = [
 
     # user copy this link
     path('checklink/<slug:slug>/', RefererValidatorAPIView.as_view()),
+    path('checklink/<slug:slug>', RefererValidatorAPIView.as_view()),
 
 ]
 if settings.DEBUG:

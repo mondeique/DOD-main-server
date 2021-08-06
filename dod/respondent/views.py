@@ -49,7 +49,6 @@ class RefererValidatorAPIView(APIView):
             base_url = 'https://d-o-d.io/'
 
         self.referer = request.META.get('HTTP_REFERER', "")
-
         if not self._check_referer():
             # client forbidden page
             forbidden_url = base_url + 'forbidden'
@@ -79,11 +78,11 @@ class RefererValidatorAPIView(APIView):
 
         if self.project.kind == Project.TEST:
             test_register_url = base_url + 'testlink?p={}&v={}'.format(project_hash_key, validator)
-            test_register_url_with_utm = test_register_url + '&utm_source=dod&utm_medium=service&utm_campaign=onboarding'
+            test_register_url_with_utm = test_register_url + '&utm_source=dod&utm_medium=onboarding&utm_campaign=lottery'
             return HttpResponseRedirect(test_register_url_with_utm)
 
         respondent_phone_register_url = base_url + 'link?p={}&v={}'.format(project_hash_key, validator)
-        respondent_phone_register_url_with_utm = respondent_phone_register_url + '&utm_source=lottery&utm_medium=service&utm_campaign=lottery'
+        respondent_phone_register_url_with_utm = respondent_phone_register_url + '&utm_source=dod&utm_medium=service&utm_campaign=lottery'
         return HttpResponseRedirect(respondent_phone_register_url_with_utm)
 
     def _check_referer(self):
