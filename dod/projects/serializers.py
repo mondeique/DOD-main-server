@@ -128,6 +128,8 @@ class ProjectDashboardSerializer(serializers.ModelSerializer):
             project_qs = project.products.all().prefetch_related('rewards', 'rewards__winner_id')
             total_count = project_qs.count()
             used_count = project_qs.filter(rewards__winner_id__isnull=False).count()
+        if total_count == 0:
+            total_count = 1
         progress = int(round(used_count / total_count, 2) * 100)
         return progress
 

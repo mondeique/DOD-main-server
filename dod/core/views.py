@@ -218,11 +218,11 @@ class SMSViewSet(viewsets.GenericViewSet):
         if self.project.kind == Project.TEST:
             self.phone_confirm = TestRespondentPhoneConfirm.objects.filter(phone=self.data.get('phone'),
                                                                            confirm_key=self.data.get('confirm_key'),
-                                                                           is_confirmed=True).first()
+                                                                           is_confirmed=True).last()
         else:
             self.phone_confirm = RespondentPhoneConfirm.objects.filter(phone=self.data.get('phone'),
                                                                        confirm_key=self.data.get('confirm_key'),
-                                                                       is_confirmed=True).first()
+                                                                       is_confirmed=True).last()
 
     def _create_respondent(self):
         self.is_win = self._am_i_winner()
@@ -283,7 +283,8 @@ class SMSViewSet(viewsets.GenericViewSet):
                 return False
             else:
                 percentage = self.left_percentages.first().percentage  # 당첨확률 : ex: 2.1
-                result = random.choices([True, False], weights=[percentage, 100])  # ex: True 일 확률 2.1
+                ex_percentage = abs(100 - percentage)
+                result = random.choices([True, False], weights=[percentage, ex_percentage])  # ex: True 일 확률 2.1
                 if not result[0]:
                     return False
                 else:
