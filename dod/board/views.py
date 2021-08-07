@@ -26,7 +26,8 @@ def _google_info_crawler(form_url):
         req = Request(form_url, headers=headers)
         html = urlopen(req)
         source = BeautifulSoup(html, 'html.parser')
-        if source.find('div', 'freebirdFormviewerViewFormContentWrapper'):
+        temp_str = str(source.find('div'))
+        if 'google' in temp_str:
             # docs.google.com 인지 확인
             valid = True
         else:
