@@ -129,7 +129,7 @@ class SMSViewSet(viewsets.GenericViewSet):
         if self.project.kind == Project.TEST:
 
             self._create_test_respondent()
-            won_thumbnail = Item.objects.get(order=999).won_thuㄴmbnail.url
+            won_thumbnail = Item.objects.get(order=999).won_thumbnail.url
 
             return Response({'id': self.project.id,
                              'is_win': True,
