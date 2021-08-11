@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.auth import (
     login as django_login,
     logout as django_logout,
@@ -16,6 +18,7 @@ from rest_framework.permissions import AllowAny
 from accounts.models import User, PhoneConfirm
 from accounts.serializers import LoginSerializer, SignupSerializer, \
     ResetPasswordSerializer, UserInfoSerializer
+from core.slack import lambda_monitoring_slack_message
 
 
 class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
@@ -54,6 +57,13 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+
+        now = datetime.datetime.now()
+        now = now.strftime('%Y년 %m월 %d일 %H:%M:%S')
+        msg = "\n\n [회원가입 로그]\n" \
+              "가입유저: {}\n\n" \
+              "가입시간: {}".format(user.phone, now)
+        lambda_monitoring_slack_message(msg)
 
         serializer = UserInfoSerializer(user)
 

@@ -30,7 +30,7 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
         start_at = validated_data['start_at']
         fixed_start_at = start_at + datetime.timedelta(minutes=1)
         dead_at = validated_data['dead_at']
-        fixed_dead_at = dead_at + datetime.timedelta(hours=11, minutes=59, seconds=59)
+        fixed_dead_at = dead_at + datetime.timedelta(hours=23, minutes=59, seconds=59)
         validated_data['start_at'] = fixed_start_at
         validated_data['dead_at'] = fixed_dead_at
         validated_data['project_hash_key'] = generate_hash_key()

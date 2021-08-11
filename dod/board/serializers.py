@@ -75,7 +75,12 @@ class BoardInfoSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_total_respondent(obj):
         if obj.project:
-            count = obj.project.respondents.all().count()
+            if obj.owner.is_staff:
+                count = obj.project.respondents.all().count()
+                if count > 50:
+                    count = count + 40
+            else:
+                count = obj.project.respondents.all().count()
         else:
             count = None
         return count
