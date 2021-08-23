@@ -88,7 +88,7 @@ class RefererValidatorAPIView(APIView):
     def _check_referer(self):
         if settings.DEVEL or settings.STAG:
             return True  # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
-        if "google.com" in self.referer:
+        if "google.com" or "naver.com" in self.referer:
             return True
         else:
             return False
