@@ -30,6 +30,9 @@ def _google_info_crawler(form_url):
         if 'google' in temp_str:
             # docs.google.com 인지 확인
             valid = True
+        elif 'form.office' in str(source.find_all('meta')):
+            # for naver form
+            valid = True
         else:
             valid = False
         dod_html = source.find_all('script', type='text/javascript')
@@ -38,12 +41,17 @@ def _google_info_crawler(form_url):
 
         if settings.DEVEL or settings.STAG:
             check_link = 'http://3.36.156.224:8010/checklink'
+
         else:
             check_link = 'https://d-o-d.io/checklink'
 
         if check_link in string_html:
             list_html = string_html.split(check_link)
             hash_key = list_html[1].split('/')[1]
+            if not len(hash_key) == 12:
+                hash_key = hash_key[:12]
+        elif 'd-o-d.io' in string_html:  # for naver form
+            hash_key = string_html.split('d-o-d.io')[1].replace('\\','').split('/')[2]
             if not len(hash_key) == 12:
                 hash_key = hash_key[:12]
         else:
