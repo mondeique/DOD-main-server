@@ -79,5 +79,6 @@ class BannedPhoneInfo(models.Model):
     추후 유저 및 응답자 인증 시 해당 데이터를 참고해서 밴 여부 확인
     """
     phone = models.CharField(max_length=20)
+    description = models.TextField(help_text='밴 사유', null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

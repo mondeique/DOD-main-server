@@ -5,7 +5,7 @@ from rest_framework.authtoken.models import Token
 from custom_manage.sites import superadmin_panel, staff_panel
 from custom_manage.tools import superadmin_register
 
-from accounts.models import User, PhoneConfirm
+from accounts.models import User, PhoneConfirm, BannedPhoneInfo
 
 
 class UserSuperadminForm(forms.ModelForm):
@@ -58,6 +58,12 @@ class PhoneConfirmAdmin(admin.ModelAdmin):
     list_display = ['phone', 'confirm_key', 'is_confirmed', 'is_used', 'created_at']
 
 
+class BannedPhoneInfoAdmin(admin.ModelAdmin):
+    list_display = ['phone', 'description', 'created_at']
+    search_fields = ['phone']
+
+
 staff_panel.register(User, UserStaffadmin)
 staff_panel.register(PhoneConfirm, PhoneConfirmAdmin)
 staff_panel.register(Token, TokenStaffAdmin)
+staff_panel.register(BannedPhoneInfo, BannedPhoneInfoAdmin)
