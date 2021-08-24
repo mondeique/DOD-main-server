@@ -71,3 +71,13 @@ class PhoneConfirm(models.Model):
     is_confirmed = models.BooleanField(default=False)
     is_used = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class BannedPhoneInfo(models.Model):
+    """
+    어뷰징, 성의없는 설문을 한 핸드폰 번호 정보들
+    추후 유저 및 응답자 인증 시 해당 데이터를 참고해서 밴 여부 확인
+    """
+    phone = models.CharField(max_length=20)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
