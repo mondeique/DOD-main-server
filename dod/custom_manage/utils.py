@@ -1,7 +1,5 @@
 import datetime
-
-from accounts.models import User
-from core.sms.utils import SMSV2Manager, LMSV1Manager
+from core.sms.utils import LMSV1Manager
 from projects.models import Project
 from respondent.models import AlertAgreeRespondent
 
@@ -23,7 +21,7 @@ def send_alert_agree_sms(phone=None):
         respondent_list = list(set(list(projects.values_list('respondents__phone_confirm__phone', flat=True))))
         sent_list = list(AlertAgreeRespondent.objects.all().values_list('phone', flat=True))
         new_respondent_list = list(set(respondent_list)-set(sent_list))
-
+        new_respondent_list = list(filter(bool, new_respondent_list))
         alert_respondent_list = [AlertAgreeRespondent(phone=i) for i in new_respondent_list]
         AlertAgreeRespondent.objects.bulk_create(alert_respondent_list)
 
@@ -46,7 +44,7 @@ def set_message(respondent):
     url = 'https://d-o-d.io/alim/{}/'.format(respondent.key)
     message = '\n안녕하세요 실시간 추첨서비스 디오디입니다.\n\n' \
               '추첨에 사용하셨던 전화번호 파기함을 안내드리며,\n' \
-              '다음 실시간 추첨이 올라올 때 알림을 받고 싶으시다면 ' \
+              '다음 실시간 추첨 설문이 올라올 때 알림을 받고 싶으시다면 ' \
               '아래 링크로 신청해주세요.\n' \
               '{}\n\n' \
               '※ 해당 안내문자 이후 전화번호는 파기됩니다.'.format(url)
