@@ -63,8 +63,8 @@ urlpatterns = [
     path('checklink/<slug:slug>', RefererValidatorAPIView.as_view()),
 
     # agree alert
-    path('thanks/for/agree/<slug:slug>/', AgreeAlertOKView.as_view()),
-    path('thanks/for/agree/<slug:slug>', AgreeAlertOKView.as_view()),
+    path('alim/<slug:slug>/', AgreeAlertOKView.as_view()),
+    path('alim/<slug:slug>', AgreeAlertOKView.as_view()),
 
 ]
 if settings.DEBUG:

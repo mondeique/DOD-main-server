@@ -248,3 +248,46 @@ class MMSV1Manager():
             return True, ''
         else:
             return False, request.status_code
+
+
+class LMSV1Manager():
+    """
+    lms 발송(ncloud 사용)을 위한 class 입니다.
+    """
+    def __init__(self):
+        self.confirm_key = ""
+        self.body = {
+            "type": "LMS",
+            "contentType": "COMM",
+            "from": load_credential("sms")["_from"], # 발신번호
+            "content": "",  # 기본 메시지 내용
+            "subject": "",  # 기본 메세지 제목
+            "messages": [{"to": ""}],
+        }
+
+    def alert_agree_content(self, message):
+        self.body['content'] = message
+        self.body['subject'] = "추첨번호 파기 안내"
+
+    def send_lms(self, phone):
+        sms_dic = load_credential("sms")
+        access_key = sms_dic['access_key']
+        url = "https://sens.apigw.ntruss.com"
+        uri = "/sms/v2/services/" + sms_dic['serviceId'] + "/messages"
+        api_url = url + uri
+        timestamp = str(int(time.time() * 1000))
+        string_to_sign = "POST " + uri + "\n" + timestamp + "\n" + access_key
+        signature = make_signature(string_to_sign)
+
+        headers = {
+            'Content-Type': 'application/json; charset=utf-8',
+            'x-ncp-apigw-timestamp': timestamp,
+            'x-ncp-iam-access-key': access_key,
+            'x-ncp-apigw-signature-v2': signature
+        }
+        self.body['messages'][0]['to'] = phone
+        request = requests.post(api_url, headers=headers, data=json.dumps(self.body))
+        if request.status_code == 202:
+            return True
+        else:
+            return False

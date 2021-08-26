@@ -3,7 +3,7 @@ from custom_manage.sites import staff_panel
 
 # staff
 from respondent.models import RespondentPhoneConfirm, Respondent, DeviceMetaInfo, TestRespondentPhoneConfirm, \
-    TestRespondent
+    TestRespondent, AlertAgreeRespondent
 
 
 class RespondentPhoneConfirmStaffadmin(admin.ModelAdmin):
@@ -33,8 +33,13 @@ class DeviceMetaInfoStaffAdmin(admin.ModelAdmin):
     list_display = ['ip', 'user_agent', 'validator', 'is_confirmed', 'created_at']
 
 
+class AlertAgreeRespondentStaffAdmin(admin.ModelAdmin):
+    list_display = ['phone', 'send', 'agree', 'created_at']
+
+
 staff_panel.register(RespondentPhoneConfirm, RespondentPhoneConfirmStaffadmin)
 staff_panel.register(TestRespondentPhoneConfirm, RespondentPhoneConfirmStaffadmin)
 staff_panel.register(Respondent, RespondentStaffadmin)
 staff_panel.register(TestRespondent, RespondentStaffadmin)
 staff_panel.register(DeviceMetaInfo, DeviceMetaInfoStaffAdmin)
+staff_panel.register(AlertAgreeRespondent, AlertAgreeRespondentStaffAdmin)
