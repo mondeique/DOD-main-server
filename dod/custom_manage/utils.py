@@ -1,13 +1,20 @@
 import datetime
+import random
+import string
+
 from core.sms.utils import LMSV1Manager
 from projects.models import Project
 from respondent.models import AlertAgreeRespondent
 
 
+def generate_random_key(length=10):
+    return ''.join(random.choices(string.digits + string.ascii_letters, k=length))
+
+
 def send_alert_agree_sms(phone=None):
     if phone:
         phone = str(phone)
-        respondent = AlertAgreeRespondent.objects.create(phone=phone)
+        respondent = AlertAgreeRespondent.objects.create(phone=phone, key=generate_random_key())
         message = set_message(respondent)
         lms_manager = LMSV1Manager()
         lms_manager.alert_agree_content(message)
@@ -22,7 +29,7 @@ def send_alert_agree_sms(phone=None):
         sent_list = list(AlertAgreeRespondent.objects.all().values_list('phone', flat=True))
         new_respondent_list = list(set(respondent_list)-set(sent_list))
         new_respondent_list = list(filter(bool, new_respondent_list))
-        alert_respondent_list = [AlertAgreeRespondent(phone=i) for i in new_respondent_list]
+        alert_respondent_list = [AlertAgreeRespondent(phone=i, key=generate_random_key()) for i in new_respondent_list]
         AlertAgreeRespondent.objects.bulk_create(alert_respondent_list)
 
         count = 0
@@ -42,6 +49,7 @@ def send_alert_agree_sms(phone=None):
 
 def set_message(respondent):
     url = 'https://d-o-d.io/alim/{}/'.format(respondent.key)
+    # url = 'http://3.36.156.224:8010/alim/{}/'.format(respondent.key)
     message = '\n안녕하세요 실시간 추첨서비스 디오디입니다.\n\n' \
               '추첨에 사용하셨던 전화번호 파기함을 안내드리며,\n' \
               '다음 실시간 추첨 설문이 올라올 때 알림을 받고 싶으시다면 ' \
