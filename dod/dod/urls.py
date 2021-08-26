@@ -20,7 +20,7 @@ from django.urls import path, include
 from board.views import CumulativeDrawsCountAPIView
 from core.views import SendMMSAPIView
 from custom_manage.sites import superadmin_panel, staff_panel
-from custom_manage.views import AutoSendLeftMMSAPIView
+from custom_manage.views import AutoSendLeftMMSAPIView, AgreeAlertOKView
 from django.conf import settings
 
 from notice.views import TestGoogleFormsAPIView
@@ -61,6 +61,10 @@ urlpatterns = [
     # user copy this link
     path('checklink/<slug:slug>/', RefererValidatorAPIView.as_view()),
     path('checklink/<slug:slug>', RefererValidatorAPIView.as_view()),
+
+    # agree alert
+    path('thanks/for/agree/<slug:slug>/', AgreeAlertOKView.as_view()),
+    path('thanks/for/agree/<slug:slug>', AgreeAlertOKView.as_view()),
 
 ]
 if settings.DEBUG:

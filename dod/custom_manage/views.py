@@ -16,7 +16,7 @@ from core.tools import get_client_ip
 from logs.models import MMSSendLog
 from products.models import Reward
 from projects.models import Project, ProjectMonitoringLog
-from respondent.models import RespondentPhoneConfirm
+from respondent.models import RespondentPhoneConfirm, AlertAgreeRespondent
 from .forms import PostForm
 from .loader import load_credential
 
@@ -214,3 +214,13 @@ class UserCheckMonitoring(APIView):
               '가입자: {}명\n'.format(now, today_users.count(), users.count())
         lambda_monitoring_slack_message(msg)
         return Response(status=status.HTTP_200_OK)
+
+
+class AgreeAlertOKView(APIView):
+
+    def get(self, request, *args, **kwargs):
+        key = kwargs['slug']
+        obj = AlertAgreeRespondent.objects.get(key=key)
+        obj.agree = True
+        obj.save()
+        return HttpResponseRedirect('https://d-o-d.io/thankyou')

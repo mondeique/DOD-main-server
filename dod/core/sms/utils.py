@@ -129,6 +129,9 @@ class SMSV2Manager():
                                "dod 바로가기\n" \
                                "https://bit.ly/3yuJCfI"
 
+    def alert_agree_content(self, message):
+        self.body['content'] = message
+
     def send_sms(self, phone):
         sms_dic = load_credential("sms")
         access_key = sms_dic['access_key']
