@@ -69,12 +69,14 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
         serializer = UserInfoSerializer(user)
 
+        # UPDATED 20210829 onboarding
         self.user = user
         self._create_test_project()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def _create_test_project(self):
+        # UPDATED 20210829 onboarding
         now = datetime.datetime.now()
         end = now + datetime.timedelta(days=365)
         key = ''.join(random.choices(string.digits + string.ascii_letters, k=12))

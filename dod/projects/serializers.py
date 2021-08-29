@@ -6,7 +6,7 @@ import datetime
 
 from notice.models import LinkCopyNotice
 from notice.serializers import LinkNoticeSerializer
-from products.models import Product, CustomGifticon
+from products.models import Product, CustomGifticon, Item
 from products.serializers import ProductSimpleDashboardSerializer
 from projects.models import Project
 
@@ -244,7 +244,7 @@ class ProjectGifticonSerializer(serializers.ModelSerializer):
     def project_type(self):
         if self.obj.products.exists():
             return 1
-        elif self.obj.custom_gifticons.exists():
+        elif self.obj.custom_gifticons.exists() or self.obj.kind == Project.ONBOARDING:
             return 2
         else:
             return 0
@@ -263,9 +263,15 @@ class ProjectGifticonSerializer(serializers.ModelSerializer):
             for product in distinct_products:
                 empty_dict[product.item.id] = product
             serializer = ProjectProductsGifticonsDetailSerializer(empty_dict.values(), many=True, context={'project': self.obj})
-        else:  # custom upload
-            custom_gifticons = self.obj.custom_gifticons.all()
-            serializer = ProjectCustomGifticonsDetailSerializer(custom_gifticons, many=True)
+        else:  # custom upload or onboarding
+            # UPDATED 20210829 onboarding
+            if self.obj.kind == Project.ONBOARDING:
+                return [{"id": 1,
+                         "thumbnail": Item.objects.get(order=999).thumbnail.url,
+                         "is_used": False}]
+            else:
+                custom_gifticons = self.obj.custom_gifticons.all()
+                serializer = ProjectCustomGifticonsDetailSerializer(custom_gifticons, many=True)
 
         return serializer.data
 
@@ -307,3 +313,22 @@ class ProjectCustomGifticonsDetailSerializer(serializers.ModelSerializer):
             return True
         else:
             return False
+
+
+class OnboardingGifticonsDetailSerializer(serializers.Serializer):
+    thumbnail = serializers.SerializerMethodField()
+    is_used = serializers.SerializerMethodField()
+    id = serializers.SerializerMethodField()
+
+    class Meta:
+        fields = ['id', 'thumbnail', 'is_used']
+
+    def get_thumbnail(self, obj):
+        url = Item.objects.get(order=999).thumbnail.url
+        return url
+
+    def get_is_used(self, obj):
+        return False
+
+    def get_id(self, obj):
+        return 1
