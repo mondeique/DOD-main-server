@@ -76,13 +76,16 @@ class ProjectDepositInfoRetrieveSerializer(serializers.ModelSerializer):
     def get_total_price(self, obj):
         if obj.custom_gifticons.exists():
             return 0
-        products = obj.products.all()
-        total_price = 0
-        for product in products:
-            item_price = product.item.price
-            price = item_price * product.count
-            total_price = total_price + price
-        return total_price
+        elif obj.products.exists():
+            products = obj.products.all()
+            total_price = 0
+            for product in products:
+                item_price = product.item.price
+                price = item_price * product.count
+                total_price = total_price + price
+            return total_price
+        else:
+            return 0
 
 
 class ProjectDashboardSerializer(serializers.ModelSerializer):

@@ -117,7 +117,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
             # 상품 없어도 생성 됨
             self.project.is_active = True
             self.project.save()
-            return Response(status=status.HTTP_201_CREATED)
 
         project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
         return Response(project_info_serializer.data, status=status.HTTP_201_CREATED)
@@ -261,6 +260,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         else:
             self._create_products()
             self._generate_percentage()
+
+        self.project.status = True
+        self.project.save()
 
         project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
         return Response(project_info_serializer.data, status=status.HTTP_201_CREATED)
