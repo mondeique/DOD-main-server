@@ -19,6 +19,29 @@ def menu_icon_directory_path(instance, filename):
     return 'menu_icon/{}'.format(filename)
 
 
+class LinkCopyMessage(models.Model):
+    """
+    링크 복사 안내 메세지.
+    """
+    ACTIVE = 1  # 정상적으로 생성
+    INACTIVE = 2  # 상품 없이 생성
+    ONBOARDING = 3  # 온보딩으로 생성
+    KINDS = (
+        (ACTIVE, 'active'),
+        (INACTIVE, 'inactive'),
+        (ONBOARDING, 'test'),
+    )
+    title = models.CharField(max_length=40)
+    kinds = models.IntegerField(choices=KINDS, default=1)
+    content = RichTextUploadingField(help_text="rich_text_field로 이미지 등을 추가할 수 있습니다.", null=True, blank=True)
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = '[10] 링크안내 멘트'
+
+
 class LinkCopyNotice(models.Model):
     """
     메인 대시보드에서 링크 복사 클릭시 나오는 안내 페이지입니다.

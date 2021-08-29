@@ -1,5 +1,6 @@
 import json
 import random
+import string
 
 import requests
 from django.db import transaction, OperationalError
@@ -22,9 +23,11 @@ from logic.models import DateTimeLotteryResult, PercentageResult
 from logs.models import MMSSendLog
 from projects.models import Project
 from products.models import Product, Reward, Item
-from respondent.models import RespondentPhoneConfirm, Respondent, TestRespondentPhoneConfirm
+from respondent.models import RespondentPhoneConfirm, Respondent, TestRespondentPhoneConfirm, AlertAgreeRespondent
 from respondent.serializers import SMSRespondentPhoneCheckSerializer, RespondentCreateSerializer, \
     SMSRespondentPhoneConfirmSerializer, TestRespondentCreateSerializer
+def generate_random_key(length=10):
+    return ''.join(random.choices(string.digits + string.ascii_letters, k=length))
 
 
 class SMSViewSet(viewsets.GenericViewSet):
@@ -102,8 +105,11 @@ class SMSViewSet(viewsets.GenericViewSet):
 
             if not sms_manager.send_sms(phone=phone):
                 return Response("Failed send sms", status=status.HTTP_410_GONE)
-
-            return Response(status=status.HTTP_200_OK)
+            if AlertAgreeRespondent.objects.filter(phone=phone).exists():
+                agreed = True
+            else:
+                agreed = False
+            return Response({"agreed": agreed}, status=status.HTTP_200_OK)
 
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -115,9 +121,14 @@ class SMSViewSet(viewsets.GenericViewSet):
         api: api/v1/sms/respondent_confirm
         method: POST
         전화번호, 인증번호 와 url에서 파싱한 project_key와 validator를 담아서 보내주어야 합니다.
-        data: {'phone', 'confirm_key', 'project_key', 'validator'}
+        data: {'phone', 'confirm_key', 'project_key', 'validator', "agree"}
         """
         data = request.data
+        agree = data.get('agree')
+        if agree:
+            AlertAgreeRespondent.objects.create(phone=data.get('phone'),
+                                                key=generate_random_key(10),
+                                                agree=True)
         serializer = self.get_serializer(data=data)
         if not serializer.is_valid(raise_exception=True):
             return Response(status=status.HTTP_400_BAD_REQUEST)

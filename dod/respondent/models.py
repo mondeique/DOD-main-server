@@ -7,16 +7,12 @@ from django.db import models
 from projects.models import Project
 
 
-def generate_random_key(length=10):
-    return ''.join(random.choices(string.digits + string.ascii_letters, k=length))
-
-
 class AlertAgreeRespondent(models.Model):
     """
     실시간 추첨 알림 수신 동의한 응답자들 정보
     """
     phone = models.CharField(max_length=20)
-    key = models.CharField(max_length=10, default=generate_random_key(10))
+    key = models.CharField(max_length=10)
     agree = models.BooleanField(default=False)
     send = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

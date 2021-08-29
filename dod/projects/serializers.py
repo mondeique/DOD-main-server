@@ -4,7 +4,7 @@ import random
 import string
 import datetime
 
-from notice.models import LinkCopyNotice
+from notice.models import LinkCopyNotice, LinkCopyMessage
 from notice.serializers import LinkNoticeSerializer
 from products.models import Product, CustomGifticon, Item
 from products.serializers import ProductSimpleDashboardSerializer
@@ -175,14 +175,25 @@ class ProjectLinkSerializer(serializers.ModelSerializer):
         fields = ['url', 'pc_url', 'mobile_url']
 
     def get_url(self, obj): # TODO : respondent validator view api
+        if obj.kind == Project.NORMAL:
+            if obj.status:  # active
+                message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
+            else:
+                message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.INACTIVE).last().content
+        elif obj.kind == Project.ONBOARDING:
+            message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ONBOARDING).last().content
+        else:
+            message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
+
         hash_key = obj.project_hash_key
-        # url = 'https://d-o-d.io/link/{}/'.format(hash_key)
-        # url = 'http://3.37.147.189:8000/link/{}/'.format(hash_key)
+
         if settings.DEVEL or settings.STAG:
             url = 'http://3.36.156.224:8010/checklink/{}'.format(hash_key)  # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
         else:
             url = 'https://d-o-d.io/checklink/{}/'.format(hash_key)
-        return url
+
+        message = '{}\n{}'.format(message, url)
+        return message
 
     def get_pc_url(self, obj):
         link_notice = LinkCopyNotice.objects.filter(is_active=True, kinds=1).last()
