@@ -81,6 +81,12 @@ class RefererValidatorAPIView(APIView):
             test_register_url_with_utm = test_register_url + '&utm_source=dod&utm_medium=onboarding&utm_campaign=lottery'
             return HttpResponseRedirect(test_register_url_with_utm)
 
+        elif self.project.kind == Project.ONBOARDING:
+            # TODO : onboarding page link & utm
+            test_register_url = base_url + 'testlink?p={}&v={}'.format(project_hash_key, validator)
+            test_register_url_with_utm = test_register_url
+            return HttpResponseRedirect(test_register_url_with_utm)
+
         respondent_phone_register_url = base_url + 'link?p={}&v={}'.format(project_hash_key, validator)
         respondent_phone_register_url_with_utm = respondent_phone_register_url + '&utm_source=dod&utm_medium=service&utm_campaign=lottery'
         return HttpResponseRedirect(respondent_phone_register_url_with_utm)
@@ -97,10 +103,11 @@ class RefererValidatorAPIView(APIView):
 
     def _validate_project(self):
         now = datetime.datetime.now()
+        if self.project.kind in [Project.ONBOARDING, Project.TEST]:
+            return True
+
         if self.project.dead_at < now:
             return False  # 종료됨
-        if not self.project.status:
-            return False  # 입금대기중
         elif not self.project.is_active:
             return False  # 프로젝트 삭제됨(환불시)
         elif self.project.start_at > now:
@@ -147,10 +154,11 @@ class ClientRefererProjectValidateCheckViewSet(viewsets.GenericViewSet):
 
     def _validate_project(self):
         now = datetime.datetime.now()
-        # if self.project.dead_at < now:  # 2021.07.07 [d-o-d.io 리뉴얼 ]추가 ####
-        #     return False  # 종료됨
-        if not self.project.status:
-            return False  # 입금대기중
+        if self.project.kind in [Project.ONBOARDING, Project.TEST]:
+            return True
+
+        if self.project.dead_at < now:
+            return False  # 종료됨
         elif not self.project.is_active:
             return False  # 프로젝트 삭제됨(환불시)
         elif self.project.start_at > now:

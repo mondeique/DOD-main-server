@@ -24,7 +24,7 @@ class SMSRespondentPhoneConfirmSerializer(serializers.Serializer):
         project_key = attrs.get('project_key')
         project = Project.objects.get(project_hash_key=project_key)
 
-        if project.kind == Project.TEST:
+        if project.kind in [Project.TEST, Project.ONBOARDING]:
             phone_confirm_queryset = TestRespondentPhoneConfirm.objects.filter(phone=phone)
             if not phone_confirm_queryset.filter(confirm_key=confirm_key, is_confirmed=False).exists():
                 msg = '잘못된 인증번호 입니다.'

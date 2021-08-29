@@ -1,4 +1,6 @@
 import datetime
+import random
+import string
 
 from django.contrib.auth import (
     login as django_login,
@@ -19,6 +21,7 @@ from accounts.models import User, PhoneConfirm
 from accounts.serializers import LoginSerializer, SignupSerializer, \
     ResetPasswordSerializer, UserInfoSerializer
 from core.slack import lambda_monitoring_slack_message
+from projects.models import Project
 
 
 class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
@@ -57,7 +60,6 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-
         now = datetime.datetime.now()
         now = now.strftime('%Y년 %m월 %d일 %H:%M:%S')
         msg = "\n\n [회원가입 로그]\n" \
@@ -67,7 +69,23 @@ class AccountViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
         serializer = UserInfoSerializer(user)
 
+        self.user = user
+        self._create_test_project()
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def _create_test_project(self):
+        now = datetime.datetime.now()
+        end = now + datetime.timedelta(days=365)
+        key = ''.join(random.choices(string.digits + string.ascii_letters, k=12))
+        Project.objects.create(kind=Project.ONBOARDING,
+                               name='테스트추첨',
+                               start_at=now,
+                               dead_at=end,
+                               owner=self.user,
+                               status=True,
+                               is_active=True,
+                               project_hash_key=key)
 
     def _login(self):
         user = self.serializer.validated_data['user']

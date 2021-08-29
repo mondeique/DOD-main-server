@@ -6,9 +6,11 @@ from django.conf import settings
 
 class Project(models.Model):
     NORMAL = 1
+    ONBOARDING = 2
     TEST = 999
     KINDS = (
         (NORMAL, 'normal'),
+        (ONBOARDING, 'onboarding'),  # user signup
         (TEST, 'test'),
     )
     kind = models.IntegerField(choices=KINDS, default=NORMAL)

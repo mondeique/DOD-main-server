@@ -126,7 +126,7 @@ class SMSViewSet(viewsets.GenericViewSet):
         self.data = serializer.validated_data
         self._set_project()
 
-        if self.project.kind == Project.TEST:
+        if self.project.kind in [Project.TEST, Project.ONBOARDING]:
 
             self._create_test_respondent()
             won_thumbnail = Item.objects.get(order=999).won_thumbnail.url
@@ -215,7 +215,7 @@ class SMSViewSet(viewsets.GenericViewSet):
             .prefetch_related('respondents', 'respondents__phone_confirm', 'custom_gifticons')
 
         self.project = project_queryset.get(project_hash_key=self.data.get('project_key'))
-        if self.project.kind == Project.TEST:
+        if self.project.kind in [Project.TEST, Project.ONBOARDING]:
             self.phone_confirm = TestRespondentPhoneConfirm.objects.filter(phone=self.data.get('phone'),
                                                                            confirm_key=self.data.get('confirm_key'),
                                                                            is_confirmed=True).last()
