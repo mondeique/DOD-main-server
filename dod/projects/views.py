@@ -59,7 +59,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return ProjectCreateSerializer
-        elif self.action in 'update':
+        elif self.action in ['update', 'add_gifticons']:
             return ProjectUpdateSerializer
         elif self.action == 'retrieve':
             return None
@@ -106,14 +106,20 @@ class ProjectViewSet(viewsets.ModelViewSet):
             self._create_custom_gifticon()
             self._generate_percentage()
 
-        else:
+        elif self.data.get('items'):
             self._create_products()
             # self._generate_lucky_time()  # [DEPRECATED] 20210725 not use lucky time
             self._generate_percentage()
             # self._check_undefined_projects() # UPDATED 20210725 not use deposit logs
 
-        project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
+        else:
+            # UPDATED 20210829 onboarding
+            # 상품 없어도 생성 됨
+            self.project.is_active = True
+            self.project.save()
+            return Response(status=status.HTTP_201_CREATED)
 
+        project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
         return Response(project_info_serializer.data, status=status.HTTP_201_CREATED)
 
     def _create_custom_gifticon(self):
@@ -157,8 +163,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 serializer.save()
 
         self.project.winner_count = winner_count
-        print('inin')
-        print(self.project.winner_count)
         self.project.save()
 
     def _create_project_monitoring_log(self):
@@ -223,9 +227,49 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return sample(range(1, 25), 1)[0]
 
     @transaction.atomic
+    @action(methods=['post'], detail=True)
+    def add_gifticons(self, request, *args, **kwargs):
+        """
+        [UPDATED] 20210829
+        온보딩 경험 향상을 위해 상품 없이도 추첨 생성 가능
+        이후 기프티콘 추가시 사용하는 api
+
+          api: api/v1/project/add_gifticons/<id>
+          method : POST
+          :data:
+          1. payment
+              {'start_at', 'dead_at',
+                  items':
+                      [{'item':'item.id', 'count':'3'}, {'item':'', 'count':''}]
+              }
+          2. custom upload
+              {'start_at', 'dead_at',
+                  'custom_upload':
+                      ['...1.jpg', '...2.jpg']
+              }
+          :return: {'id', 'name', 'winner_count', 'total_price'}
+          """
+        self.data = request.data.copy()
+        self.files = request.FILES
+        self.project = self.get_object()
+
+        if self.files.get('custom_upload'):
+            self.custom_upload = self.files.pop('custom_upload')
+            self._create_custom_gifticon()
+            self._generate_percentage()
+
+        else:
+            self._create_products()
+            self._generate_percentage()
+
+        project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
+        return Response(project_info_serializer.data, status=status.HTTP_201_CREATED)
+
+    @transaction.atomic
     def update(self, request, *args, **kwargs):
         """
         프로젝트 업데이트 api
+        [DEPRECATED]
         items, start_at, dead_at 중 원하는 데이터 입력하여 PUT 요청하면 됨
         api: api/v1/project/<id>
         method : PUT

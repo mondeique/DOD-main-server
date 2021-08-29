@@ -53,9 +53,9 @@ class ProjectUpdateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         start_at = validated_data['start_at']
-        fixed_start_at = start_at + datetime.timedelta(hours=9)
+        fixed_start_at = start_at + datetime.timedelta(minutes=1)
         dead_at = validated_data['dead_at']
-        fixed_dead_at = dead_at + datetime.timedelta(days=1, hours=8, minutes=59, seconds=59)
+        fixed_dead_at = dead_at + datetime.timedelta(hours=23, minutes=59, seconds=59)
         validated_data['start_at'] = fixed_start_at
         validated_data['dead_at'] = fixed_dead_at
         project = super(ProjectUpdateSerializer, self).update(instance, validated_data)
@@ -113,7 +113,7 @@ class ProjectDashboardSerializer(serializers.ModelSerializer):
         if obj.dead_at < now:
             return 999  # 종료됨
         elif not obj.status:
-            return 200  # 입금대기중
+            return 200  # 활성화 안됨 # UPDATED 20210829 onboarding
         elif obj.start_at > now:
             return 300  # 프로젝트 대기중
         else:
@@ -121,6 +121,8 @@ class ProjectDashboardSerializer(serializers.ModelSerializer):
 
     def get_progress(self, obj):  # humanize
         project = obj
+        if not project.status:
+            return 0
         if project.custom_gifticons.exists():
             total_count = project.custom_gifticons.all().count()
             used_count = project.custom_gifticons.filter(winner_id__isnull=False).count()
