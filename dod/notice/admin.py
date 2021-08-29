@@ -1,10 +1,14 @@
 from django.contrib import admin
 from custom_manage.sites import staff_panel
 from notice.models import LinkCopyNotice, FAQLink, ContactLink, MainPageDodExplanation, SuggestionLink, \
-    PrivacyPolicyLink, TermsOfServiceLink, NoticeLink, TestGoogleFormsUrl
+    PrivacyPolicyLink, TermsOfServiceLink, NoticeLink, TestGoogleFormsUrl, LinkCopyMessage
 
 
 class LinkCopyNoticeStaffAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'kinds', 'title', 'is_active', 'created_at']
+
+
+class LinkCopyMessageStaffAdmin(admin.ModelAdmin):
     list_display = ['pk', 'kinds', 'title', 'is_active', 'created_at']
 
 
@@ -49,3 +53,4 @@ staff_panel.register(PrivacyPolicyLink, PrivacyPolicyLinkStaffAdmin)
 staff_panel.register(TermsOfServiceLink, TermsOfServiceLinkStaffAdmin)
 staff_panel.register(MainPageDodExplanation, MainPageDodExplanationStaffAdmin)
 staff_panel.register(TestGoogleFormsUrl, TestGoogleFormsUrlStaffAdmin)
+staff_panel.register(LinkCopyMessage, LinkCopyMessageStaffAdmin)
