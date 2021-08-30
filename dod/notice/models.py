@@ -33,7 +33,7 @@ class LinkCopyMessage(models.Model):
     )
     title = models.CharField(max_length=40)
     kinds = models.IntegerField(choices=KINDS, default=1)
-    content = RichTextUploadingField(help_text="rich_text_field로 이미지 등을 추가할 수 있습니다.", null=True, blank=True)
+    content = models.TextField(help_text="rich_text_field로 이미지 등을 추가할 수 있습니다.", null=True, blank=True)
     is_active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
