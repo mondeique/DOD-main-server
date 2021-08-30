@@ -188,7 +188,7 @@ class PaymentViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
                     serializer.save()
 
                     # product status 2번처리 : 결제완료
-                    products = Product.objects.filter(project__payment=payment)
+                    products = Product.objects.filter(project__payments=payment)
                     products.update(status=1)
 
                     # payment : 결제 완료
@@ -225,7 +225,7 @@ class PaymentViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
                                                    is_refunded=True)
 
                     # trade : bootpay 환불 완료
-                    Product.objects.filter(project__payment=payment).update(status=2)  # 결제되었다가 취소이므로 환불.
+                    Product.objects.filter(project__payments=payment).update(status=2)  # 결제되었다가 취소이므로 환불.
 
                     # payment : 결제 취소 완료
                     payment.status = 20
@@ -257,7 +257,7 @@ class PaymentViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
                                                description='(환불완료)[결제 완료 중 에러] bootpay 결제 실패, *취소 완료', is_refunded=True)
 
                 # trade : bootpay 환불 완료
-                Product.objects.filter(project__payment=payment).update(status=2)  # 결제되었다가 취소이므로 환불.
+                Product.objects.filter(project__payments=payment).update(status=2)  # 결제되었다가 취소이므로 환불.
 
                 # payment : 결제 취소 완료
                 payment.status = 20
@@ -297,7 +297,7 @@ class PaymentViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
             serializer.save()
 
             # trade : bootpay 환불 완료
-            Product.objects.filter(project__payment=payment).update(status=2)  # 결제되었다가 취소이므로 환불.
+            Product.objects.filter(project__payments=payment).update(status=2)  # 결제되었다가 취소이므로 환불.
 
             # payment : 결제 취소 완료
             payment.status = 20
@@ -336,7 +336,7 @@ class PaymentViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
             serializer.save()
 
             # trade : bootpay 환불 완료
-            Product.objects.filter(project__payment=payment).update(status=2)  # 결제되었다가 취소이므로 환불.
+            Product.objects.filter(project__payments=payment).update(status=2)  # 결제되었다가 취소이므로 환불.
 
             # payment : 결제 취소 완료
             payment.status = 20

@@ -32,7 +32,7 @@ class Payment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='유저')
     receipt_id = models.CharField(max_length=100, verbose_name='영수증키', db_index=True)
     status = models.IntegerField(choices=STATUS, verbose_name='결제상태', default=0)
-    project = models.OneToOneField(Project, null=True, on_delete=models.SET_NULL)
+    project = models.ForeignKey(Project, null=True, on_delete=models.SET_NULL, related_name='payments')
     price = models.IntegerField(verbose_name='결제금액', null=True)
     name = models.CharField(max_length=100, verbose_name='대표상품명')
 

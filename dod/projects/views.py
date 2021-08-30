@@ -373,8 +373,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         instance.is_active = False
         instance.save()
 
-        if hasattr(instance, 'payment'):
-            payment = instance.payment
+        if hasattr(instance, 'payments'):
+            payment = instance.payments.last()
             bootpay = self.get_access_token()
             result = bootpay.cancel(payment.receipt_id, '{}'.format(payment.price), '디오디', '결제취소')
             if result['status'] != 200:
@@ -401,7 +401,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 serializer.save()
 
                 # trade : bootpay 환불 완료
-                Product.objects.filter(project__payment=payment).update(status=2)  # 결제되었다가 취소이므로 환불.
+                Product.objects.filter(project__payments=payment).update(status=2)  # 결제되었다가 취소이므로 환불.
 
                 # payment : 결제 취소 완료
                 payment.status = 20
