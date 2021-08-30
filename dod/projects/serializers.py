@@ -175,15 +175,18 @@ class ProjectLinkSerializer(serializers.ModelSerializer):
         fields = ['url', 'pc_url', 'mobile_url']
 
     def get_url(self, obj): # TODO : respondent validator view api
-        if obj.kind == Project.NORMAL:
-            if obj.status:  # active
-                message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
-            else:
-                message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.INACTIVE).last().content
-        elif obj.kind == Project.ONBOARDING:
-            message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ONBOARDING).last().content
-        else:
-            message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
+        # if obj.kind == Project.NORMAL:
+        #     if obj.status:  # active
+        #         message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
+        #     else:
+        #         message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
+        # elif obj.kind == Project.ONBOARDING:
+        #     message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
+        # else:
+        #     message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
+
+        # FIXED same message
+        message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
 
         hash_key = obj.project_hash_key
 

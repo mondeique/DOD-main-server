@@ -252,17 +252,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
         self.files = request.FILES
         self.project = self.get_object()
 
+        if self.project.products.exists():
+            self.project.products.all().delete()
+
         if self.files.get('custom_upload'):
             self.custom_upload = self.files.pop('custom_upload')
             self._create_custom_gifticon()
             self._generate_percentage()
-
         else:
             self._create_products()
             self._generate_percentage()
-
-        self.project.status = True
-        self.project.save()
 
         project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
         return Response(project_info_serializer.data, status=status.HTTP_201_CREATED)
@@ -279,54 +278,90 @@ class ProjectViewSet(viewsets.ModelViewSet):
         {'start_at', 'dead_at', 'items':[]}
         :return: {'id', 'name'', 'total_price'}
         """
-        items = request.data.get('items')
-        if not items:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        # items = request.data.get('items')
+        # print(request.data)
+        # if not items:
+        #     return Response(status=status.HTTP_400_BAD_REQUEST)
+        #
+        # self.data = request.data.copy()
+        # self.files = request.FILES
+        # serializer = self.get_serializer(self.get_object(), data=self.data, partial=True)
+        # serializer.is_valid(raise_exception=True)
+        # self.project = serializer.save()
+        #
+        # previous_items = list(self.project.products.values('item', 'count'))
+        # previous_items = sorted(previous_items, key=itemgetter('item'))
+        #
+        # # UPDATED 2021.07.04
+        # # Convert list of dict to list of tuple
+        # previous_tuple_list = _convert_dict_to_tuple(previous_items)
+        # # Sum same item id : [(1,1), (1,1), (2,1)] => [(1,2), (2,1)]
+        # previous_items = _sum_same_tuple_first_values(previous_tuple_list)
+        #
+        # present_tuple_list = _convert_dict_to_tuple(sorted(items, key=itemgetter('item')))
+        # present_items = _sum_same_tuple_first_values(present_tuple_list)
+        #
+        # if previous_items == present_items:
+        #     # item 변화 없는 경우
+        #     project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
+        #     return Response(project_info_serializer.data, status=status.HTTP_206_PARTIAL_CONTENT)
+        # else:
+        #     # delete previous data
+        #     self.project.products.all().delete()
+        #     self.project.select_logics.all().delete()
+        #     # self.project.deposit_logs.all().delete()
+        #     # create new data
+        #
+        #     # UPDATED 20210725 custom upload
+        #     if self.data.get('custom_upload'):
+        #         self.custom_upload = self.files.pop('custom_upload')
+        #         self._create_custom_gifticon()
+        #         self._generate_percentage()
+        #         project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
+        #
+        #     else:
+        #         self._create_products()
+        #         # self._generate_lucky_time()  # [DEPRECATED] 20210725 not use lucky time
+        #         self._generate_percentage()
+        #         # self._check_undefined_projects() # UPDATED 20210725 not use deposit logs
+        #         project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
+        #
+        #     return Response(project_info_serializer.data, status=status.HTTP_206_PARTIAL_CONTENT)
 
         self.data = request.data.copy()
         self.files = request.FILES
-        serializer = self.get_serializer(self.get_object(), data=self.data, partial=True)
+        self.data['start_at'] = datetime.datetime.strptime(self.data['start_at'], '%Y/%m/%d')
+        self.data['dead_at'] = datetime.datetime.strptime(self.data['dead_at'], '%Y/%m/%d')
+
+        serializer = self.get_serializer_class()
+        serializer = serializer(self.get_object(), data=self.data, context={'request': request,
+                                                         'user': request.user}, partial=True)
         serializer.is_valid(raise_exception=True)
         self.project = serializer.save()
 
-        previous_items = list(self.project.products.values('item', 'count'))
-        previous_items = sorted(previous_items, key=itemgetter('item'))
-
-        # UPDATED 2021.07.04
-        # Convert list of dict to list of tuple
-        previous_tuple_list = _convert_dict_to_tuple(previous_items)
-        # Sum same item id : [(1,1), (1,1), (2,1)] => [(1,2), (2,1)]
-        previous_items = _sum_same_tuple_first_values(previous_tuple_list)
-
-        present_tuple_list = _convert_dict_to_tuple(sorted(items, key=itemgetter('item')))
-        present_items = _sum_same_tuple_first_values(present_tuple_list)
-
-        if previous_items == present_items:
-            # item 변화 없는 경우
-            project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
-            return Response(project_info_serializer.data, status=status.HTTP_206_PARTIAL_CONTENT)
-        else:
-            # delete previous data
+        if self.project.products.exists():
             self.project.products.all().delete()
-            self.project.select_logics.all().delete()
-            # self.project.deposit_logs.all().delete()
-            # create new data
 
-            # UPDATED 20210725 custom upload
-            if self.data.get('custom_upload'):
-                self.custom_upload = self.files.pop('custom_upload')
-                self._create_custom_gifticon()
-                self._generate_percentage()
-                project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
+        # UPDATED 20210725 custom upload
+        if self.files.get('custom_upload'):
+            self.custom_upload = self.files.pop('custom_upload')
+            self._create_custom_gifticon()
+            self._generate_percentage()
 
-            else:
-                self._create_products()
-                # self._generate_lucky_time()  # [DEPRECATED] 20210725 not use lucky time
-                self._generate_percentage()
-                # self._check_undefined_projects() # UPDATED 20210725 not use deposit logs
-                project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
+        elif self.data.get('items'):
+            self._create_products()
+            # self._generate_lucky_time()  # [DEPRECATED] 20210725 not use lucky time
+            self._generate_percentage()
+            # self._check_undefined_projects() # UPDATED 20210725 not use deposit logs
 
-            return Response(project_info_serializer.data, status=status.HTTP_206_PARTIAL_CONTENT)
+        else:
+            # UPDATED 20210829 onboarding
+            # 상품 없어도 생성 됨
+            self.project.is_active = True
+            self.project.save()
+
+        project_info_serializer = ProjectDepositInfoRetrieveSerializer(self.project)
+        return Response(project_info_serializer.data, status=status.HTTP_206_PARTIAL_CONTENT)
 
     @action(methods=['get'], detail=True)
     def link_notice(self, request, *args, **kwargs):
