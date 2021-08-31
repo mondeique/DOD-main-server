@@ -6,6 +6,7 @@ import random
 import json
 from accounts.models import PhoneConfirm
 from core.sms.signature import time_stamp, make_signature
+from projects.models import Project
 from respondent.models import RespondentPhoneConfirm, Respondent, TestRespondentPhoneConfirm
 from ..loader import load_credential
 import requests
@@ -101,8 +102,8 @@ class SMSV2Manager():
         self.set_confirm_key()
         self.body['content'] = "[디오디] 본인확인을 위해 인증번호 {}를 입력해 주세요.".format(self.confirm_key)
 
-    def create_respondent_send_instance(self, phone, project_key=None):
-        if project_key:
+    def create_respondent_send_instance(self, phone, project=None):
+        if project.kind in [Project.TEST, Project.ONBOARDING] or not project.status:
             respondent_phone_confirm = TestRespondentPhoneConfirm.objects.create(
                 phone=phone,
                 confirm_key=self.confirm_key,

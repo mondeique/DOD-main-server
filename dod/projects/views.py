@@ -408,7 +408,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         instance.is_active = False
         instance.save()
 
-        if hasattr(instance, 'payments'):
+        if instance.payments.exists():
             payment = instance.payments.last()
             bootpay = self.get_access_token()
             result = bootpay.cancel(payment.receipt_id, '{}'.format(payment.price), '디오디', '결제취소')

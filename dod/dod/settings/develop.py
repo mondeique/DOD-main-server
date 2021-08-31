@@ -9,7 +9,20 @@ SECRET_KEY = SETTING_DEV_DIC['SECRET_KEY']
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
+CORS_ORIGIN_WHITELIST = (
+    'https://dod-beta.com',
+    'https://d-o-d.io',
+    'http://docs.gift',
+    'http://172.30.1.26:3000'  # for local production db test
+)
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 
 # AUTH USER
 AUTH_USER_MODEL = 'accounts.User'

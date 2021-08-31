@@ -102,7 +102,7 @@ class ProjectDashboardSerializer(serializers.ModelSerializer):
                   'project_status', 'progress']
 
     def get_total_respondent(self, obj):
-        if obj.kind in [Project.TEST, Project.ONBOARDING]:
+        if obj.kind in [Project.TEST, Project.ONBOARDING] or not obj.status:
             count = obj.test_respondents.all().count()
         else:
             count = obj.respondents.all().count()
@@ -186,7 +186,7 @@ class ProjectLinkSerializer(serializers.ModelSerializer):
         #     message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
 
         # FIXED same message
-        message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
+        # message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
 
         hash_key = obj.project_hash_key
 
@@ -195,8 +195,8 @@ class ProjectLinkSerializer(serializers.ModelSerializer):
         else:
             url = 'https://d-o-d.io/checklink/{}/'.format(hash_key)
 
-        message = '{}\n{}'.format(message, url)
-        return message
+        # message = '{}\n{}'.format(message, url)
+        return url
 
     def get_pc_url(self, obj):
         link_notice = LinkCopyNotice.objects.filter(is_active=True, kinds=1).last()
