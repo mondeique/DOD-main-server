@@ -22,6 +22,7 @@ def dod_extra_reward_img_directory_path(instance, filename):
 
 class DODExtraGifticonsItem(models.Model):
     name = models.CharField(max_length=30)
+    brand = models.CharField(max_length=30, null=True, blank=True)
     percentage = models.FloatField()
     price = models.IntegerField()
     thumbnail = models.ImageField(upload_to=icon_thumb_directory_path)
@@ -42,6 +43,7 @@ class DODExtraLotteryLogs(models.Model):
                                  null=True, blank=True, help_text='디오디 자체추첨 상품')
     due_date = models.CharField(max_length=30, default='')
     send = models.BooleanField(default=False)
+    send_datetime = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
