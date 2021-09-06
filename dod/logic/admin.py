@@ -1,6 +1,6 @@
 from django.contrib import admin
 from custom_manage.sites import staff_panel
-from logic.models import DateTimeLotteryResult, PercentageResult, DODAveragePercentage
+from logic.models import DateTimeLotteryResult, PercentageResult, DODAveragePercentage, DODExtraAveragePercentage
 
 
 class DateTimeLotteryResultStaffAdmin(admin.ModelAdmin):
@@ -38,6 +38,14 @@ class DODAveragePercentageStaffAdmin(admin.ModelAdmin):
         return str(obj.average_percentage) + '%'
 
 
+class DODExtraAveragePercentageStaffAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'average', 'created_at', 'updated_at']
+
+    def average(self, obj):
+        return str(obj.extra_average_percentage) + '%'
+
+
 staff_panel.register(DateTimeLotteryResult, DateTimeLotteryResultStaffAdmin)
 staff_panel.register(PercentageResult, PercentageResultStaffAdmin)
 staff_panel.register(DODAveragePercentage, DODAveragePercentageStaffAdmin)
+staff_panel.register(DODExtraAveragePercentage, DODExtraAveragePercentageStaffAdmin)
