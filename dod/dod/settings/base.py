@@ -52,7 +52,8 @@ SECONDS_APPS = [
     'custom_manage',
     'core',
     'logs',
-    'board'
+    'board',
+    'dod_lottery'
 ]
 
 THIRD_APPS = [
