@@ -509,13 +509,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
 class ProjectDashboardViewSet(viewsets.GenericViewSet,
                               mixins.ListModelMixin,
                               mixins.RetrieveModelMixin):
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = [AllowAny, ]
     queryset = Project.objects.filter(is_active=True)
     serializer_class = ProjectDashboardSerializer
     pagination_class = None
 
     def get_queryset(self):
         user = self.request.user
+        if user.is_anonymous:
+            return self.queryset.filter(kind=Project.ANONYMOUS)
         queryset = self.queryset.filter(owner=user).order_by('-id')
         return queryset
 
@@ -534,7 +536,10 @@ class ProjectDashboardViewSet(viewsets.GenericViewSet,
         ]
 
         """
-        return super(ProjectDashboardViewSet, self).list(request, *args, **kwargs)
+
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
         """

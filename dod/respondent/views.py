@@ -82,8 +82,7 @@ class RefererValidatorAPIView(APIView):
             test_register_url_with_utm = test_register_url + '&utm_source=dod&utm_medium=onboarding&utm_campaign=lottery'
             return HttpResponseRedirect(test_register_url_with_utm)
 
-        elif self.project.kind == Project.ONBOARDING:
-            # TODO : onboarding page link & utm
+        elif self.project.kind in [Project.ONBOARDING, Project.ANONYMOUS]:
             test_register_url = base_url + 'testlink?p={}&v={}'.format(project_hash_key, validator)
             test_register_url_with_utm = test_register_url
             return HttpResponseRedirect(test_register_url_with_utm)
@@ -109,7 +108,7 @@ class RefererValidatorAPIView(APIView):
 
     def _validate_project(self):
         now = datetime.datetime.now()
-        if self.project.kind in [Project.ONBOARDING, Project.TEST]:
+        if self.project.kind in [Project.ONBOARDING, Project.TEST, Project.ANONYMOUS]:
             return True
 
         if self.project.dead_at < now:

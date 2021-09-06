@@ -104,19 +104,27 @@ class ProjectDashboardSerializer(serializers.ModelSerializer):
     def get_total_respondent(self, obj):
         if obj.kind in [Project.TEST, Project.ONBOARDING] or not obj.status:
             count = obj.test_respondents.all().count()
+        elif obj.kind == Project.ANONYMOUS:
+            count = 0
         else:
             count = obj.respondents.all().count()
         return count
 
     def get_start_at(self, obj):  # humanize
+        if obj.kind in [Project.ONBOARDING, Project.ANONYMOUS]:
+            today = datetime.datetime.now().strftime("%m월 %d일")
+            return today
         return obj.start_at.strftime("%m월 %d일")
 
     def get_dead_at(self, obj):  # humanize
+        if obj.kind in [Project.ONBOARDING, Project.ANONYMOUS]:
+            week_later = (datetime.datetime.now() + datetime.timedelta(days=7)).strftime("%m월 %d일")
+            return week_later
         return obj.dead_at.strftime("%m월 %d일")
 
     def get_project_status(self, obj):
         now = datetime.datetime.now()
-        if obj.kind == Project.ONBOARDING:
+        if obj.kind in [Project.ONBOARDING, Project.ANONYMOUS]:
             return 400
         if obj.dead_at < now:
             return 999  # 종료됨

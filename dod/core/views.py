@@ -138,7 +138,7 @@ class SMSViewSet(viewsets.GenericViewSet):
         self.data = serializer.validated_data
         self._set_project()
 
-        if self.project.kind in [Project.TEST, Project.ONBOARDING] or not self.project.status:
+        if self.project.kind in [Project.TEST, Project.ONBOARDING, Project.ANONYMOUS] or not self.project.status:
 
             self._create_test_respondent()
             won_thumbnail = Item.objects.get(order=999).won_thumbnail.url
