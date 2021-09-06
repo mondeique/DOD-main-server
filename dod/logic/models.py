@@ -54,3 +54,15 @@ class DODAveragePercentage(models.Model):
 
     class Meta:
         verbose_name_plural = '디오디 평균 당첨 확률'
+
+
+class DODExtraAveragePercentage(models.Model):
+    """
+    추첨 종료 후 디오디 추첨의 진입확률
+    """
+    extra_average_percentage = models.FloatField(help_text='dod추첨 진입 확률: 퍼센트 소수점으로 작성')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = '디오디 자체 추첨 진입 확률'
