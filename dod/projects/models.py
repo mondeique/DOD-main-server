@@ -8,10 +8,12 @@ class Project(models.Model):
     NORMAL = 1
     ONBOARDING = 2
     TEST = 999
+    ANONYMOUS = 1000
     KINDS = (
         (NORMAL, 'normal'),
         (ONBOARDING, 'onboarding'),  # user signup
         (TEST, 'test'),
+        (ANONYMOUS, 'anonymous')
     )
     kind = models.IntegerField(choices=KINDS, default=NORMAL)
     name = models.CharField(max_length=30)

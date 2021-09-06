@@ -93,7 +93,7 @@ class SMSViewSet(viewsets.GenericViewSet):
         설문자 인증번호 발송시 사용하는 핸드폰인증입니다.
         api: api/v1/sms/respondent_send/
         method: POST
-        data: {'phone'}
+        data: {'phone', 'project_key'}
         """
         data = request.data
         serializer = self.get_serializer(data=data)
@@ -101,7 +101,8 @@ class SMSViewSet(viewsets.GenericViewSet):
             phone = serializer.validated_data['phone']
             sms_manager = SMSV2Manager()
             sms_manager.set_respondent_content()
-            sms_manager.create_respondent_send_instance(phone=phone, project_key=data.get('project_key'))
+            project = Project.objects.filter(project_hash_key=data.get('project_key')).last()
+            sms_manager.create_respondent_send_instance(phone=phone, project=project)
 
             if not sms_manager.send_sms(phone=phone):
                 return Response("Failed send sms", status=status.HTTP_410_GONE)
@@ -137,7 +138,7 @@ class SMSViewSet(viewsets.GenericViewSet):
         self.data = serializer.validated_data
         self._set_project()
 
-        if self.project.kind in [Project.TEST, Project.ONBOARDING]:
+        if self.project.kind in [Project.TEST, Project.ONBOARDING, Project.ANONYMOUS] or not self.project.status:
 
             self._create_test_respondent()
             won_thumbnail = Item.objects.get(order=999).won_thumbnail.url
@@ -226,7 +227,7 @@ class SMSViewSet(viewsets.GenericViewSet):
             .prefetch_related('respondents', 'respondents__phone_confirm', 'custom_gifticons')
 
         self.project = project_queryset.get(project_hash_key=self.data.get('project_key'))
-        if self.project.kind in [Project.TEST, Project.ONBOARDING]:
+        if self.project.kind in [Project.TEST, Project.ONBOARDING] or not self.project.status:
             self.phone_confirm = TestRespondentPhoneConfirm.objects.filter(phone=self.data.get('phone'),
                                                                            confirm_key=self.data.get('confirm_key'),
                                                                            is_confirmed=True).last()

@@ -45,6 +45,7 @@ class RefererValidatorAPIView(APIView):
 
         if settings.DEVEL or settings.STAG:
             base_url = 'http://docs.gift/'
+            base_url = 'http://172.30.1.47:3000/'
         else:
             base_url = 'https://d-o-d.io/'
 
@@ -57,7 +58,7 @@ class RefererValidatorAPIView(APIView):
         project_hash_key = kwargs['slug']
         self.project = Project.objects.filter(project_hash_key=project_hash_key).last()
 
-        if not self.project or not self._validate_project():
+        if not self.project or not self._validate_project(): # 여기에 활성화 전 추가
             # project not started page
             project_not_start_url = base_url + 'invalid'
             return HttpResponseRedirect(project_not_start_url)
@@ -81,9 +82,13 @@ class RefererValidatorAPIView(APIView):
             test_register_url_with_utm = test_register_url + '&utm_source=dod&utm_medium=onboarding&utm_campaign=lottery'
             return HttpResponseRedirect(test_register_url_with_utm)
 
-        elif self.project.kind == Project.ONBOARDING:
-            # TODO : onboarding page link & utm
+        elif self.project.kind in [Project.ONBOARDING, Project.ANONYMOUS]:
             test_register_url = base_url + 'testlink?p={}&v={}'.format(project_hash_key, validator)
+            test_register_url_with_utm = test_register_url
+            return HttpResponseRedirect(test_register_url_with_utm)
+
+        elif not self.project.status: # 활성화 안됨
+            test_register_url = base_url + 'ownerlink?p={}&v={}'.format(project_hash_key, validator)
             test_register_url_with_utm = test_register_url
             return HttpResponseRedirect(test_register_url_with_utm)
 
@@ -103,7 +108,7 @@ class RefererValidatorAPIView(APIView):
 
     def _validate_project(self):
         now = datetime.datetime.now()
-        if self.project.kind in [Project.ONBOARDING, Project.TEST]:
+        if self.project.kind in [Project.ONBOARDING, Project.TEST, Project.ANONYMOUS]:
             return True
 
         if self.project.dead_at < now:

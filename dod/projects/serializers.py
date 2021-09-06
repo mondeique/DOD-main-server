@@ -102,21 +102,29 @@ class ProjectDashboardSerializer(serializers.ModelSerializer):
                   'project_status', 'progress']
 
     def get_total_respondent(self, obj):
-        if obj.kind in [Project.TEST, Project.ONBOARDING]:
+        if obj.kind in [Project.TEST, Project.ONBOARDING] or not obj.status:
             count = obj.test_respondents.all().count()
+        elif obj.kind == Project.ANONYMOUS:
+            count = 0
         else:
             count = obj.respondents.all().count()
         return count
 
     def get_start_at(self, obj):  # humanize
+        if obj.kind in [Project.ONBOARDING, Project.ANONYMOUS]:
+            today = datetime.datetime.now().strftime("%m월 %d일")
+            return today
         return obj.start_at.strftime("%m월 %d일")
 
     def get_dead_at(self, obj):  # humanize
+        if obj.kind in [Project.ONBOARDING, Project.ANONYMOUS]:
+            week_later = (datetime.datetime.now() + datetime.timedelta(days=7)).strftime("%m월 %d일")
+            return week_later
         return obj.dead_at.strftime("%m월 %d일")
 
     def get_project_status(self, obj):
         now = datetime.datetime.now()
-        if obj.kind == Project.ONBOARDING:
+        if obj.kind in [Project.ONBOARDING, Project.ANONYMOUS]:
             return 400
         if obj.dead_at < now:
             return 999  # 종료됨
@@ -175,15 +183,18 @@ class ProjectLinkSerializer(serializers.ModelSerializer):
         fields = ['url', 'pc_url', 'mobile_url']
 
     def get_url(self, obj): # TODO : respondent validator view api
-        if obj.kind == Project.NORMAL:
-            if obj.status:  # active
-                message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
-            else:
-                message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.INACTIVE).last().content
-        elif obj.kind == Project.ONBOARDING:
-            message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ONBOARDING).last().content
-        else:
-            message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
+        # if obj.kind == Project.NORMAL:
+        #     if obj.status:  # active
+        #         message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
+        #     else:
+        #         message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
+        # elif obj.kind == Project.ONBOARDING:
+        #     message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
+        # else:
+        #     message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
+
+        # FIXED same message
+        # message = LinkCopyMessage.objects.filter(kinds=LinkCopyMessage.ACTIVE).last().content
 
         hash_key = obj.project_hash_key
 
@@ -192,8 +203,8 @@ class ProjectLinkSerializer(serializers.ModelSerializer):
         else:
             url = 'https://d-o-d.io/checklink/{}/'.format(hash_key)
 
-        message = '{}\n{}'.format(message, url)
-        return message
+        # message = '{}\n{}'.format(message, url)
+        return url
 
     def get_pc_url(self, obj):
         link_notice = LinkCopyNotice.objects.filter(is_active=True, kinds=1).last()
