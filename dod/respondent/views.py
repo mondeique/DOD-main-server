@@ -17,7 +17,7 @@ from core.slack import staff_reward_didnt_upload_slack_message
 from core.tools import get_client_ip
 from projects.models import Project
 from respondent.models import DeviceMetaInfo
-from respondent.serializers import ClientRefererProjectValidateSerializer
+from respondent.serializers import ClientRefererProjectValidateSerializer, LotteryAnnouncementRetrieveSerializer
 
 
 class RefererValidatorAPIView(APIView):
@@ -170,6 +170,17 @@ class ClientRefererProjectValidateCheckViewSet(viewsets.GenericViewSet):
             return False  # 프로젝트 대기중
         else:
             return True  # 진행중
+
+
+class LotteryAnnouncementViewSet(APIView):
+    permission_classes = [AllowAny]
+    queryset = Project.objects.filter(is_active=True)
+
+    def get(self, request, *args, **kwargs):
+        project_hash_key = kwargs['slug']
+        project = Project.objects.filter(project_hash_key=project_hash_key).last()
+        serializer = LotteryAnnouncementRetrieveSerializer(project)
+        return Response(serializer.data)
 
 
 def test_send(request):

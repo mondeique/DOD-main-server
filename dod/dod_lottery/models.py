@@ -29,6 +29,7 @@ class DODExtraGifticonsItem(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # order = models.IntegerField(null=True)
 
     class Meta:
         verbose_name_plural = '디오디 자체추첨 상품'

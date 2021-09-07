@@ -25,7 +25,7 @@ from django.conf import settings
 
 from notice.views import TestGoogleFormsAPIView
 from payment.views import pay_test
-from respondent.views import RefererValidatorAPIView, home, test_send
+from respondent.views import RefererValidatorAPIView, home, test_send, LotteryAnnouncementViewSet
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -65,6 +65,10 @@ urlpatterns = [
     # agree alert
     path('alim/<slug:slug>/', AgreeAlertOKView.as_view()),
     path('alim/<slug:slug>', AgreeAlertOKView.as_view()),
+
+    # dod lottery announce
+    path('api/v1/announce/<slug:slug>/', LotteryAnnouncementViewSet.as_view()),
+    path('api/v1/announce/<slug:slug>', LotteryAnnouncementViewSet.as_view()),
 
 ]
 if settings.DEBUG:

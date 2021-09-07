@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from respondent.views import ClientRefererProjectValidateCheckViewSet
+from respondent.views import ClientRefererProjectValidateCheckViewSet, LotteryAnnouncementViewSet
 
 app_name = 'respondent'
 
