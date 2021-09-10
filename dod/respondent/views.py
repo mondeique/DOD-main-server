@@ -46,6 +46,7 @@ class RefererValidatorAPIView(APIView):
         if settings.DEVEL or settings.STAG:
             base_url = 'http://docs.gift/'
             base_url = 'http://172.30.1.47:3000/'
+            base_url = 'http://localhost:3000/'
         else:
             base_url = 'https://d-o-d.io/'
 
@@ -179,6 +180,8 @@ class LotteryAnnouncementViewSet(APIView):
     def get(self, request, *args, **kwargs):
         project_hash_key = kwargs['slug']
         project = Project.objects.filter(project_hash_key=project_hash_key).last()
+        if not project:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = LotteryAnnouncementRetrieveSerializer(project)
         return Response(serializer.data)
 

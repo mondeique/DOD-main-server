@@ -1,8 +1,10 @@
+import datetime
+
 from rest_framework import serializers, exceptions
 
 from accounts.models import BannedPhoneInfo
 from dod_lottery.models import DODExtraGifticonsItem
-from products.models import Item
+from products.models import Item, Reward
 from projects.models import Project
 from projects.serializers import ProjectProductsGifticonsDetailSerializer
 from respondent.models import RespondentPhoneConfirm, Respondent, DeviceMetaInfo, TestRespondent, \
@@ -115,34 +117,16 @@ class LotteryAnnouncementRetrieveSerializer(serializers.ModelSerializer):
     left_count = serializers.SerializerMethodField()
     winner_list = serializers.SerializerMethodField()
     total_respondents_count = serializers.SerializerMethodField()
+    due_date = serializers.SerializerMethodField()
     lottery_type = serializers.SerializerMethodField()
     dod_lottery = serializers.SerializerMethodField()
     product_info = serializers.SerializerMethodField()
-    dod_product_info = serializers.SerializerMethodField()
+    # dod_product_info = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
-        fields = ['id', 'left_count', 'winner_list', 'total_respondents_count',
-                  'lottery_type', 'dod_lottery', 'product_info', 'dod_product_info']
-
-    # def __init__(self, instance=None, *args, **kwargs):
-    #     super(LotteryAnnouncementRetrieveSerializer, self).__init__(*args, **kwargs)
-    #     self.type = None
-    #     print('inin')
-        # self.project = instance
-        # print(self.project)
-
-        # if self.project.kind == Project.TEST:  # 실시간 추첨 체험(메인)
-        #     self.type = 'experience'
-        # elif self.project.kind in [Project.ANONYMOUS, Project.ONBOARDING]:  # 테스트링크(온보딩)
-        #     self.type = 'test'
-        # elif not self.project.status:  # 활성화 안됨
-        #     self.type = 'inactive'
-        # elif self.project.custom_gifticons.exists():  # 직접 업로드
-        #     self.type = 'custom'
-        # else:  # 우리쪽 구매
-        #     self.type = 'payment'
-        # print(self.type)
+        fields = ['id', 'left_count', 'winner_list', 'due_date', 'total_respondents_count',
+                  'lottery_type', 'dod_lottery', 'product_info']
 
     def project_type(self):
         if self.project.kind == Project.TEST:  # 실시간 추첨 체험(메인)
@@ -155,44 +139,48 @@ class LotteryAnnouncementRetrieveSerializer(serializers.ModelSerializer):
             self.type = 'custom'
         else:  # 우리쪽 구매
             self.type = 'payment'
-        print(self.type)
 
     def get_lottery_type(self, project):
         return self.type
 
     def get_left_count(self, project):
-        print('1111')
         self.project = project
         self.project_type()
         if self.type == 'experience':
-            return '남은개수 9개(예시)'
+            return '9개'
         elif self.type == 'test':
-            return '남은개수 5개(예시)'
+            return '없음'
         elif self.type == 'inactive':
-            return '남은개수 0개'
+            return '0개'
         elif self.type == 'custom':
             count = self.project.custom_gifticons.filter(winner_id__isnull=True).count()
-            return '남은개수 {}개'.format(count)
+            return '{}개'.format(count)
         else:
             count = self.project.products.filter(rewards__winner_id__isnull=True).count()
-            return '남은개수 {}개'.format(count)
+            return '{}개'.format(count)
 
-    def get_winner_list(self, project):
-        four_digits = []
+    def get_winner_list(self, project):  # TODO : 상품정보, 시간 같
         if self.type in ['inactive']:
-            qs = list(self.project.test_respondents.filter(is_win=True).values_list('phone_confirm__phone', flat=True))
+            return []  # 당첨자 없음
         elif self.type in ['custom', 'payment']:
-            qs = list(self.project.respondents.filter(is_win=True).values_list('phone_confirm__phone', flat=True))
+            qs = self.project.respondents.filter(is_win=True)
+            serializer = DODWinnerInfoAnnounceSerializer(qs, many=True)
+            return serializer.data
         elif self.type == 'test':  # anonymous와 온보딩을 합쳤기 때문에 그냥 지정해서 보여줌
-            return ['12*4님', '23*1님', '77*7님']
+            return [
+                {
+                    'phone': '77*7님',
+                    'name': '아이스 아메리카노',
+                    'time': datetime.datetime.now().strftime('%m월 %d일 %H:%M')
+                },
+                {
+                    'phone': '12*4님',
+                    'name': '아이스 아메리카노',
+                    'time': datetime.datetime.now().strftime('%m월 %d일 %H:%M')
+                }
+            ]
         else:
-            return ['없음']
-
-        for i in qs:
-            digits = i[7:]
-            crypto_digits = digits[:2]+'*'+digits[-1]
-            four_digits.append(crypto_digits)
-        return four_digits
+            return []
 
     def get_total_respondents_count(self, project):
         if self.type in ['experience', 'test']:  # anonymous와 온보딩을 합쳤기 때문에 그냥 지정해서 보여줌
@@ -206,6 +194,10 @@ class LotteryAnnouncementRetrieveSerializer(serializers.ModelSerializer):
         else:
             return '0명'
 
+    def get_due_date(self, project):  # TODO 0
+        dead_at = project.dead_at
+        return dead_at.strftime('%m월 %d일')
+
     def get_dod_lottery(self, project):
         """
         일반적인 추첨(기프티콘 있음)에서 모든 상품이 빠진 경우에만 디오디추첨으로 전환
@@ -218,7 +210,7 @@ class LotteryAnnouncementRetrieveSerializer(serializers.ModelSerializer):
                 return True  # dod 추첨
         return False  # 원래 추첨 방식
 
-    def get_product_info(self, project):
+    def get_product_info(self, project):  # TODO : 상품명, 브랜드 0
         """
         lottery type 에 맞추어 다르게 return
         """
@@ -233,30 +225,67 @@ class LotteryAnnouncementRetrieveSerializer(serializers.ModelSerializer):
         elif self.type in ['test', 'experience']:
             data = [{'id': 2,
                      'thumbnail': Item.objects.get(order=998).thumbnail.url,
-                     'total_count': 5,
-                     'left_count': 3}]
+                     'brand': '스타벅스',
+                     'name': '아이스 아메리카노 Tall',
+                     'total_count': 0,
+                     'left_count': 0}]
             return data
-        elif self.type in ['inactive']:  # 기프티콘 없다는 멘트
-            return '기프티콘이 업로드 되지 않았습니다.'
+        elif self.type in ['inactive']:
+            data = [{'id': 2,
+                     'thumbnail': Item.objects.get(order=997).won_thumbnail.url,
+                     'brand': '기프티콘 없음',
+                     'name': '기프티콘을 추가해주세요',
+                     'total_count': 0,
+                     'left_count': 0}]
+            return data
         elif self.type in ['custom']:
-            return '설문자가 직접 업로드 한 상품입니다. 랜덤하게 추첨합니다.'
+            qs = self.project.custom_gifticons.all()
+            data = [{'id': 2,
+                     'thumbnail': Item.objects.get(order=997).won_thumbnail.url,
+                     'brand': '직접 업로드',
+                     'name': '랜덤으로 추첨됩니다',
+                     'total_count': qs.count(),
+                     'left_count': qs.filter(winner_id__isnull=True).count()}]
+            return data
         else:
-            return ''
+            return None
 
-    def get_dod_product_info(self, project):
-        qs = DODExtraGifticonsItem.objects.filter(is_active=True)
-        serializer = DODExtraGifticonsDetailSerializer(qs, many=True)
-        return serializer.data
+
+class DODWinnerInfoAnnounceSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    phone = serializers.SerializerMethodField()
+    time = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Respondent
+        fields = ['id', 'name', 'phone', 'time']
+
+    def get_phone(self, obj):
+        phone = str(obj.phone_confirm.phone)
+        digits = phone[7:]
+        crypto_digits = digits[:2] + '*' + digits[-1]
+        return '{}님'.format(crypto_digits)
+
+    def get_name(self, obj):
+        reward = Reward.objects.filter(winner_id=obj.id).last()
+        if reward:
+            name = reward.product.item.short_name
+            return name
+        return '기프티콘'
+
+    def get_time(self, obj):
+        time = obj.phone_confirm.created_at
+        return time.strftime('%m월 %d일 %H:%M')
 
 
 class DODExtraGifticonsDetailSerializer(serializers.ModelSerializer):
-    thumbnail = serializers.SerializerMethodField()
+    thumbnail = serializers.SerializerMethodField()  # TODO : 상품명, 브랜드
 
     class Meta:
         model = DODExtraGifticonsItem
         fields = ['id', 'name', 'thumbnail', 'percentage']
 
-    def get_thumbnail(self, obj):
+    def get_thumbnail(self, obj):  # percent?
         if obj.thumbnail:
             return obj.thumbnail.url
         return ''

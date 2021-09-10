@@ -19,7 +19,9 @@ from accounts.serializers import SMSSignupPhoneCheckSerializer, SMSSignupPhoneCo
 from core.sms.utils import SMSV2Manager, MMSV1Manager
 from core.tools import get_client_ip
 from django.conf import settings
-from logic.models import DateTimeLotteryResult, PercentageResult
+
+from dod_lottery.models import DODExtraGifticonsItem, DODExtraLotteryLogs
+from logic.models import DateTimeLotteryResult, PercentageResult, DODAveragePercentage
 from logs.models import MMSSendLog
 from projects.models import Project
 from products.models import Product, Reward, Item
@@ -138,6 +140,9 @@ class SMSViewSet(viewsets.GenericViewSet):
         self.data = serializer.validated_data
         self._set_project()
 
+        # UPDATED 20210907 dod_lottery False
+        self.dod_lottery = False
+
         if self.project.kind in [Project.TEST, Project.ONBOARDING, Project.ANONYMOUS] or not self.project.status:
 
             self._create_test_respondent()
@@ -145,6 +150,7 @@ class SMSViewSet(viewsets.GenericViewSet):
 
             return Response({'id': self.project.id,
                              'is_win': True,
+                             'dod_lottery': self.dod_lottery,
                              'won_thumbnail': won_thumbnail  # UPDATED 20210725 당첨이미지
                              }, status=status.HTTP_200_OK)
 
@@ -200,10 +206,26 @@ class SMSViewSet(viewsets.GenericViewSet):
                 item_name = self.reward.product.item.short_name
                 won_thumbnail = self.reward.product.item.won_thumbnail.url
 
+        # UPDATED 20210907 dod lottery
+        elif self.dod_lottery:
+            if self._am_i_dod_winner():
+                dod_prizes = DODExtraGifticonsItem.objects.filter(is_active=True)
+                dod_prizes_ids = list(dod_prizes.values_list('pk', flat=True))
+                dod_prizes_percentage = list(dod_prizes.values_list('percentage', flat=True))
+                dod_reward_id = random.choices(dod_prizes_ids, weights=dod_prizes_percentage)[0]
+                dod_reward = dod_prizes.get(id=dod_reward_id)
+
+                DODExtraLotteryLogs.objects.create(item=dod_reward,
+                                                   project=self.project,
+                                                   phone=self.data.get('phone')
+                                                   )
+                self.is_win = True
+                won_thumbnail = dod_reward.thumbnail.url
+
         return Response({'id': self.project.id,
                          'is_win': self.is_win,
-                         # 'is_owner': True if self.phone_confirm.phone == self.project.owner.phone else False,  # UPDATED 20210725 작성자여부
-                         'item_name': item_name,  # WILL BE DEPRECATED
+                         # 'item_name': item_name,  # WILL BE DEPRECATED
+                         'dod_lottery': self.dod_lottery,  # 디오디 추첨으로 당첨되었다를 공지하기 위해
                          'won_thumbnail': won_thumbnail  # UPDATED 20210725 당첨이미지
                          }, status=status.HTTP_200_OK)
 
@@ -292,6 +314,8 @@ class SMSViewSet(viewsets.GenericViewSet):
             self.left_percentages = self.project.select_logics.last().percentages.filter(is_used=False)
             if not self.left_percentages.exists():
                 # 추첨 다 됨
+                # UPDATED 20210907 dod lottery
+                self.dod_lottery = True
                 return False
             else:
                 percentage = self.left_percentages.first().percentage  # 당첨확률 : ex: 2.1
@@ -313,6 +337,13 @@ class SMSViewSet(viewsets.GenericViewSet):
                     except PercentageResult.DoesNotExist:
                         val = False
                     return val
+
+    def _am_i_dod_winner(self):
+        # 15% 확률로 들어옴
+        probability_of_entry = DODAveragePercentage.objects.last().average_percentage  # 15.0
+        ex_percentage = abs(100 - probability_of_entry)
+        result = random.choices([True, False], weights=[probability_of_entry, ex_percentage])
+        return result
 
 
 class SendMMSAPIView(APIView):

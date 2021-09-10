@@ -305,10 +305,12 @@ class ProjectProductsGifticonsDetailSerializer(serializers.ModelSerializer):
     thumbnail = serializers.SerializerMethodField()
     total_count = serializers.SerializerMethodField()
     left_count = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
+    brand = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        fields = ['id', 'thumbnail', 'total_count', 'left_count']
+        fields = ['id', 'thumbnail', 'total_count', 'left_count', 'name', 'brand']
 
     def get_thumbnail(self, obj):
         return obj.item.thumbnail.url
@@ -316,6 +318,15 @@ class ProjectProductsGifticonsDetailSerializer(serializers.ModelSerializer):
     def get_total_count(self, obj):
         project = self.context['project']
         return project.products.filter(item__id=obj.item.id).count()
+
+    def get_name(self, obj):
+        if obj.item:
+            return obj.item.name
+
+    def get_brand(self, obj):
+        if obj.item:
+            return obj.item.brand.name
+
 
     def get_left_count(self, obj):
         project = self.context['project']
