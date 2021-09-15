@@ -143,6 +143,7 @@ class SMSViewSet(viewsets.GenericViewSet):
         # UPDATED 20210907 dod_lottery False
         self.dod_lottery = False
 
+
         if self.project.kind in [Project.TEST, Project.ONBOARDING, Project.ANONYMOUS] or not self.project.status:
 
             self._create_test_respondent()

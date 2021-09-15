@@ -1,7 +1,7 @@
 from django.contrib import admin
 from custom_manage.sites import staff_panel
 from notice.models import LinkCopyNotice, FAQLink, ContactLink, MainPageDodExplanation, SuggestionLink, \
-    PrivacyPolicyLink, TermsOfServiceLink, NoticeLink, TestGoogleFormsUrl, LinkCopyMessage
+    PrivacyPolicyLink, TermsOfServiceLink, NoticeLink, TestGoogleFormsUrl, LinkCopyMessage, LotteryEndMessage
 
 
 class LinkCopyNoticeStaffAdmin(admin.ModelAdmin):
@@ -44,6 +44,10 @@ class TestGoogleFormsUrlStaffAdmin(admin.ModelAdmin):
     list_display = ['pk', 'forms_url', 'is_active', 'created_at']
 
 
+# class LotteryEndMessageStaffAdmin(admin.ModelAdmin):
+#     list_display = ['main_message', 'sub_message', 'kind', 'is_active']
+
+
 staff_panel.register(LinkCopyNotice, LinkCopyNoticeStaffAdmin)
 staff_panel.register(FAQLink, FAQLinkStaffAdmin)
 staff_panel.register(NoticeLink, NoticeLinkStaffAdmin)
@@ -54,3 +58,4 @@ staff_panel.register(TermsOfServiceLink, TermsOfServiceLinkStaffAdmin)
 staff_panel.register(MainPageDodExplanation, MainPageDodExplanationStaffAdmin)
 staff_panel.register(TestGoogleFormsUrl, TestGoogleFormsUrlStaffAdmin)
 staff_panel.register(LinkCopyMessage, LinkCopyMessageStaffAdmin)
+# staff_panel.register(LotteryEndMessage, LotteryEndMessageStaffAdmin)
