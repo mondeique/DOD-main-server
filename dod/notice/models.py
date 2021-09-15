@@ -19,6 +19,34 @@ def menu_icon_directory_path(instance, filename):
     return 'menu_icon/{}'.format(filename)
 
 
+class LotteryEndMessage(models.Model):
+    """
+    당첨확인 페이지 안내 멘트
+    """
+    NORMAL_WIN = 1  # 당첨
+    NORMAL_LOSE = 2  # 당첨안됨
+    INACTIVE = 10  # 기프티콘 업로드 안됨
+    ONBOARDING = 20  # 테스트 링크
+    TEST = 30  # 실시간 추첨 체험
+    DOD_WIN = 40  # 디오디 자체 추첨 당첨
+    DOD_LOSE = 41  # 디오디 자체 추첨 꽝
+    KINDS = (
+        (NORMAL_WIN, 'win'),
+        (NORMAL_LOSE, 'lose'),
+        (INACTIVE, 'inactive'),
+        (ONBOARDING, 'onboarding'),
+        (TEST, 'test'),
+        (DOD_WIN, 'dod_win'),
+        (DOD_LOSE, 'dod_lose'),
+    )
+    main_message = models.CharField(max_length=50)
+    sub_message = models.CharField(max_length=50)
+    kind = models.IntegerField(choices=KINDS)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
 class LinkCopyMessage(models.Model):
     """
     링크 복사 안내 메세지.
